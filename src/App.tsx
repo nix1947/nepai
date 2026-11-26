@@ -7,6 +7,7 @@ import {
   CandlestickChart,
   Compass,
   Gauge,
+  Globe,
   Menu,
   Moon,
   Radar,
@@ -18,9 +19,11 @@ import {
   X,
 } from 'lucide-react';
 import { useWatchlist } from './hooks/useWatchlist';
-import type { DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
+import type { AppLanguage, DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
 import { formatTimeUntil } from './utils/format';
+import { biText, NAV_LABELS } from './utils/i18n';
 import { AlgorithmsView } from './views/AlgorithmsView';
+import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
 import { OverviewView } from './views/OverviewView';
 import { ScannersView } from './views/ScannersView';
@@ -36,18 +39,20 @@ type NavTab =
   | 'direction'
   | 'scanners'
   | 'explorer'
+  | 'macro'
   | 'algorithms'
   | 'scheduler';
 
-const NAV_ITEMS: Array<{ id: NavTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-  { id: 'overview', label: 'Overview', icon: BarChart3 },
-  { id: 'pulse', label: 'Market Pulse', icon: Gauge },
-  { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
-  { id: 'direction', label: 'Turnover × Direction', icon: Activity },
-  { id: 'scanners', label: 'Scanners', icon: Radar },
-  { id: 'explorer', label: 'Stock Explorer', icon: CandlestickChart },
-  { id: 'algorithms', label: 'Algorithms', icon: BookOpen },
-  { id: 'scheduler', label: 'Scheduler & Data', icon: CalendarClock },
+const NAV_ITEMS: Array<{ id: NavTab; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: 'overview', icon: BarChart3 },
+  { id: 'pulse', icon: Gauge },
+  { id: 'turnover', icon: TrendingUp },
+  { id: 'direction', icon: Activity },
+  { id: 'scanners', icon: Radar },
+  { id: 'explorer', icon: CandlestickChart },
+  { id: 'macro', icon: Globe },
+  { id: 'algorithms', icon: BookOpen },
+  { id: 'scheduler', icon: CalendarClock },
 ];
 
 export default function App() {
@@ -62,6 +67,7 @@ export default function App() {
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [lang, setLang] = useState<AppLanguage>('bi');
   const [allSymbols, setAllSymbols] = useState<SymbolInfo[]>([]);
   const [quickQuery, setQuickQuery] = useState<string>('');
   const [quickOpen, setQuickOpen] = useState<boolean>(false);
@@ -159,7 +165,13 @@ export default function App() {
   };
 
   const currentNav = NAV_ITEMS.find((n) => n.id === activeTab)!;
-  const needsMarketData = activeTab !== 'algorithms' && activeTab !== 'scheduler';
+  const currentNavLabel = biText(
+    NAV_LABELS[currentNav.id].en,
+    NAV_LABELS[currentNav.id].ne,
+    lang
+  );
+  const needsMarketData =
+    activeTab !== 'algorithms' && activeTab !== 'scheduler' && activeTab !== 'macro';
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -184,6 +196,7 @@ export default function App() {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = activeTab === item.id;
+          const lbl = NAV_LABELS[item.id];
           return (
             <button
               key={item.id}
@@ -199,13 +212,41 @@ export default function App() {
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span>{item.label}</span>
+              <span className="truncate">{biText(lbl.en, lbl.ne, lang)}</span>
             </button>
           );
         })}
       </nav>
 
       <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-4 text-xs">
+        <div className="space-y-1.5">
+          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            Language · भाषा
+          </div>
+          <div className="grid grid-cols-3 gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-[11px]">
+            {(
+              [
+                { id: 'bi', label: 'EN+ने' },
+                { id: 'en', label: 'English' },
+                { id: 'ne', label: 'नेपाली' },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setLang(opt.id)}
+                className={`py-1 rounded font-medium transition-colors whitespace-nowrap ${
+                  lang === opt.id
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <label className="flex items-start gap-2.5 cursor-pointer text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
@@ -214,7 +255,7 @@ export default function App() {
             className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
           />
           <span>
-            <span className="font-medium block">Equities only</span>
+            <span className="font-medium block">{biText('Equities only', 'इक्विटी मात्र', lang)}</span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug block">
               Exclude funds &amp; debentures
             </span>
@@ -290,7 +331,7 @@ export default function App() {
               </span>
               <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">/</span>
               <h1 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
-                {currentNav.label}
+                {currentNavLabel}
               </h1>
             </div>
           </div>
@@ -469,6 +510,7 @@ export default function App() {
                 <TopTurnoverView
                   dates={dates}
                   equityOnly={equityOnly}
+                  lang={lang}
                   onInspectSymbol={inspectSymbol}
                 />
               )}
@@ -490,13 +532,23 @@ export default function App() {
                 <StockExplorerView
                   dates={dates}
                   equityOnly={equityOnly}
+                  lang={lang}
                   initialSymbol={explorerSymbol}
+                />
+              )}
+              {activeTab === 'macro' && (
+                <MacroRisksView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  lang={lang}
+                  onInspectSymbol={inspectSymbol}
                 />
               )}
               {activeTab === 'algorithms' && (
                 <AlgorithmsView
                   dates={dates}
                   equityOnly={equityOnly}
+                  lang={lang}
                   onInspectSymbol={inspectSymbol}
                 />
               )}

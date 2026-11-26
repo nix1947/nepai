@@ -57,6 +57,7 @@ export interface RangeSummaryRow {
   close_pos_pct?: number;
   momentum_score?: number;
   flow_tag?: string;
+  market_share_pct?: number;
 }
 
 export interface WeeklyTopRow extends RangeSummaryRow {
@@ -195,4 +196,65 @@ export interface MarketPulseResponse {
   summary: MarketPulseSummary;
   rows: MarketPulseRow[];
 }
+
+export type AppLanguage = 'bi' | 'en' | 'ne';
+
+export interface ResearchSource {
+  title: string;
+  uri: string;
+}
+
+export interface ResearchPoint {
+  title: string;
+  titleNe: string;
+  detail: string;
+  detailNe: string;
+  impact: 'High' | 'Medium' | 'Low';
+}
+
+export interface MacroResearchResponse {
+  generatedAt: string;
+  model: string;
+  cached: boolean;
+  nepalSummaryEn: string;
+  nepalSummaryNe: string;
+  worldSummaryEn: string;
+  worldSummaryNe: string;
+  nepalOpportunities: ResearchPoint[];
+  nepalRisks: ResearchPoint[];
+  worldOpportunities: ResearchPoint[];
+  worldRisks: ResearchPoint[];
+  sectorsToWatch: Array<{
+    sector: string;
+    sectorNe: string;
+    stance: 'Positive' | 'Neutral' | 'Cautious';
+    reason: string;
+    reasonNe: string;
+  }>;
+  sources: ResearchSource[];
+  rawFallback?: string;
+}
+
+export interface StockResearchResponse {
+  symbol: string;
+  companyName: string;
+  generatedAt: string;
+  model: string;
+  cached: boolean;
+  summaryEn: string;
+  summaryNe: string;
+  stance: 'Bullish' | 'Neutral' | 'Cautious';
+  opportunities: ResearchPoint[];
+  risks: ResearchPoint[];
+  macroLinkageEn: string;
+  macroLinkageNe: string;
+  catalysts: Array<{
+    headline: string;
+    headlineNe: string;
+    timeframe: string;
+  }>;
+  sources: ResearchSource[];
+  rawFallback?: string;
+}
+
 

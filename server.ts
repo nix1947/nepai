@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getGitHubAccount, pushProjectToGitHub } from './server/githubSync.ts';
 import { isValidDateStr, MarketStore } from './server/marketStore.ts';
+import { generateMacroResearch, generateStockResearch } from './server/researchAi.ts';
 import { DailyScheduler } from './server/scheduler.ts';
 import type { ScannerKind } from './src/types/market.ts';
 
@@ -106,7 +107,13 @@ async function startServer() {
     const equityOnly = req.query.equityOnly === 'true';
     const n = req.query.n ? Math.max(1, Math.min(200, Number(req.query.n))) : 50;
     const summary = store.rangeSummary(start, end, equityOnly);
-    res.json({ rows: summary.slice(0, n), total: summary.length });
+    const marketTotalTurnover = summary.reduce((acc, r) => acc + r.turnover, 0);
+    const rows = summary.slice(0, n).map((r) => ({
+      ...r,
+      market_share_pct:
+        marketTotalTurnover > 0 ? Math.round((r.turnover / marketTotalTurnover) * 10000) / 100 : 0,
+    }));
+    res.json({ rows, total: summary.length, marketTotalTurnover });
   });
 
   app.get('/api/weekly-turnover', (req, res) => {
@@ -159,6 +166,36 @@ async function startServer() {
       params: cleanParams,
     });
     res.json({ rows });
+  });
+
+  // ---------------------------------------------------------------- Gemini Search Grounded Research
+  app.post('/api/research/macro', async (req, res) => {
+    try {
+      const force = Boolean(req.body?.force);
+      const data = await generateMacroResearch(store, force);
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to fetch Nepal & global macro research',
+      });
+    }
+  });
+
+  app.post('/api/research/stock', async (req, res) => {
+    try {
+      const symbol = String(req.body?.symbol || '').trim();
+      const force = Boolean(req.body?.force);
+      if (!symbol) {
+        res.status(400).json({ error: 'Symbol is required' });
+        return;
+      }
+      const data = await generateStockResearch(store, symbol, force);
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to fetch stock risks and opportunities',
+      });
+    }
   });
 
   // ---------------------------------------------------------------- ShareSansar & Scheduler Routes

@@ -3,19 +3,23 @@ import { Search, Star } from 'lucide-react';
 import { CandlestickVolumeChart, type HorizontalLevel } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { NepseTradePlanner } from '../components/NepseTradePlanner';
+import { StockRiskOpportunitiesPanel } from '../components/StockRiskOpportunitiesPanel';
 import { useWatchlist } from '../hooks/useWatchlist';
-import type { PriceRow, SymbolInfo } from '../types/market';
+import type { AppLanguage, PriceRow, SymbolInfo } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
+import { biText } from '../utils/i18n';
 
 interface StockExplorerViewProps {
   dates: string[];
   equityOnly: boolean;
+  lang: AppLanguage;
   initialSymbol?: string | null;
 }
 
 export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
   dates,
   equityOnly,
+  lang,
   initialSymbol,
 }) => {
   const [symbols, setSymbols] = useState<SymbolInfo[]>([]);
@@ -361,9 +365,18 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
         <CandlestickVolumeChart history={sliced} levels={srLevels} />
       )}
 
+      {selectedSymbol && (
+        <StockRiskOpportunitiesPanel
+          symbol={selectedSymbol}
+          companyName={last?.name || symbols.find((s) => s.symbol === selectedSymbol)?.name}
+          lang={lang}
+          autoLoad
+        />
+      )}
+
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          Recent Daily Sessions
+          {biText('Recent Daily Sessions', 'पछिल्ला दैनिक कारोबार', lang)}
         </h3>
         <DataTable
           rows={[...sliced].reverse().slice(0, 30)}

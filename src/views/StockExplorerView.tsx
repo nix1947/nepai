@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Star } from 'lucide-react';
 import { CandlestickVolumeChart, type HorizontalLevel } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
+import { NepseTradePlanner } from '../components/NepseTradePlanner';
 import { useWatchlist } from '../hooks/useWatchlist';
 import type { PriceRow, SymbolInfo } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
@@ -260,6 +261,98 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {last && (
+        <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-4 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
+          <div className="flex-1 min-w-[220px] max-w-sm space-y-1">
+            <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+              <span>52w Low: {formatNum(last.w52_low, 1)}</span>
+              <span>
+                {last.w52_high && last.w52_low && last.w52_high > last.w52_low
+                  ? `${Math.round(
+                      Math.max(
+                        0,
+                        Math.min(
+                          100,
+                          ((last.close - last.w52_low) / (last.w52_high - last.w52_low)) * 100
+                        )
+                      )
+                    )}% of 52w range`
+                  : '52w position'}
+              </span>
+              <span>52w High: {formatNum(last.w52_high, 1)}</span>
+            </div>
+            <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded overflow-hidden relative">
+              <div
+                className="h-full bg-blue-600 dark:bg-blue-500"
+                style={{
+                  width: `${
+                    last.w52_high && last.w52_low && last.w52_high > last.w52_low
+                      ? Math.max(
+                          2,
+                          Math.min(
+                            100,
+                            ((last.close - last.w52_low) / (last.w52_high - last.w52_low)) * 100
+                          )
+                        )
+                      : 0
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-5 font-mono tabular-nums">
+            <div>
+              <span className="text-slate-400 mr-1.5 font-sans">vs VWAP:</span>
+              <span
+                className={
+                  (last.vwap_pct ?? 0) >= 0
+                    ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                    : 'text-red-600 dark:text-red-400 font-medium'
+                }
+              >
+                {formatPct(last.vwap_pct)}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-400 mr-1.5 font-sans">Rs/Trade:</span>
+              <span className="text-slate-800 dark:text-slate-200 font-medium">
+                {last.trans > 0 ? formatInt(last.turnover / last.trans) : '–'}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-400 mr-1.5 font-sans">Close Str:</span>
+              <span className="text-slate-800 dark:text-slate-200 font-medium">
+                {last.high > last.low
+                  ? `${Math.round(((last.close - last.low) / (last.high - last.low)) * 100)}%`
+                  : '–'}
+              </span>
+            </div>
+            <div>
+              <span className="text-slate-400 mr-1.5 font-sans">vs MA180:</span>
+              <span className="text-slate-800 dark:text-slate-200 font-medium">
+                {last.d180 && last.d180 > 0
+                  ? formatPct(((last.close / last.d180 - 1) * 100))
+                  : '–'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {last && (
+        <NepseTradePlanner
+          symbol={selectedSymbol}
+          lastClose={last.close}
+          suggestedStop={
+            srLevels.find((l) => l.label.includes('support'))?.value ?? last.low
+          }
+          suggestedTarget={
+            srLevels.find((l) => l.label.includes('resistance'))?.value ?? last.w52_high
+          }
+        />
       )}
 
       {loading ? (

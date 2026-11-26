@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   BarChart3,
@@ -6,18 +6,22 @@ import {
   CalendarClock,
   CandlestickChart,
   Compass,
+  Gauge,
   Menu,
   Moon,
   Radar,
   RefreshCw,
+  Search,
+  Star,
   Sun,
   TrendingUp,
   X,
 } from 'lucide-react';
 import { useWatchlist } from './hooks/useWatchlist';
-import type { DailyAggregate, SchedulerStatus } from './types/market';
+import type { DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
 import { formatTimeUntil } from './utils/format';
 import { AlgorithmsView } from './views/AlgorithmsView';
+import { MarketPulseView } from './views/MarketPulseView';
 import { OverviewView } from './views/OverviewView';
 import { ScannersView } from './views/ScannersView';
 import { SchedulerView } from './views/SchedulerView';
@@ -27,6 +31,7 @@ import { TurnoverDirectionView } from './views/TurnoverDirectionView';
 
 type NavTab =
   | 'overview'
+  | 'pulse'
   | 'turnover'
   | 'direction'
   | 'scanners'
@@ -36,6 +41,7 @@ type NavTab =
 
 const NAV_ITEMS: Array<{ id: NavTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
+  { id: 'pulse', label: 'Market Pulse', icon: Gauge },
   { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
   { id: 'direction', label: 'Turnover × Direction', icon: Activity },
   { id: 'scanners', label: 'Scanners', icon: Radar },
@@ -56,7 +62,11 @@ export default function App() {
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
-  const { watchlist } = useWatchlist();
+  const [allSymbols, setAllSymbols] = useState<SymbolInfo[]>([]);
+  const [quickQuery, setQuickQuery] = useState<string>('');
+  const [quickOpen, setQuickOpen] = useState<boolean>(false);
+  const quickInputRef = useRef<HTMLInputElement | null>(null);
+  const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -83,6 +93,43 @@ export default function App() {
   useEffect(() => {
     void loadMeta();
   }, [loadMeta]);
+
+  useEffect(() => {
+    const latest = dates[dates.length - 1];
+    if (!latest) return;
+    fetch(`/api/symbols?day=${encodeURIComponent(latest)}&equityOnly=${equityOnly}`)
+      .then((r) => r.json())
+      .then((d) => setAllSymbols(d.symbols || []))
+      .catch(() => null);
+  }, [dates, equityOnly]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        quickInputRef.current?.focus();
+        setQuickOpen(true);
+      } else if (e.key === 'Escape') {
+        setQuickOpen(false);
+        quickInputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  const quickMatches = useMemo(() => {
+    const q = quickQuery.trim().toLowerCase();
+    if (!q) return [];
+    return allSymbols
+      .filter((s) => s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const ae = a.symbol.toLowerCase().startsWith(q) ? 0 : 1;
+        const be = b.symbol.toLowerCase().startsWith(q) ? 0 : 1;
+        return ae - be || a.symbol.localeCompare(b.symbol);
+      })
+      .slice(0, 8);
+  }, [allSymbols, quickQuery]);
 
   const handleQuickPull = async () => {
     setPulling(true);
@@ -249,6 +296,76 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
+            {allSymbols.length > 0 && (
+              <div className="relative hidden sm:block">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  ref={quickInputRef}
+                  type="text"
+                  value={quickQuery}
+                  onFocus={() => setQuickOpen(true)}
+                  onBlur={() => setTimeout(() => setQuickOpen(false), 160)}
+                  onChange={(e) => {
+                    setQuickQuery(e.target.value);
+                    setQuickOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && quickMatches.length > 0) {
+                      inspectSymbol(quickMatches[0].symbol);
+                      setQuickQuery('');
+                      setQuickOpen(false);
+                    }
+                  }}
+                  placeholder="Jump ticker (⌘K)…"
+                  className="w-44 lg:w-56 pl-8 pr-2.5 py-1.5 text-xs rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+                {quickOpen && quickMatches.length > 0 && (
+                  <div className="absolute right-0 mt-1 w-72 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+                    {quickMatches.map((m) => {
+                      const starred = hasSymbol(m.symbol);
+                      return (
+                        <div
+                          key={m.symbol}
+                          className="flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/70"
+                        >
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              inspectSymbol(m.symbol);
+                              setQuickQuery('');
+                              setQuickOpen(false);
+                            }}
+                            className="flex-1 min-w-0 text-left flex items-center gap-2"
+                          >
+                            <span className="font-semibold text-blue-600 dark:text-blue-400 shrink-0">
+                              {m.symbol}
+                            </span>
+                            <span className="text-slate-500 dark:text-slate-400 truncate">
+                              {m.name}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              toggleSymbol(m.symbol);
+                            }}
+                            aria-label={`Star ${m.symbol}`}
+                            className="p-0.5 text-slate-400 hover:text-amber-500 shrink-0"
+                          >
+                            <Star
+                              className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`}
+                            />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               type="button"
               onClick={() => setDarkMode((v) => !v)}
@@ -339,6 +456,13 @@ export default function App() {
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}
                   onOpenScheduler={() => setActiveTab('scheduler')}
+                />
+              )}
+              {activeTab === 'pulse' && (
+                <MarketPulseView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
                 />
               )}
               {activeTab === 'turnover' && (

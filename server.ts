@@ -55,6 +55,20 @@ async function startServer() {
     res.json({ date, rows });
   });
 
+  app.get('/api/market-pulse', (req, res) => {
+    const dates = store.getDates();
+    const day =
+      typeof req.query.day === 'string' && isValidDateStr(req.query.day)
+        ? req.query.day
+        : dates[dates.length - 1];
+    if (!day) {
+      res.status(404).json({ error: 'No trading day loaded' });
+      return;
+    }
+    const equityOnly = req.query.equityOnly !== 'false';
+    res.json(store.getMarketPulse(day, equityOnly));
+  });
+
   app.get('/api/symbols', (req, res) => {
     const dates = store.getDates();
     const day = typeof req.query.day === 'string' && isValidDateStr(req.query.day)

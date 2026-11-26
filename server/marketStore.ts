@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import type {
   DailyAggregate,
+  MarketPulseResponse,
+  MarketPulseRow,
+  MarketPulseSummary,
   PriceRow,
   RangeSummaryRow,
   ScannerKind,
@@ -1163,5 +1166,101 @@ export class MarketStore {
       });
     }
     return rows.sort((a, b) => b.score - a.score).slice(0, 50);
+  }
+
+  public getMarketPulse(day: string, equityOnly = true): MarketPulseResponse {
+    const raw = this.getDayPrices(day, equityOnly);
+    let aboveMa120 = 0;
+    let ma120Eligible = 0;
+    let aboveMa180 = 0;
+    let ma180Eligible = 0;
+    let goldenCross = 0;
+    let maEligible = 0;
+    let aboveVwap = 0;
+    let vwapEligible = 0;
+    let near52HighCount = 0;
+    let near52LowCount = 0;
+    let upperCircuitCount = 0;
+    let lowerCircuitCount = 0;
+    const tradeSizes: number[] = [];
+    const rangePcts: number[] = [];
+
+    const enriched: MarketPulseRow[] = raw.map((r) => {
+      const avgTradeSize = r.trans > 0 ? round1(r.turnover / r.trans) : 0;
+      if (avgTradeSize > 0) tradeSizes.push(avgTradeSize);
+
+      const closePosPct =
+        r.high > r.low ? round1(clip(((r.close - r.low) / (r.high - r.low)) * 100, 0, 100)) : 50;
+      if (r.range_pct !== null) rangePcts.push(r.range_pct);
+
+      const pos52w =
+        r.w52_high !== null && r.w52_low !== null && r.w52_high > r.w52_low
+          ? round1(clip(((r.close - r.w52_low) / (r.w52_high - r.w52_low)) * 100, 0, 100))
+          : null;
+
+      const gap52h =
+        r.w52_high !== null && r.w52_high > 0
+          ? round2(((r.w52_high - r.close) / r.w52_high) * 100)
+          : null;
+
+      const vsD120 =
+        r.d120 !== null && r.d120 > 0 ? round2((r.close / r.d120 - 1) * 100) : null;
+      const vsD180 =
+        r.d180 !== null && r.d180 > 0 ? round2((r.close / r.d180 - 1) * 100) : null;
+
+      if (r.d120 !== null && r.d120 > 0) {
+        ma120Eligible++;
+        if (r.close > r.d120) aboveMa120++;
+      }
+      if (r.d180 !== null && r.d180 > 0) {
+        ma180Eligible++;
+        if (r.close > r.d180) aboveMa180++;
+      }
+      if (r.d120 !== null && r.d120 > 0 && r.d180 !== null && r.d180 > 0) {
+        maEligible++;
+        if (r.d120 > r.d180) goldenCross++;
+      }
+      if (r.vwap !== null && r.vwap > 0) {
+        vwapEligible++;
+        if (r.close > r.vwap) aboveVwap++;
+      }
+      if (gap52h !== null && gap52h <= 5.0) near52HighCount++;
+      if (r.w52_low !== null && r.w52_low > 0 && ((r.close - r.w52_low) / r.w52_low) * 100 <= 5.0) {
+        near52LowCount++;
+      }
+      if ((r.diff_pct ?? 0) >= 9.0) upperCircuitCount++;
+      if ((r.diff_pct ?? 0) <= -9.0) lowerCircuitCount++;
+
+      return {
+        ...r,
+        avg_trade_size: avgTradeSize,
+        close_pos_pct: closePosPct,
+        pos_52w_pct: pos52w,
+        gap_52h_pct: gap52h,
+        vs_d120_pct: vsD120,
+        vs_d180_pct: vsD180,
+      };
+    });
+
+    const summary: MarketPulseSummary = {
+      date: day,
+      total: raw.length,
+      aboveMa120,
+      ma120Eligible,
+      aboveMa180,
+      ma180Eligible,
+      goldenCross,
+      maEligible,
+      aboveVwap,
+      vwapEligible,
+      near52HighCount,
+      near52LowCount,
+      upperCircuitCount,
+      lowerCircuitCount,
+      medianAvgTradeSize: round1(median(tradeSizes)),
+      medianRangePct: round2(median(rangePcts)),
+    };
+
+    return { summary, rows: enriched };
   }
 }

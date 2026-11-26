@@ -154,3 +154,37 @@ export interface BackfillStatus {
   currentDate: string | null;
   message: string;
 }
+
+export interface MarketPulseRow extends PriceRow {
+  avg_trade_size: number;
+  close_pos_pct: number;
+  pos_52w_pct: number | null;
+  gap_52h_pct: number | null;
+  vs_d120_pct: number | null;
+  vs_d180_pct: number | null;
+}
+
+export interface MarketPulseSummary {
+  date: string;
+  total: number;
+  aboveMa120: number;
+  ma120Eligible: number;
+  aboveMa180: number;
+  ma180Eligible: number;
+  goldenCross: number;
+  maEligible: number;
+  aboveVwap: number;
+  vwapEligible: number;
+  near52HighCount: number;
+  near52LowCount: number;
+  upperCircuitCount: number;
+  lowerCircuitCount: number;
+  medianAvgTradeSize: number;
+  medianRangePct: number;
+}
+
+export interface MarketPulseResponse {
+  summary: MarketPulseSummary;
+  rows: MarketPulseRow[];
+}
+

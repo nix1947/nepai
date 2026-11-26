@@ -493,7 +493,13 @@ export default function App() {
                   initialSymbol={explorerSymbol}
                 />
               )}
-              {activeTab === 'algorithms' && <AlgorithmsView />}
+              {activeTab === 'algorithms' && (
+                <AlgorithmsView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
               {activeTab === 'scheduler' && <SchedulerView onDataChanged={loadMeta} />}
             </>
           )}

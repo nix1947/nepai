@@ -491,6 +491,21 @@ export class MarketStore {
         if (refPrice < 50) continue;
       }
 
+      const avgTradeSize = acc.trans > 0 ? round1(acc.turnover / acc.trans) : 0;
+      const winRatePct = acc.days_traded > 0 ? round1((acc.up_days / acc.days_traded) * 100) : 0;
+      const vsD120 =
+        acc.lastRow.d120 !== null && acc.lastRow.d120 > 0
+          ? round2((acc.lastRow.close / acc.lastRow.d120 - 1) * 100)
+          : null;
+      const gap52h =
+        acc.lastRow.w52_high !== null && acc.lastRow.w52_high > 0
+          ? round2(((acc.lastRow.w52_high - acc.lastRow.close) / acc.lastRow.w52_high) * 100)
+          : null;
+      const closePosPct =
+        acc.lastRow.high > acc.lastRow.low
+          ? round1(clip(((acc.lastRow.close - acc.lastRow.low) / (acc.lastRow.high - acc.lastRow.low)) * 100, 0, 100))
+          : 50;
+
       result.push({
         symbol: acc.symbol,
         name: acc.name,
@@ -504,6 +519,12 @@ export class MarketStore {
         end_price: endPrice,
         change_pct: changePct,
         avg_price: avgPrice,
+        avg_trade_size: avgTradeSize,
+        win_rate_pct: winRatePct,
+        vwap_pct: acc.lastRow.vwap_pct,
+        vs_d120_pct: vsD120,
+        gap_52h_pct: gap52h,
+        close_pos_pct: closePosPct,
       });
     }
 
@@ -572,30 +593,84 @@ export class MarketStore {
     up: RangeSummaryRow[];
     down: RangeSummaryRow[];
     cutoff: number;
+    upTurnover: number;
+    downTurnover: number;
   } {
     const all = this.rangeSummary(start, end, equityOnly).filter(
       (r) => r.start_price !== null && r.end_price !== null && r.change_pct !== null
     );
-    if (all.length === 0) return { all: [], up: [], down: [], cutoff: 0 };
+    if (all.length === 0) {
+      return { all: [], up: [], down: [], cutoff: 0, upTurnover: 0, downTurnover: 0 };
+    }
 
     const cutoff = quantile(
       all.map((r) => r.turnover),
       clip(1 - topPct / 100, 0, 1)
     );
     const hi = all.filter((r) => r.turnover >= cutoff);
-    let up = hi.filter((r) => (r.change_pct ?? 0) > 0);
-    let down = hi.filter((r) => (r.change_pct ?? 0) < 0);
+    const maxHiTurn = Math.max(...hi.map((r) => r.turnover), 1);
+
+    const scoreRow = (r: RangeSummaryRow, dir: 'up' | 'down'): RangeSummaryRow => {
+      const turnPts = 30 * (Math.log10(Math.max(r.turnover, 1)) / Math.log10(Math.max(maxHiTurn, 10)));
+      const chgMag = Math.abs(r.change_pct ?? 0);
+      const chgPts = 25 * clip(chgMag / 15, 0, 1);
+      const dirDays = dir === 'up' ? r.up_days : r.down_days;
+      const consistency = r.days_traded > 0 ? dirDays / r.days_traded : 0;
+      const consPts = 20 * consistency;
+
+      const vwapAligned = dir === 'up' ? (r.vwap_pct ?? 0) > 0 : (r.vwap_pct ?? 0) < 0;
+      const closePos = r.close_pos_pct ?? 50;
+      const convicPts = (vwapAligned ? 8 : 0) + 7 * (dir === 'up' ? closePos / 100 : (100 - closePos) / 100);
+
+      let trendPts = 0;
+      if (dir === 'up') {
+        if ((r.vs_d120_pct ?? -99) > 0) trendPts += 5;
+        if (r.gap_52h_pct !== null && r.gap_52h_pct !== undefined && r.gap_52h_pct <= 10) trendPts += 5;
+      } else {
+        if ((r.vs_d120_pct ?? 99) < 0) trendPts += 5;
+        if (r.gap_52h_pct !== null && r.gap_52h_pct !== undefined && r.gap_52h_pct >= 20) trendPts += 5;
+      }
+
+      const momentumScore = round1(clip(turnPts + chgPts + consPts + convicPts + trendPts, 0, 100));
+      const isBlockOnly = r.trans < Math.max(12, r.days_traded * 10) && (r.avg_trade_size ?? 0) > 500_000;
+
+      let flowTag = dir === 'up' ? 'Active Buying' : 'Supply Pressure';
+      if (dir === 'up') {
+        if (isBlockOnly) flowTag = 'Block / Low Trades';
+        else if (momentumScore >= 68 && consistency >= 0.6) flowTag = 'Momentum Leader';
+        else if (consistency >= 0.6) flowTag = 'Steady Accumulation';
+        else if ((r.change_pct ?? 0) >= 4 && (r.vwap_pct ?? 0) > 0) flowTag = 'Breakout Surge';
+      } else {
+        if (isBlockOnly) flowTag = 'Block Exit';
+        else if (consistency >= 0.6 && (r.change_pct ?? 0) <= -3) flowTag = 'Heavy Distribution';
+        else if ((r.vwap_pct ?? 0) < -1) flowTag = 'Intraday Fade';
+      }
+
+      return {
+        ...r,
+        momentum_score: momentumScore,
+        flow_tag: flowTag,
+      };
+    };
+
+    let up = hi.filter((r) => (r.change_pct ?? 0) > 0).map((r) => scoreRow(r, 'up'));
+    let down = hi.filter((r) => (r.change_pct ?? 0) < 0).map((r) => scoreRow(r, 'down'));
 
     if (consistent) {
       up = up.filter((r) => r.up_days / r.days_traded >= 0.6);
       down = down.filter((r) => r.down_days / r.days_traded >= 0.6);
     }
 
+    const upTurnover = up.reduce((s, r) => s + r.turnover, 0);
+    const downTurnover = down.reduce((s, r) => s + r.turnover, 0);
+
     return {
       all,
-      up: up.sort((a, b) => b.turnover - a.turnover),
-      down: down.sort((a, b) => b.turnover - a.turnover),
+      up: up.sort((a, b) => (b.momentum_score ?? 0) - (a.momentum_score ?? 0)),
+      down: down.sort((a, b) => (b.momentum_score ?? 0) - (a.momentum_score ?? 0)),
       cutoff,
+      upTurnover,
+      downTurnover,
     };
   }
 

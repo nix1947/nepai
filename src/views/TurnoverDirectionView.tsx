@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Star } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp, Flame, Star } from 'lucide-react';
+import { AlgorithmExplainPanel } from '../components/AlgorithmExplainPanel';
 import { TurnoverScatterChart } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { PeriodPicker, resolvePeriodRange, type PeriodMode } from '../components/PeriodPicker';
+import { ALGORITHM_DOCS } from '../data/algorithmDocs';
 import { useWatchlist } from '../hooks/useWatchlist';
 import type { RangeSummaryRow } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
@@ -18,13 +20,14 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
   equityOnly,
   onInspectSymbol,
 }) => {
-  const [mode, setMode] = useState<PeriodMode>('last5');
+  const [mode, setMode] = useState<PeriodMode>(dates.length >= 5 ? 'last5' : 'last1');
   const [customStart, setCustomStart] = useState(
     dates[Math.max(0, dates.length - 6)] ?? ''
   );
   const [customEnd, setCustomEnd] = useState(dates[dates.length - 1] ?? '');
   const [topPct, setTopPct] = useState(10);
   const [consistent, setConsistent] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
   const [data, setData] = useState<{
@@ -32,10 +35,16 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
     up: RangeSummaryRow[];
     down: RangeSummaryRow[];
     cutoff: number;
-  }>({ all: [], up: [], down: [], cutoff: 0 });
+    upTurnover: number;
+    downTurnover: number;
+  }>({ all: [], up: [], down: [], cutoff: 0, upTurnover: 0, downTurnover: 0 });
   const [loading, setLoading] = useState(false);
 
   const resolved = resolvePeriodRange(dates, mode, customStart, customEnd);
+  const algoDoc = useMemo(
+    () => ALGORITHM_DOCS.find((d) => d.id === 'turnover_direction'),
+    []
+  );
 
   useEffect(() => {
     if (!resolved) return;
@@ -54,6 +63,8 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
             up: res.up || [],
             down: res.down || [],
             cutoff: res.cutoff || 0,
+            upTurnover: res.upTurnover || 0,
+            downTurnover: res.downTurnover || 0,
           });
         }
       })
@@ -64,6 +75,10 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
       cancelled = true;
     };
   }, [resolved?.start, resolved?.end, topPct, consistent, equityOnly]);
+
+  const topLeader = data.up[0] ?? null;
+  const totalFlowTurn = data.upTurnover + data.downTurnover;
+  const upSharePct = totalFlowTurn > 0 ? Math.round((data.upTurnover / totalFlowTurn) * 100) : 50;
 
   const makeCols = (dir: 'up' | 'down'): ColumnDef<RangeSummaryRow>[] => [
     {
@@ -97,9 +112,54 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
         <span className="font-semibold text-blue-600 dark:text-blue-400">{r.symbol}</span>
       ),
     },
-    { key: 'turnover', label: 'Turn (cr)', align: 'right', render: (r) => formatCrore(r.turnover) },
-    { key: 'start_price', label: 'Start', align: 'right', render: (r) => formatNum(r.start_price) },
-    { key: 'end_price', label: 'End', align: 'right', render: (r) => formatNum(r.end_price) },
+    {
+      key: 'flow_tag',
+      label: 'Flow Read',
+      align: 'left',
+      render: (r) => {
+        const tag = r.flow_tag || '–';
+        const isWarn = tag.includes('Block');
+        return (
+          <span
+            className={`text-xs font-medium ${
+              isWarn
+                ? 'text-amber-600 dark:text-amber-400'
+                : dir === 'up'
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-red-700 dark:text-red-400'
+            }`}
+          >
+            {tag}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'momentum_score',
+      label: 'Score',
+      align: 'right',
+      render: (r) => {
+        const sc = r.momentum_score ?? 0;
+        return (
+          <div className="inline-flex items-center gap-1.5 justify-end">
+            <div className="w-10 h-1.5 bg-slate-200 dark:bg-slate-800 rounded overflow-hidden">
+              <div
+                className={`h-full ${dir === 'up' ? 'bg-emerald-600' : 'bg-red-600'}`}
+                style={{ width: `${Math.min(100, Math.max(0, sc))}%` }}
+              />
+            </div>
+            <span className="font-semibold">{sc.toFixed(0)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'turnover',
+      label: 'Turn (cr)',
+      align: 'right',
+      csvValue: (r) => (r.turnover / 1e7).toFixed(4),
+      render: (r) => formatCrore(r.turnover),
+    },
     {
       key: 'change_pct',
       label: 'Chg %',
@@ -118,23 +178,55 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
     },
     {
       key: dir === 'up' ? 'up_days' : 'down_days',
-      label: dir === 'up' ? 'Up / Days' : 'Dn / Days',
+      label: dir === 'up' ? 'Up/Days' : 'Dn/Days',
       align: 'right',
       render: (r) => `${dir === 'up' ? r.up_days : r.down_days}/${r.days_traded}`,
     },
-    { key: 'volume', label: 'Volume', align: 'right', render: (r) => formatInt(r.volume) },
+    {
+      key: 'vwap_pct',
+      label: 'vs VWAP',
+      align: 'right',
+      render: (r) => formatPct(r.vwap_pct),
+    },
+    {
+      key: 'avg_trade_size',
+      label: 'Rs/Trade',
+      align: 'right',
+      render: (r) => formatInt(r.avg_trade_size),
+    },
+    {
+      key: 'end_price',
+      label: 'Close',
+      align: 'right',
+      render: (r) => formatNum(r.end_price),
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Turnover × Direction
-        </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Separates the highest-turnover percentile into institutional accumulation (UP) vs heavy distribution (DOWN)
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Turnover × Direction — Momentum &amp; Distribution Finder
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Isolates the top {topPct}% most liquid stocks and ranks true momentum leaders by turnover dominance, price gain, green-day consistency, VWAP control, and trend alignment
+          </p>
+        </div>
+
+        {algoDoc && (
+          <button
+            type="button"
+            onClick={() => setShowGuide((v) => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+          >
+            <span>{showGuide ? 'Hide step-by-step guide' : 'How momentum is scored'}</span>
+            {showGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        )}
       </div>
+
+      {showGuide && algoDoc && <AlgorithmExplainPanel doc={algoDoc} />}
 
       <PeriodPicker
         dates={dates}
@@ -148,72 +240,219 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
         }}
       />
 
-      <div className="flex flex-wrap items-center gap-6 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-4 py-3 text-xs">
-        <div className="flex items-center gap-3">
-          <label htmlFor="td-pct" className="text-slate-600 dark:text-slate-300 font-medium">
-            High turnover = top <span className="font-mono font-semibold">{topPct}%</span>
-          </label>
-          <input
-            id="td-pct"
-            type="range"
-            min={3}
-            max={50}
-            value={topPct}
-            onChange={(e) => setTopPct(Number(e.target.value))}
-            className="w-32 accent-blue-600"
-          />
+      {/* Quick Presets + Threshold Controls */}
+      <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-4 py-3 space-y-3 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-slate-500 dark:text-slate-400">Presets:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setTopPct(10);
+                setConsistent(false);
+              }}
+              className={`px-2.5 py-1 rounded border transition-colors ${
+                topPct === 10 && !consistent
+                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+              }`}
+            >
+              Momentum Leaders (Top 10%)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTopPct(15);
+                setConsistent(true);
+              }}
+              className={`px-2.5 py-1 rounded border transition-colors ${
+                topPct === 15 && consistent
+                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+              }`}
+            >
+              Steady Accumulation (Top 15% + ≥60% Up)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTopPct(25);
+                setConsistent(false);
+              }}
+              className={`px-2.5 py-1 rounded border transition-colors ${
+                topPct === 25 && !consistent
+                  ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+              }`}
+            >
+              Early Rotation (Top 25%)
+            </button>
+          </div>
+
+          {data.cutoff > 0 && (
+            <span className="font-mono tabular-nums text-slate-500 dark:text-slate-400">
+              Turnover cutoff: Rs {formatCrore(data.cutoff)} cr
+            </span>
+          )}
         </div>
 
-        <label className="inline-flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300">
-          <input
-            type="checkbox"
-            checked={consistent}
-            onChange={(e) => setConsistent(e.target.checked)}
-            className="rounded border-slate-300 text-blue-600 focus:ring-blue-600"
-          />
-          <span>Steady trend only (≥ 60% of days in that direction)</span>
-        </label>
+        <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <label htmlFor="td-pct" className="text-slate-600 dark:text-slate-300 font-medium">
+              High turnover = top <span className="font-mono font-semibold">{topPct}%</span>
+            </label>
+            <input
+              id="td-pct"
+              type="range"
+              min={3}
+              max={50}
+              value={topPct}
+              onChange={(e) => setTopPct(Number(e.target.value))}
+              className="w-32 accent-blue-600"
+            />
+          </div>
 
-        {data.cutoff > 0 && (
-          <span className="ml-auto font-mono tabular-nums text-slate-500 dark:text-slate-400">
-            Cutoff: Rs {formatCrore(data.cutoff)} cr
-          </span>
-        )}
+          <label className="inline-flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300">
+            <input
+              type="checkbox"
+              checked={consistent}
+              onChange={(e) => setConsistent(e.target.checked)}
+              className="rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+            />
+            <span>Steady trend only (≥ 60% of sessions in that direction)</span>
+          </label>
+        </div>
       </div>
+
+      {/* Capital Flow & Top Momentum Narrative */}
+      {!loading && (data.up.length > 0 || data.down.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-7 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 flex flex-col justify-between gap-3">
+            {topLeader ? (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                    <Flame className="w-4 h-4" />
+                    <span>#1 Momentum Pick: {topLeader.symbol}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onInspectSymbol(topLeader.symbol)}
+                    className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Inspect chart →
+                  </button>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                    {topLeader.symbol}
+                  </span>{' '}
+                  ({topLeader.name}) scored{' '}
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    {topLeader.momentum_score?.toFixed(0)}/100
+                  </span>{' '}
+                  ({topLeader.flow_tag}): gained{' '}
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    {formatPct(topLeader.change_pct)}
+                  </span>{' '}
+                  on{' '}
+                  <span className="font-mono font-semibold">
+                    Rs {formatCrore(topLeader.turnover)} cr
+                  </span>{' '}
+                  across{' '}
+                  <span className="font-mono">
+                    {topLeader.up_days}/{topLeader.days_traded}
+                  </span>{' '}
+                  green day(s) ({formatInt(topLeader.trans)} trades, avg Rs{' '}
+                  {formatInt(topLeader.avg_trade_size)}/trade).
+                  {topLeader.vwap_pct !== null && topLeader.vwap_pct !== undefined && (
+                    <>
+                      {' '}
+                      Closed{' '}
+                      <span className="font-mono">{formatPct(topLeader.vwap_pct)}</span> vs intraday VWAP.
+                    </>
+                  )}
+                </p>
+              </>
+            ) : (
+              <div className="text-xs text-slate-500">
+                No top-turnover advancers matched the current filter settings.
+              </div>
+            )}
+          </div>
+
+          <div className="lg:col-span-5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-2.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-slate-600 dark:text-slate-300">
+                Top-{topPct}% Capital Flow Balance
+              </span>
+              <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
+                {upSharePct}% Buying / {100 - upSharePct}% Selling
+              </span>
+            </div>
+            <div className="h-2.5 bg-red-500/80 rounded overflow-hidden flex">
+              <div
+                className="h-full bg-emerald-600 transition-all"
+                style={{ width: `${upSharePct}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs font-mono tabular-nums pt-0.5">
+              <span className="text-emerald-600 dark:text-emerald-400">
+                UP: Rs {formatCrore(data.upTurnover, 1)} cr ({data.up.length})
+              </span>
+              <span className="text-red-600 dark:text-red-400">
+                DOWN: Rs {formatCrore(data.downTurnover, 1)} cr ({data.down.length})
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="h-80 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
       ) : (
         <>
-          <TurnoverScatterChart all={data.all} up={data.up} down={data.down} />
+          <TurnoverScatterChart
+            all={data.all}
+            up={data.up}
+            down={data.down}
+            cutoff={data.cutoff}
+            onSelectSymbol={onInspectSymbol}
+          />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                High Turnover + Price UP ({data.up.length})
-              </h3>
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  Momentum &amp; Accumulation Leaders ({data.up.length})
+                </h3>
+                <span className="text-[11px] text-slate-400">Sorted by Momentum Score</span>
+              </div>
               <DataTable
                 rows={data.up}
                 columns={makeCols('up')}
                 rowKey={(r) => r.symbol}
                 onRowClick={(r) => onInspectSymbol(r.symbol)}
-                searchKeys={['symbol', 'name']}
-                exportFilename={`nepse-high-turnover-up-${resolved?.end || 'latest'}.csv`}
+                searchKeys={['symbol', 'name', 'flow_tag']}
+                exportFilename={`nepse-momentum-up-${resolved?.end || 'latest'}.csv`}
                 watchlistFilter={{ watchlist, getSymbol: (r) => r.symbol }}
               />
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-red-700 dark:text-red-400">
-                High Turnover + Price DOWN ({data.down.length})
-              </h3>
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-sm font-semibold text-red-700 dark:text-red-400">
+                  Heavy Distribution &amp; Supply ({data.down.length})
+                </h3>
+                <span className="text-[11px] text-slate-400">Sorted by Pressure Score</span>
+              </div>
               <DataTable
                 rows={data.down}
                 columns={makeCols('down')}
                 rowKey={(r) => r.symbol}
                 onRowClick={(r) => onInspectSymbol(r.symbol)}
-                searchKeys={['symbol', 'name']}
-                exportFilename={`nepse-high-turnover-down-${resolved?.end || 'latest'}.csv`}
+                searchKeys={['symbol', 'name', 'flow_tag']}
+                exportFilename={`nepse-distribution-down-${resolved?.end || 'latest'}.csv`}
                 watchlistFilter={{ watchlist, getSymbol: (r) => r.symbol }}
               />
             </div>

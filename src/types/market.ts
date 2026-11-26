@@ -49,6 +49,14 @@ export interface RangeSummaryRow {
   end_price: number | null;
   change_pct: number | null;
   avg_price: number | null;
+  avg_trade_size?: number;
+  win_rate_pct?: number;
+  vwap_pct?: number | null;
+  vs_d120_pct?: number | null;
+  gap_52h_pct?: number | null;
+  close_pos_pct?: number;
+  momentum_score?: number;
+  flow_tag?: string;
 }
 
 export interface WeeklyTopRow extends RangeSummaryRow {

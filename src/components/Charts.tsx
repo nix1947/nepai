@@ -545,13 +545,15 @@ export const TurnoverScatterChart: React.FC<{
   all: RangeSummaryRow[];
   up: RangeSummaryRow[];
   down: RangeSummaryRow[];
-}> = ({ all, up, down }) => {
+  cutoff?: number;
+  onSelectSymbol?: (symbol: string) => void;
+}> = ({ all, up, down, cutoff = 0, onSelectSymbol }) => {
   const [hovered, setHovered] = useState<RangeSummaryRow | null>(null);
   const W = 900;
-  const H = 380;
+  const H = 390;
   const padL = 62;
   const padR = 24;
-  const padT = 22;
+  const padT = 26;
   const padB = 38;
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
@@ -578,28 +580,53 @@ export const TurnoverScatterChart: React.FC<{
   };
 
   const zeroX = mapX(0);
+  const cutoffY = cutoff > 0 ? mapY(cutoff) : null;
 
   return (
     <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2 text-xs">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <span className="font-medium text-emerald-600 dark:text-emerald-400">
-            High turnover + Price UP ({up.length})
+            Accumulation / Momentum ({up.length})
           </span>
           <span className="font-medium text-red-600 dark:text-red-400">
-            High turnover + Price DOWN ({down.length})
+            Heavy Distribution ({down.length})
           </span>
-          <span className="text-slate-400">Other equities</span>
+          <span className="text-slate-400">Below cutoff (lower turnover)</span>
         </div>
-        {hovered && (
+        {hovered ? (
           <div className="font-mono tabular-nums text-slate-700 dark:text-slate-200">
             <span className="font-semibold">{hovered.symbol}</span> · {formatPct(hovered.change_pct)} · Rs{' '}
-            {formatCrore(hovered.turnover)} cr
+            {formatCrore(hovered.turnover)} cr · {hovered.up_days}/{hovered.days_traded} up days
           </div>
+        ) : (
+          <span className="text-[11px] text-slate-400">Hover or click any point to inspect</span>
         )}
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+        {/* Quadrant highlights */}
+        {cutoffY !== null && cutoffY > padT && cutoffY < padT + innerH && (
+          <>
+            <rect
+              x={zeroX}
+              y={padT}
+              width={Math.max(0, W - padR - zeroX)}
+              height={Math.max(0, cutoffY - padT)}
+              fill="#16a34a"
+              fillOpacity={0.04}
+            />
+            <rect
+              x={padL}
+              y={padT}
+              width={Math.max(0, zeroX - padL)}
+              height={Math.max(0, cutoffY - padT)}
+              fill="#dc2626"
+              fillOpacity={0.04}
+            />
+          </>
+        )}
+
         <line
           x1={zeroX}
           x2={zeroX}
@@ -609,6 +636,37 @@ export const TurnoverScatterChart: React.FC<{
           className="text-slate-300 dark:text-slate-700"
           strokeDasharray="3 3"
         />
+
+        {cutoffY !== null && cutoffY >= padT && cutoffY <= padT + innerH && (
+          <g>
+            <line
+              x1={padL}
+              x2={W - padR}
+              y1={cutoffY}
+              y2={cutoffY}
+              stroke="#2563eb"
+              strokeWidth={1.2}
+              strokeDasharray="4 4"
+            />
+            <text
+              x={W - padR - 4}
+              y={cutoffY - 5}
+              textAnchor="end"
+              fontSize={10}
+              className="fill-blue-600 dark:fill-blue-400 font-mono"
+            >
+              Cutoff: Rs {formatCrore(cutoff)} cr
+            </text>
+          </g>
+        )}
+
+        <text x={padL + 8} y={padT + 14} fontSize={10} fontWeight={600} className="fill-red-600/75 dark:fill-red-400/75">
+          HEAVY DISTRIBUTION
+        </text>
+        <text x={W - padR - 8} y={padT + 14} textAnchor="end" fontSize={10} fontWeight={600} className="fill-emerald-600/80 dark:fill-emerald-400/80">
+          MOMENTUM &amp; ACCUMULATION
+        </text>
+
         {[-1, 0, 1, 2, 3].map((pow) => {
           if (pow < minY - 0.2 || pow > maxY + 0.2) return null;
           const y = padT + innerH - ((pow - minY) / (maxY - minY || 1)) * innerH;
@@ -647,6 +705,8 @@ export const TurnoverScatterChart: React.FC<{
               key={r.symbol}
               onMouseEnter={() => setHovered(r)}
               onMouseLeave={() => setHovered(null)}
+              onClick={() => onSelectSymbol?.(r.symbol)}
+              className={onSelectSymbol ? 'cursor-pointer' : undefined}
             >
               <circle
                 cx={cx}

@@ -294,20 +294,20 @@ export const ALGORITHM_DOCS: AlgorithmDoc[] = [
   },
   {
     id: 'weekly_turnover',
-    name: 'Weekly Breakdown (NEPSE Sun–Sat)',
+    name: 'Weekly Breakdown (Mon–Fri)',
     category: 'Turnover Flow',
     bias: 'Neutral',
     minHistoryDays: 5,
     summary:
-      'Buckets daily trading sessions into Nepal Stock Exchange weeks (Sunday through Saturday) and ranks weekly turnover leaders to visualize capital rotation across weeks.',
+      'Buckets daily trading sessions into Monday–Friday trading weeks and ranks weekly turnover leaders to visualize capital rotation across weeks.',
     thesis:
       'Tracking which tickers repeatedly appear in the weekly top-N turnover heatmap reveals sustained sector leadership and multi-week institutional rotation.',
     conditions: [
-      'Each week starts on Sunday and ends on Saturday (aligned to NEPSE Sun–Thu trading calendar).',
+      'Each week starts on Monday and covers the Monday–Friday trading calendar.',
       'Aggregates total turnover, shares traded, and full-week percentage change from the pre-week close.',
     ],
     parameters: [
-      { name: 'Top N per week', defaultVal: '15', effect: 'Number of top turnover symbols captured for each Sunday–Saturday week.' },
+      { name: 'Top N per week', defaultVal: '15', effect: 'Number of top turnover symbols captured for each Monday–Friday week.' },
     ],
     cautions: 'Short holiday weeks will naturally show lower absolute Rs crore values in the heatmap.',
   },

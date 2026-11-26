@@ -18,13 +18,13 @@ import { ShareSansarClient } from './scraper.ts';
 
 const DEFAULT_CONFIG: SchedulerConfig = {
   enabled: true,
-  time: '15:30',
+  time: '15:40', // After 3:30 PM NPT close
   timezone: 'Asia/Kathmandu',
-  days: [0, 1, 2, 3, 4], // Sun - Thu (NEPSE trading days)
+  days: [1, 2, 3, 4, 5], // Monday - Friday
   retryIfNotUpdated: true,
   retryDelayMinutes: 20,
-  sourceMode: 'sharesansar',
-  githubRepo: '',
+  sourceMode: 'github',
+  githubRepo: 'nix1947/nepai',
   githubBranch: 'main',
   githubDataPath: 'data',
   pushToGitHub: false,
@@ -396,6 +396,23 @@ export class DailyScheduler {
           } else {
             notes.push(`GitHub: up to date (${gh.skippedFiles} existing)`);
           }
+
+          // If running scheduled GitHub-only mode and today's CSV isn't on GitHub yet, schedule a retry
+          const todayInTz = getDatePartsInTz(new Date(), this.config.timezone).dateStr;
+          if (
+            this.config.sourceMode === 'github' &&
+            trigger === 'scheduled' &&
+            !this.store.hasDate(todayInTz) &&
+            this.config.retryIfNotUpdated &&
+            !isRetry
+          ) {
+            this.retryTimer = setTimeout(() => {
+              void this.pullLatest('scheduled', true);
+            }, this.config.retryDelayMinutes * 60 * 1000);
+            notes.push(
+              `Today's file (${todayInTz}.csv) not on GitHub yet; retrying in ${this.config.retryDelayMinutes} min`
+            );
+          }
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           if (this.config.sourceMode === 'github') {
@@ -496,7 +513,7 @@ export class DailyScheduler {
     const end = new Date(`${to}T00:00:00Z`);
     while (cur <= end) {
       const dow = cur.getUTCDay();
-      if (dow !== 5 && dow !== 6) {
+      if (dow !== 0 && dow !== 6) {
         dates.push(cur.toISOString().slice(0, 10));
       }
       cur.setUTCDate(cur.getUTCDate() + 1);

@@ -1,9 +1,10 @@
-name: Daily NEPSE ShareSansar Data Pull
+name: Daily ShareSansar Data Pull (Mon-Fri)
 
 on:
   schedule:
-    # 09:45 UTC = 15:30 NPT (Nepal Standard Time, UTC+5:45), Sunday–Thursday (NEPSE trading days)
-    - cron: '45 9 * * 0-4'
+    # Monday–Friday at 15:30 NPT (09:45 UTC) and fallback check at 16:00 NPT (10:15 UTC)
+    - cron: '45 9 * * 1-5'
+    - cron: '15 10 * * 1-5'
   workflow_dispatch:
 
 permissions:
@@ -35,6 +36,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No new trading day changes to commit."
           else
-            git commit -m "chore(data): daily NEPSE share prices from ShareSansar"
+            git commit -m "chore(data): daily ShareSansar share prices"
             git push
           fi

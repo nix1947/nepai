@@ -29,13 +29,13 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
 
   // Form states synced from backend config
   const [enabled, setEnabled] = useState(true);
-  const [time, setTime] = useState('15:30');
+  const [time, setTime] = useState('15:40');
   const [timezone, setTimezone] = useState('Asia/Kathmandu');
-  const [days, setDays] = useState<number[]>([0, 1, 2, 3, 4]);
+  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [retryIfNotUpdated, setRetryIfNotUpdated] = useState(true);
   const [retryDelayMinutes, setRetryDelayMinutes] = useState(20);
-  const [sourceMode, setSourceMode] = useState<SchedulerSourceMode>('sharesansar');
-  const [githubRepo, setGithubRepo] = useState('');
+  const [sourceMode, setSourceMode] = useState<SchedulerSourceMode>('github');
+  const [githubRepo, setGithubRepo] = useState('nix1947/nepai');
   const [githubBranch, setGithubBranch] = useState('main');
   const [githubDataPath, setGithubDataPath] = useState('data');
   const [pushToGitHub, setPushToGitHub] = useState(false);
@@ -487,10 +487,18 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  onClick={() => setDays([1, 2, 3, 4, 5])}
+                  className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                >
+                  Mon–Fri
+                </button>
+                <span className="text-slate-300 dark:text-slate-700">|</span>
+                <button
+                  type="button"
                   onClick={() => setDays([0, 1, 2, 3, 4])}
                   className="text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  NEPSE (Sun–Thu)
+                  Sun–Thu
                 </button>
                 <span className="text-slate-300 dark:text-slate-700">|</span>
                 <button

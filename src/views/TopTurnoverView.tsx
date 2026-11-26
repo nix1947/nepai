@@ -207,7 +207,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
         <div className="space-y-6">
           <div className="space-y-2">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              NEPSE weeks run Sunday–Saturday. Matrix values show turnover in Rs crore.
+              Trading weeks start on Monday (Mon–Fri). Matrix values show turnover in Rs crore.
             </p>
             <WeeklyHeatmapChart weeks={weeklyData.weeks} symbols={weeklyOrder} />
           </div>

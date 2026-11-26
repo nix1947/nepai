@@ -494,9 +494,9 @@ export class MarketStore {
   public static getNepseWeeks(start: string, end: string): Array<{ week_start: string; week_end: string }> {
     const s = new Date(`${start}T00:00:00Z`);
     const e = new Date(`${end}T00:00:00Z`);
-    // Roll back to Sunday (UTCDay: Sun=0 ... Sat=6)
+    // Roll back to Monday (UTCDay: Sun=0, Mon=1 ... Sat=6)
     const ws = new Date(s);
-    ws.setUTCDate(ws.getUTCDate() - ws.getUTCDay());
+    ws.setUTCDate(ws.getUTCDate() - ((ws.getUTCDay() + 6) % 7));
 
     const weeks: Array<{ week_start: string; week_end: string }> = [];
     while (ws <= e) {

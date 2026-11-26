@@ -57,7 +57,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
     login: string | null;
     repos: Array<{ full_name: string; private: boolean; default_branch: string; html_url: string }>;
   } | null>(null);
-  const [pushRepoName, setPushRepoName] = useState('nepse-turnover-workbench');
+  const [pushRepoName, setPushRepoName] = useState('nix1947/nepai');
   const [pushBranchName, setPushBranchName] = useState('main');
   const [pushPrivate, setPushPrivate] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null);
@@ -79,7 +79,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
       setGithubBranch(data.config.githubBranch || 'main');
       setGithubDataPath(data.config.githubDataPath || 'data');
       setPushToGitHub(Boolean(data.config.pushToGitHub));
-      if (data.config.githubRepo && !pushRepoName) {
+      if (data.config.githubRepo) {
         setPushRepoName(data.config.githubRepo);
       }
     }
@@ -554,7 +554,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
                   type="text"
                   value={githubRepo}
                   onChange={(e) => setGithubRepo(e.target.value)}
-                  placeholder="username/nepse-workbench"
+                  placeholder="nix1947/nepai"
                   className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-slate-900 dark:text-slate-100"
                 />
               </label>
@@ -783,7 +783,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
                       list="gh-existing-repos"
                       value={pushRepoName}
                       onChange={(e) => setPushRepoName(e.target.value)}
-                      placeholder="nepse-turnover-workbench"
+                      placeholder="nix1947/nepai"
                       className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 font-mono text-slate-900 dark:text-slate-100"
                     />
                     <datalist id="gh-existing-repos">

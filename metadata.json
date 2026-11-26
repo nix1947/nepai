@@ -1,0 +1,6 @@
+{
+  "name": "NEPSE Turnover & Scanner Workbench",
+  "description": "NEPSE daily share price turnover analytics, algorithmic technical scanners with detailed methodology documentation, and automated ShareSansar daily scheduler.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

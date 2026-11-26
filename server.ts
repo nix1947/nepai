@@ -197,8 +197,8 @@ async function startServer() {
         githubRepo: result.repoFullName,
         githubBranch: result.branch,
         githubDataPath: 'data',
-        sourceMode: 'both',
-        pushToGitHub: true,
+        sourceMode: 'github',
+        pushToGitHub: false,
       });
       scheduler.recordExternalLog({
         trigger: 'github',

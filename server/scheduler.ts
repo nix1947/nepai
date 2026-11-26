@@ -129,6 +129,47 @@ export class DailyScheduler {
     this.config = loaded.config;
     this.history = loaded.history;
     this.applyCronSchedule();
+    this.scheduleStartupSync();
+  }
+
+  private scheduleStartupSync(): void {
+    if (!this.config.enabled || this.config.sourceMode !== 'github' || !this.config.githubRepo) {
+      return;
+    }
+    setTimeout(() => {
+      void this.startupSyncFromGitHub();
+    }, 1500);
+  }
+
+  private async startupSyncFromGitHub(): Promise<void> {
+    if (this.running || this.config.sourceMode !== 'github' || !this.config.githubRepo) return;
+    this.running = true;
+    const started = Date.now();
+    try {
+      const res = await syncFromGitHub(
+        this.store,
+        {
+          repo: this.config.githubRepo,
+          branch: this.config.githubBranch,
+          dataPath: this.config.githubDataPath,
+        },
+        false
+      );
+      if (res.fetchedFiles > 0) {
+        this.appendLog({
+          trigger: 'github',
+          status: 'success',
+          tradingDate: res.latestDate,
+          rowsSaved: res.totalRows,
+          durationMs: Date.now() - started,
+          message: `Startup sync: pulled ${res.fetchedFiles} new CSV file(s) (${res.totalRows} rows) from GitHub.`,
+        });
+      }
+    } catch {
+      // Quietly ignore transient startup network errors; scheduled cron handles retries.
+    } finally {
+      this.running = false;
+    }
   }
 
   private loadState(): PersistedSchedulerState {

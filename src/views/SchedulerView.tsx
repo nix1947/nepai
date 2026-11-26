@@ -217,7 +217,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
       if (!res.ok) throw new Error(data.error || 'Failed to push project to GitHub');
       setNotice({
         kind: 'success',
-        text: `${data.result.createdRepo ? 'Created' : 'Updated'} ${data.result.repoFullName} (${data.result.filesUploaded} files committed). Daily ShareSansar + GitHub sync is now enabled.`,
+        text: `${data.result.createdRepo ? 'Created' : 'Updated'} ${data.result.repoFullName} (${data.result.filesUploaded} files committed). GitHub Actions handles daily ShareSansar pulls and this app syncs from GitHub.`,
       });
       await loadStatus();
     } catch (err) {
@@ -428,9 +428,9 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
             <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-lg">
               {(
                 [
-                  { id: 'sharesansar', label: 'ShareSansar' },
-                  { id: 'github', label: 'GitHub Repo' },
-                  { id: 'both', label: 'Both (Sync + Pull)' },
+                  { id: 'github', label: 'GitHub Repo (Recommended)' },
+                  { id: 'sharesansar', label: 'ShareSansar Direct' },
+                  { id: 'both', label: 'Both' },
                 ] as const
               ).map((opt) => (
                 <button
@@ -605,7 +605,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
                 onChange={(e) => setRetryIfNotUpdated(e.target.checked)}
                 className="rounded border-slate-300 text-blue-600"
               />
-              <span>Auto-retry if ShareSansar hasn&apos;t posted today yet</span>
+              <span>Auto-retry if today&apos;s CSV isn&apos;t posted yet</span>
             </label>
             {retryIfNotUpdated && (
               <div className="flex items-center gap-1.5">

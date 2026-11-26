@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ArrowUpRight,
+  Banknote,
   ExternalLink,
+  FileCheck2,
   Globe,
   Landmark,
   RefreshCw,
@@ -11,6 +13,7 @@ import {
 } from 'lucide-react';
 import { StockRiskOpportunitiesPanel } from '../components/StockRiskOpportunitiesPanel';
 import type {
+  DataFreshnessStatus,
   MacroResearchResponse,
   ResearchPoint,
   SymbolInfo,
@@ -23,6 +26,19 @@ interface MacroRisksViewProps {
 }
 
 let clientMacroCache: MacroResearchResponse | null = null;
+
+function statusClass(status?: DataFreshnessStatus): string {
+  if (status === 'Live') {
+    return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900';
+  }
+  if (status === 'Cached') {
+    return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900';
+  }
+  if (status === 'Historical') {
+    return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900';
+  }
+  return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+}
 
 export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
   dates,
@@ -115,16 +131,29 @@ export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
     </ul>
   );
 
+  const fi = macro?.fixedIncomeBenchmarks;
+  const ind = macro?.macroIndicators;
+  const regs = macro?.regulatoryUpdates || [];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Nepal &amp; World Economy — Risks &amp; Opportunities
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              Nepal Macro, Fixed-Income Benchmarks &amp; Global Backdrop
+            </h2>
+            {macro?.dataStatus && (
+              <span
+                className={`px-2 py-0.5 text-[11px] font-medium rounded border ${statusClass(macro.dataStatus)}`}
+              >
+                {macro.dataStatus}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Live Google Search grounded macro intelligence connecting NRB policy, Nepal liquidity,
-            global rates/oil/India markets, and individual NEPSE stocks
+            NRB Treasury Bills, Government &amp; Development Bond yields, Commercial Bank FD rates,
+            NRB/NIA/SEBON regulatory directives, and global macro spillovers
           </p>
         </div>
 
@@ -135,7 +164,7 @@ export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
           className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>{loading ? 'Searching live news…' : 'Refresh Macro Search'}</span>
+          <span>{loading ? 'Searching NRB & macro…' : 'Refresh Macro & Rates'}</span>
         </button>
       </div>
 
@@ -149,6 +178,12 @@ export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
           >
             Retry
           </button>
+        </div>
+      )}
+
+      {macro?.notice && (
+        <div className="p-3.5 rounded-lg border border-amber-200 dark:border-amber-900/70 bg-amber-50 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-200">
+          {macro.notice}
         </div>
       )}
 
@@ -166,6 +201,136 @@ export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
           </section>
         ) : (
           <div className="space-y-6">
+            {/* Fixed-Income Benchmarks (Opportunity Cost Reference) */}
+            {fi && (
+              <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Nepal Fixed-Income Alternatives &amp; Rate Benchmarks
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] font-mono">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Trend:{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{fi.rateTrend}</strong>
+                    </span>
+                    <span className="text-slate-400">As of: {fi.asOfDate}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-xs">
+                  {[
+                    { label: 'Bank Individual FD', val: fi.bankFdIndividualRate },
+                    { label: 'Bank Institutional FD', val: fi.bankFdInstitutionalRate },
+                    { label: '28-Day T-Bill', val: fi.tbill28d },
+                    { label: '91-Day T-Bill', val: fi.tbill91d },
+                    { label: '182-Day T-Bill', val: fi.tbill182d },
+                    { label: '364-Day T-Bill', val: fi.tbill364d },
+                    { label: 'Gov / Citizen Bond', val: fi.govBondYield },
+                    { label: 'NRB Policy Rate', val: fi.nrbPolicyRate },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="border border-slate-200 dark:border-slate-800 rounded-md p-2.5 bg-slate-50/70 dark:bg-slate-950/60"
+                    >
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {item.label}
+                      </div>
+                      <div
+                        className={`mt-0.5 font-mono font-semibold text-xs break-words ${
+                          item.val === 'Unavailable'
+                            ? 'text-slate-400 italic'
+                            : 'text-slate-900 dark:text-slate-100'
+                        }`}
+                      >
+                        {item.val}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {ind && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-1 text-xs">
+                    {[
+                      { label: 'CD Ratio', val: ind.cdRatio },
+                      { label: 'Banking Liquidity', val: ind.bankingLiquidity },
+                      { label: 'CPI Inflation', val: ind.cpiInflation },
+                      { label: 'FX Reserves', val: ind.fxReserves },
+                      { label: 'Credit Growth', val: ind.creditGrowth },
+                      { label: 'Remittance', val: ind.remittanceTrend },
+                      { label: 'Fiscal CapEx', val: ind.fiscalCapex },
+                    ].map((m) => (
+                      <div
+                        key={m.label}
+                        className="border border-slate-100 dark:border-slate-800/80 rounded p-2"
+                      >
+                        <div className="text-[10px] uppercase tracking-wide text-slate-400">
+                          {m.label}
+                        </div>
+                        <div className="font-mono text-[11px] font-medium text-slate-800 dark:text-slate-200 mt-0.5">
+                          {m.val}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {fi.sourceNote && (
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{fi.sourceNote}</p>
+                )}
+              </section>
+            )}
+
+            {/* Regulatory Updates */}
+            {regs.length > 0 && (
+              <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <FileCheck2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    NRB, NIA, SEBON, NEPSE &amp; Government Regulatory Directives
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  {regs.map((reg, idx) => (
+                    <div
+                      key={idx}
+                      className="border border-slate-200 dark:border-slate-800 rounded-md p-3.5 space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                          {reg.authority} · {reg.date}
+                        </span>
+                        <span
+                          className={`font-mono text-[11px] font-semibold ${
+                            reg.impact === 'Positive'
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : reg.impact === 'Negative'
+                                ? 'text-red-600 dark:text-red-400'
+                                : 'text-amber-600 dark:text-amber-400'
+                          }`}
+                        >
+                          {reg.impact}
+                        </span>
+                      </div>
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">
+                        {reg.title}
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {reg.summary}
+                      </p>
+                      {reg.impactedSectors.length > 0 && (
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Sectors: {reg.impactedSectors.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
@@ -175,7 +340,7 @@ export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
                   </h3>
                 </div>
                 <span className="text-[11px] font-mono tabular-nums text-slate-400">
-                  {new Date(macro.generatedAt).toLocaleString()}
+                  Retrieved: {new Date(macro.retrievedAt || macro.generatedAt).toLocaleString()}
                 </span>
               </div>
 
@@ -288,6 +453,11 @@ export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
                       className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline max-w-xs truncate"
                     >
                       <ExternalLink className="w-3 h-3 shrink-0" />
+                      {src.category && (
+                        <span className="font-mono text-[10px] text-slate-400 shrink-0">
+                          [{src.category}]
+                        </span>
+                      )}
                       <span className="truncate">{src.title}</span>
                     </a>
                   ))}
@@ -302,11 +472,11 @@ export const MacroRisksView: React.FC<MacroRisksViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Stock-Specific Risk &amp; Opportunity Lookup
+              Stock-Specific Fundamental, Macro &amp; Fixed-Income Opportunity Lookup
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Pick any NEPSE security to inspect live company news, macro sensitivity, risks, and
-              catalysts
+              Pick any NEPSE security to search quarterly/annual disclosures, benchmark vs FD/Gov
+              Bonds, and evaluate 9-part fundamental risks &amp; opportunities
             </p>
           </div>
 

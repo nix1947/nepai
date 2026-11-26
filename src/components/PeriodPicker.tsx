@@ -2,7 +2,10 @@ import React from 'react';
 
 export type PeriodMode =
   | 'last1'
+  | 'yesterday'
   | 'last2'
+  | 'last3'
+  | 'last4'
   | 'last5'
   | 'last10'
   | 'custom'
@@ -16,6 +19,7 @@ interface PeriodPickerProps {
   customEnd: string;
   onCustomChange: (start: string, end: string) => void;
   allowWeekly?: boolean;
+  includeShortWindows?: boolean;
 }
 
 export function resolvePeriodRange(
@@ -25,9 +29,15 @@ export function resolvePeriodRange(
   customEnd: string
 ): { start: string; end: string } | null {
   if (dates.length === 0) return null;
+  if (mode === 'yesterday') {
+    const idx = Math.max(0, dates.length - 2);
+    return { start: dates[idx], end: dates[idx] };
+  }
   const fixedMap: Record<string, number> = {
     last1: 1,
     last2: 2,
+    last3: 3,
+    last4: 4,
     last5: 5,
     last10: 10,
   };
@@ -47,16 +57,27 @@ export const PeriodPicker: React.FC<PeriodPickerProps> = ({
   customEnd,
   onCustomChange,
   allowWeekly = false,
+  includeShortWindows = false,
 }) => {
-  const options: Array<{ id: PeriodMode; label: string }> = [
-    { id: 'last1', label: 'Last day' },
-    { id: 'last2', label: 'Last 2 days' },
-    { id: 'last5', label: 'Last 5 days' },
-    { id: 'last10', label: 'Last 10 days' },
-    { id: 'custom', label: 'Custom range' },
-  ];
+  const options: Array<{ id: PeriodMode; label: string }> = includeShortWindows
+    ? [
+        { id: 'last1', label: 'Last Day' },
+        { id: 'yesterday', label: 'Yesterday' },
+        { id: 'last2', label: 'Last 2 Days' },
+        { id: 'last3', label: 'Last 3 Days' },
+        { id: 'last4', label: 'Last 4 Days' },
+        { id: 'last5', label: 'Last 5 Days' },
+        { id: 'custom', label: 'Custom Range' },
+      ]
+    : [
+        { id: 'last1', label: 'Last day' },
+        { id: 'last2', label: 'Last 2 days' },
+        { id: 'last5', label: 'Last 5 days' },
+        { id: 'last10', label: 'Last 10 days' },
+        { id: 'custom', label: 'Custom range' },
+      ];
   if (allowWeekly) {
-    options.push({ id: 'weekly', label: 'Weekly breakdown' });
+    options.push({ id: 'weekly', label: 'Weekly' });
   }
 
   const resolved = resolvePeriodRange(dates, mode, customStart, customEnd);
@@ -69,7 +90,7 @@ export const PeriodPicker: React.FC<PeriodPickerProps> = ({
             key={opt.id}
             type="button"
             onClick={() => onModeChange(opt.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+            className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
               mode === opt.id
                 ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -103,7 +124,9 @@ export const PeriodPicker: React.FC<PeriodPickerProps> = ({
       ) : (
         resolved && (
           <span className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-            {resolved.start} → {resolved.end}
+            {resolved.start === resolved.end
+              ? resolved.end
+              : `${resolved.start} → ${resolved.end}`}
           </span>
         )
       )}

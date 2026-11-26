@@ -1,0 +1,2144 @@
+{
+  "BGWT": {
+    "symbol": "BGWT",
+    "companyName": "Bhagawati Hydropower Development Company Limited",
+    "sector": "Hydropower",
+    "generatedAt": "2026-11-26T13:20:39.846Z",
+    "retrievedAt": "2026-11-26T13:20:39.846Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-01",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Full detailed FY 2080/81 audited annual report figures are extracted from summary disclosures; some granular cash flow components may require full PDF validation.",
+      "Specific recent internal project cost/MW for capacity expansion beyond existing PPA not fully detailed in recent disclosures."
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 55,
+    "opportunityScore": 45,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Q1 FY 2081/82 Net profit stands at Rs 1.15 crore.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Long-term debt servicing remains the primary balance sheet constraint.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Earnings yield lower than current 6-7% bank FD rates.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Trading below MA120/MA180 indicates bearish structural momentum.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 12,
+        "maxScore": 30,
+        "evidence": "ROE remains modest due to high capitalization.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "LTP of 511.8 against 52W high of 828 provides mean-reversion potential.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "Hydropower sector remains central to national energy policy.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 9,
+        "maxScore": 20,
+        "evidence": "Lack of strong volume accumulation on recent 5-day gains.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-01",
+      "reportType": "Quarterly",
+      "revenue": "Rs 4.10 crore (Q1 2081/82)",
+      "netProfit": "Rs 1.15 crore (Q1 2081/82)",
+      "eps": "Rs 5.48 (Annualized)",
+      "netWorthPerShare": "Rs 117.84",
+      "pe": "93.4x",
+      "pb": "4.34x",
+      "roe": "4.65%",
+      "roa": "Unavailable",
+      "reserves": "Rs 7.50 crore",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Rs 92.5 crore",
+      "totalLiabilities": "Unavailable",
+      "deposits": "N/A",
+      "loans": "N/A",
+      "npl": "N/A",
+      "car": "N/A",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Positive operational cash flow maintained",
+      "dividendHistory": "FY 2079/80: 10% Cash Dividend",
+      "sectorSpecific": [
+        {
+          "label": "Installed Capacity",
+          "value": "4.5 MW"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "Revenue and profit exhibit cyclicality typical of hydro seasonal flow.",
+      "yoy": "Performance metrics are largely stable compared to Q1 FY 2080/81.",
+      "annual": "Maintained profitability; however, EPS growth is constrained by paid-up capital base.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "BGWT reported a Q1 2081/82 net profit of Rs 1.15 crore.",
+          "The company maintained a 10% cash dividend in the previous fiscal cycle."
+        ],
+        "interpretations": [
+          "The high P/E ratio relative to earnings growth suggests the market is pricing in future expansion or scarcity premium."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Stable, low-risk operational model focused on 4.5MW generation; however, capital efficiency is low.",
+      "fundamentalStrengths": [
+        "Operational stability",
+        "Clean energy revenue stream"
+      ],
+      "majorRisksRedFlags": [
+        "High valuation multiples",
+        "Limited scale for significant earnings jumps"
+      ],
+      "growthOpportunities": [
+        "Future project diversification",
+        "Potential sector-wide energy policy reforms"
+      ],
+      "financialTrendAnalysis": "Profitability is consistent but lacks aggressive upward trajectory required for valuation multiple expansion.",
+      "valuationAssessment": "Valuation is currently premium compared to book value and earnings power.",
+      "scenarios": {
+        "bull": "Expansion into new capacity or M&A activity triggers rerating.",
+        "base": "Sideways movement within existing range as earnings stabilize.",
+        "bear": "Multiple compression due to rising interest rates or poor hydrological output."
+      },
+      "nextQuarterWatchlist": [
+        "Revenue fluctuation",
+        "Operating cash flow margin"
+      ],
+      "overallOutlook": "Neutral: Wait for improved liquidity or valuation correction toward the 400-450 range for a better margin of safety."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% - 7.5% per annum",
+      "benchmarkTBillText": "3% - 4% range",
+      "benchmarkBondYieldText": "Unavailable",
+      "benchmarkFdPct": 7,
+      "stockEarningsYieldPct": 1.07,
+      "expectedReturnThesis": "The stock's earnings yield of ~1.07% significantly trails the 7% bank deposit rate, making it unattractive as a pure income play.",
+      "beatsFixedIncome": false,
+      "verdict": "The equity risk premium is currently negative; investment is only justifiable for capital appreciation, not income."
+    },
+    "summary": "Bhagawati Hydropower shows stable operational cash flows but faces valuation compression as market prices trade significantly below historical moving averages. While earnings remain positive, the current yield fails to provide a robust risk premium over prevailing bank deposit rates. The stock requires a clear technical reversal or a major expansion announcement to justify a transition from watchlist to buy.",
+    "stance": "Neutral",
+    "opportunities": [
+      {
+        "title": "Energy Policy Reforms",
+        "detail": "Potential for better PPA rates in future",
+        "impact": "Medium",
+        "evidence": "Industry trends"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Hydrological Variability",
+        "detail": "Climate change impact on water flow",
+        "impact": "High",
+        "evidence": "Sectoral risk"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to interest rate cycles, as hydropower projects rely heavily on long-term debt financing.",
+    "catalysts": [
+      {
+        "headline": "Annual General Meeting (AGM) dividend announcement",
+        "timeframe": "Next Quarter"
+      }
+    ],
+    "sources": []
+  },
+  "BNT": {
+    "symbol": "BNT",
+    "companyName": "Bottlers Nepal (Terai) Limited",
+    "sector": "Manufacturing & Processing",
+    "generatedAt": "2026-11-26T13:20:46.517Z",
+    "retrievedAt": "2026-11-26T13:20:46.517Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-05 (2024-11-20)",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Q1 FY 2081/82 report available, but detailed breakdown of specific cash flow components is limited in summary disclosures.",
+      "Operating Cash Flow (OCF) not explicitly itemized in the abridged Q1 disclosure.",
+      "No current institutional analyst consensus available for forward-looking earnings estimates."
+    ],
+    "recommendation": "HOLD",
+    "riskScore": 65,
+    "opportunityScore": 40,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Q1 FY 2081/82 report shows sustained market presence but sensitivity to raw material import costs.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Limited disclosure on debt restructuring in Q1; debt-to-equity remains stable but leveraged.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 5,
+        "maxScore": 25,
+        "evidence": "High P/E multiple relative to current risk-free FD rates (~6.5-7%).",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Low liquidity (60 shares traded) suggests high impact-cost risk.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 15,
+        "maxScore": 30,
+        "evidence": "Steady demand in the beverage sector provides a stable (though not explosive) growth floor.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 5,
+        "maxScore": 25,
+        "evidence": "Current price levels offer poor margin of safety relative to book value.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Dependence on summer seasonal demand cycles.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 10,
+        "maxScore": 20,
+        "evidence": "Technical setup shows consolidation above 120-day MA.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-05 (2024-11-20)",
+      "reportType": "Quarterly",
+      "revenue": "Rs 1.58 Billion (Q1 FY 2081/82)",
+      "netProfit": "Rs 80.2 Million (Q1 FY 2081/82)",
+      "eps": "Annualized Rs 32.08 (based on Q1 figures)",
+      "netWorthPerShare": "Rs 746.22 (As of Q1 End)",
+      "pe": "402.12 (Calculated based on TTM/Annualized)",
+      "pb": "17.28",
+      "roe": "4.30% (Annualized)",
+      "roa": "Unavailable",
+      "reserves": "Rs 1.48 Billion",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Rs 4.12 Billion",
+      "totalLiabilities": "Rs 2.22 Billion",
+      "deposits": "N/A",
+      "loans": "Rs 0.45 Billion (Short-term borrowings)",
+      "npl": "N/A",
+      "car": "N/A",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2079/80: No Dividend; FY 2078/79: 20% Cash Dividend",
+      "sectorSpecific": [
+        {
+          "label": "Capacity Utilization",
+          "value": "Unavailable"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "N/A (Q1 comparison requires Q4 data synthesis)",
+      "yoy": "Q1 2081/82 Net Profit of Rs 80.2 Million vs Q1 2080/81 (comparative data unavailable)",
+      "annual": "FY 2080/81 Audited Report confirms recovery trends vs prior year",
+      "inconsistencies": "None identified in verified disclosures",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 FY 2081/82 Net Profit: Rs 80.2 Million.",
+          "Total Assets: Rs 4.12 Billion as of Ashoj end 2081."
+        ],
+        "interpretations": [
+          "High P/E suggests market assumes significant future growth or carries a high 'scarcity premium' due to thin liquidity."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Bottlers Nepal (Terai) maintains a solid operational base with consistent revenue generation, though earnings are heavily seasonal and cost-sensitive.",
+      "fundamentalStrengths": [
+        "Strong brand recognition",
+        "Market leadership in carbonated beverages",
+        "Solid balance sheet with manageable debt ratios."
+      ],
+      "majorRisksRedFlags": [
+        "Extremely low liquidity leading to high volatility",
+        "High valuation multiples",
+        "Exposure to fluctuating import duties and energy costs."
+      ],
+      "growthOpportunities": [
+        "Diversification of product portfolio",
+        "Operational efficiencies in distribution channels."
+      ],
+      "financialTrendAnalysis": "Performance is currently stable with modest profit margins, consistent with seasonal beverage demand patterns.",
+      "valuationAssessment": "Valuation is significantly stretched with a P/E exceeding 400x, demanding high growth that the current quarterly trend does not clearly substantiate.",
+      "scenarios": {
+        "bull": "Volume expansion via new product lines and lower sugar/import costs boosting margins.",
+        "base": "Slow, steady performance with price stability near current technical support levels.",
+        "bear": "Contraction in consumer spending leading to margin compression and P/E contraction."
+      },
+      "nextQuarterWatchlist": [
+        "Revenue growth consistency",
+        "Operating margin expansion",
+        "Movement in short-term borrowing costs."
+      ],
+      "overallOutlook": "The stock is a 'HOLD' for existing shareholders but lacks the valuation justification for new entry at current price levels versus risk-free alternatives."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% - 7% per annum",
+      "benchmarkTBillText": "3% - 4% range",
+      "benchmarkBondYieldText": "7.5% - 8.5% range",
+      "benchmarkFdPct": 6.5,
+      "stockEarningsYieldPct": 0.25,
+      "expectedReturnThesis": "The stock's earnings yield of ~0.25% is substantially lower than the 6.5%+ risk-free return offered by Nepal Bank FDs, indicating significant overvaluation risk.",
+      "beatsFixedIncome": false,
+      "verdict": "The equity risk premium is currently negative, suggesting that the capital is not being efficiently rewarded relative to safer fixed-income instruments."
+    },
+    "summary": "Bottlers Nepal (Terai) maintains a strong market position with a high-margin business model, though it faces severe liquidity and valuation headwinds. The stock's extreme price volatility and low free-float liquidity pose significant risks that outweigh immediate dividend appeal. Investors are advised to maintain current positions while awaiting clearer recovery in consumption patterns and improved regulatory clarity.",
+    "stance": "Cautious",
+    "opportunities": [
+      {
+        "title": "Market Dominance",
+        "detail": "Continued reliance on established distribution networks.",
+        "impact": "Medium",
+        "evidence": "Historical market share data"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Liquidity Risk",
+        "detail": "Extremely low volume makes entry/exit difficult.",
+        "impact": "High",
+        "evidence": "2026-11-26 Turnover data"
+      }
+    ],
+    "macroLinkage": "High sensitivity to Nepal's discretionary consumer spending power and the import-dependent cost structure of raw materials.",
+    "catalysts": [
+      {
+        "headline": "Summer Season Sales Cycle",
+        "timeframe": "Near-term"
+      }
+    ],
+    "sources": []
+  },
+  "HATHY": {
+    "symbol": "HATHY",
+    "companyName": "Hathway Investment Nepal Limited",
+    "sector": "Investment",
+    "generatedAt": "2026-11-26T13:21:01.093Z",
+    "retrievedAt": "2026-11-26T13:21:01.093Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-01",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Complete audited annual report for FY 2080/81 is pending detailed breakdown in summary disclosures",
+      "Operating Cash Flow (OCF) not explicitly stated in condensed quarterly summaries",
+      "Specific sector-wide weighted average cost of equity for investment companies unavailable"
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 45,
+    "opportunityScore": 40,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "Net profit reported at Rs 3.88 Crores for Q1 FY 2081/82 vs Rs 4.58 Crores in Q1 FY 2080/81.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 20,
+        "maxScore": 25,
+        "evidence": "Low debt-to-equity ratio; company maintains strong liquidity position.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "High P/E ratio relative to earnings growth; FD rates remain competitive at ~6.5-7%.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Trading significantly below 180-day moving average (Rs 703).",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 10,
+        "maxScore": 30,
+        "evidence": "Profitability remains volatile due to market-linked investment returns.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Premium valuation (P/B) limits immediate margin of safety.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Increased allocation toward hydropower and strategic equity holdings.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 10,
+        "maxScore": 20,
+        "evidence": "Recent volume spike suggests accumulation, but trend remains bearish.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-01",
+      "reportType": "Quarterly",
+      "revenue": "Rs 5.25 Crores (Net Profit)",
+      "netProfit": "Rs 3.88 Crores",
+      "eps": "Rs 2.94 (Annualized)",
+      "netWorthPerShare": "Rs 117.89",
+      "pe": "142.17x",
+      "pb": "3.54x",
+      "roe": "Unavailable",
+      "roa": "Unavailable",
+      "reserves": "Rs 23.63 Crores",
+      "retainedEarnings": "Included in reserves",
+      "totalAssets": "Rs 151.72 Crores",
+      "totalLiabilities": "Rs 1.87 Crores",
+      "deposits": "N/A",
+      "loans": "N/A",
+      "npl": "N/A",
+      "car": "N/A",
+      "liquidityRatio": "Strong",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2079/80: 4% Bonus, 0.21% Cash.",
+      "sectorSpecific": [
+        {
+          "label": "Investment Diversification",
+          "value": "Hydro, Insurance, and Listed Equities"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "Comparison data limited due to Q1 start.",
+      "yoy": "Net profit declined from Rs 4.58 Cr (Q1 80/81) to Rs 3.88 Cr (Q1 81/82).",
+      "annual": "FY 2080/81 audited report pending consolidation.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 FY 2081/82 Net Profit: Rs 3.88 Cr",
+          "Paid-up Capital: Rs 1.28 Arba"
+        ],
+        "interpretations": [
+          "Profit contraction suggests lower realized gains in portfolio holdings for the period."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Strong balance sheet with negligible debt; highly dependent on market cycles.",
+      "fundamentalStrengths": [
+        "Zero debt structure",
+        "Diversified portfolio of blue-chip investments"
+      ],
+      "majorRisksRedFlags": [
+        "High P/E valuation",
+        "Earnings volatility correlated to NEPSE index performance"
+      ],
+      "growthOpportunities": [
+        "Long-term value accretion from hydropower subsidiary projects"
+      ],
+      "financialTrendAnalysis": "Profitability is experiencing pressure due to market-wide volatility.",
+      "valuationAssessment": "Trading at a premium (3.54x P/B), expensive compared to historical investment sector averages.",
+      "scenarios": {
+        "bull": "Significant NEPSE rally leads to massive unrealized gain mark-to-market adjustments.",
+        "base": "Modest growth in line with broader market recovery.",
+        "bear": "Sustained index stagnation leads to further YoY profit contraction."
+      },
+      "nextQuarterWatchlist": [
+        "Unrealized gains on investments",
+        "Volume trends at the Rs 400 support level"
+      ],
+      "overallOutlook": "The stock is currently overvalued compared to historical norms. Wait for a consolidation phase before considering entry."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% - 7.0% annual",
+      "benchmarkTBillText": "Unavailable",
+      "benchmarkBondYieldText": "Unavailable",
+      "benchmarkFdPct": 6.75,
+      "stockEarningsYieldPct": 0.7,
+      "expectedReturnThesis": "Equity yield is currently below risk-free FD rates, requiring higher capital appreciation for parity.",
+      "beatsFixedIncome": false,
+      "verdict": "Equity risk does not compensate for the opportunity cost at current valuations."
+    },
+    "summary": "Hathway Investment demonstrates a stable balance sheet with minimal debt, but net profit has seen a YoY contraction in Q1 FY 2081/82. The stock trades at a significant premium to book value, making it susceptible to market volatility compared to risk-free 6.5-7% FD yields. A watchlist stance is appropriate until revenue diversification and net profit growth stabilize relative to the current valuation.",
+    "stance": "Neutral",
+    "opportunities": [
+      {
+        "title": "Market Recovery",
+        "detail": "Capital gains on portfolio holdings.",
+        "impact": "High",
+        "evidence": "Investment sector nature"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Index Stagnation",
+        "detail": "Direct impact on company's bottom line.",
+        "impact": "High",
+        "evidence": "Q1 YoY profit decline"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to NRB interest rate cycles which influence index liquidity and portfolio values.",
+    "catalysts": [
+      {
+        "headline": "Dividend Announcement for FY 2080/81",
+        "timeframe": "AGM"
+      }
+    ],
+    "sources": []
+  },
+  "SANIMA": {
+    "symbol": "SANIMA",
+    "companyName": "Sanima Bank Limited",
+    "sector": "Commercial Banks",
+    "generatedAt": "2026-11-26T13:21:21.099Z",
+    "retrievedAt": "2026-11-26T13:21:21.099Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-01 (approx. via NEPSE portal)",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Specific operating cash flow statement unavailable for Q1",
+      "Current precise T-Bill and Government Bond yields not updated in real-time database",
+      "Full details of deferred tax assets impact for Q1 not fully reconciled with FY 2080/81 audit"
+    ],
+    "recommendation": "HOLD",
+    "riskScore": 45,
+    "opportunityScore": 50,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Q1 FY 2081/82 NII compression observed due to NIM pressure.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 20,
+        "maxScore": 25,
+        "evidence": "NPL maintained below industry average; steady deposit growth.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "P/E parity with sector makes yield competition tight.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 20,
+        "maxScore": 25,
+        "evidence": "Strong regulatory compliance and historical audit integrity.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 15,
+        "maxScore": 30,
+        "evidence": "ROE recovery contingent on credit expansion.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Current price near 1.1x - 1.2x P/B, historical floor.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "NRB policy easing provides sector-wide tailwinds.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 10,
+        "maxScore": 20,
+        "evidence": "Above MA120/180 suggests moderate technical support.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-01 (approx. via NEPSE portal)",
+      "reportType": "Quarterly",
+      "revenue": "Net Interest Income Rs 1.76 Arba (Q1 2081/82)",
+      "netProfit": "Rs 54.08 Crore (Q1 2081/82)",
+      "eps": "Rs 15.68 (Annualized)",
+      "netWorthPerShare": "Rs 158.42",
+      "pe": "26.08",
+      "pb": "2.58",
+      "roe": "9.92%",
+      "roa": "0.98%",
+      "reserves": "Rs 8.95 Arba",
+      "retainedEarnings": "Rs 2.02 Arba",
+      "totalAssets": "Rs 214.34 Arba",
+      "totalLiabilities": "Rs 194.55 Arba",
+      "deposits": "Rs 184.22 Arba",
+      "loans": "Rs 152.18 Arba",
+      "npl": "2.68%",
+      "car": "13.88%",
+      "liquidityRatio": "CCD Ratio approx 78.4%",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2080/81: 5.263% cash (including tax); FY 2079/80: 14.7% total.",
+      "sectorSpecific": [
+        {
+          "label": "Base Rate",
+          "value": "8.82%"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "Comparison limited by seasonal banking shifts; profit growth stable compared to previous quarter volatility.",
+      "yoy": "Profitability shows modest improvement vs Q1 FY 2080/81 due to reduced provisioning requirements.",
+      "annual": "Audited FY 2080/81 reports consistent with disclosed quarterly trends.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "EPS of 15.68 in Q1 FY 2081/82; NPL at 2.68%."
+        ],
+        "interpretations": [
+          "Profit stability is largely driven by lower cost of funds rather than significant organic loan expansion."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Strong balance sheet with healthy liquidity ratios and diversified lending portfolio.",
+      "fundamentalStrengths": [
+        "Conservative risk management culture",
+        "Stable deposit base",
+        "Sustained dividend track record"
+      ],
+      "majorRisksRedFlags": [
+        "High sector-wide NPL sensitivity",
+        "Credit growth saturation"
+      ],
+      "growthOpportunities": [
+        "Digital transformation cost-savings",
+        "Shift in credit-to-GDP demand"
+      ],
+      "financialTrendAnalysis": "Earnings show stabilization after FY 2080/81 troughs.",
+      "valuationAssessment": "P/E and P/B are currently in line with Tier-I commercial bank averages.",
+      "scenarios": {
+        "bull": "Expansion of credit demand leading to 15%+ profit growth.",
+        "base": "Marginal growth consistent with current GDP performance.",
+        "bear": "Significant slippage in NPL leading to increased provisioning."
+      },
+      "nextQuarterWatchlist": [
+        "NPL movement",
+        "NIM expansion",
+        "Credit growth (Loans/Deposits)"
+      ],
+      "overallOutlook": "Sanima is a reliable 'Hold' for income-oriented investors, but lacks immediate alpha-generating catalysts until credit growth accelerates industry-wide."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% to 7.5% per annum",
+      "benchmarkTBillText": "Unavailable",
+      "benchmarkBondYieldText": "Unavailable",
+      "benchmarkFdPct": 7,
+      "stockEarningsYieldPct": 3.8,
+      "expectedReturnThesis": "Equity return currently trails Fixed Income yields; holding is justified primarily by capital appreciation potential.",
+      "beatsFixedIncome": false,
+      "verdict": "Equities currently offer less immediate cash-yield than fixed-income instruments."
+    },
+    "summary": "Sanima Bank demonstrates stable asset quality metrics relative to industry peers, though profitability remains constrained by the prevailing high-cost deposit environment and sluggish credit off-take. While current valuation multiples are attractive compared to historical averages, the risk-adjusted return remains marginal when weighed against the current 6.5-7% risk-free fixed deposit yields. The bank requires a sustained uptick in credit demand and improved net interest margins to justify a shift from 'Hold' to 'Buy'.",
+    "stance": "Neutral",
+    "opportunities": [
+      {
+        "title": "Macro-liquidity easing",
+        "detail": "NRB rate cuts improving NIMs.",
+        "impact": "Medium",
+        "evidence": "NRB Monetary Policy"
+      }
+    ],
+    "risks": [
+      {
+        "title": "NPL Contagion",
+        "detail": "Real estate and construction sector loan quality.",
+        "impact": "High",
+        "evidence": "Industry NPL trends"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to NRB policy rates and Nepal's import/remittance balance, which dictates banking sector liquidity.",
+    "catalysts": [
+      {
+        "headline": "Credit expansion revival",
+        "timeframe": "Next Quarter"
+      }
+    ],
+    "sources": []
+  },
+  "CYCL": {
+    "symbol": "CYCL",
+    "companyName": "CYC Nepal Laghubitta Bittiya Sanstha Limited",
+    "sector": "Microfinance",
+    "generatedAt": "2026-11-26T13:21:26.591Z",
+    "retrievedAt": "2026-11-26T13:21:26.591Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-01",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Operating Cash Flow (OCF) not explicitly stated in Q1 summary",
+      "Current government bond yield data unavailable; using standard 5-7% range for proxy",
+      "Detailed segmental loan portfolio breakdown unavailable for Q1"
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 65,
+    "opportunityScore": 40,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 8,
+        "maxScore": 25,
+        "evidence": "Q1 FY 2081/82 Net profit margins remain suppressed.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Rising NPL trend noted in recent quarterly disclosures.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "Earnings yield currently insufficient against 6-8% risk-free rates.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Heavy reliance on NRB policy shifts for liquidity.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 10,
+        "maxScore": 30,
+        "evidence": "Negative growth trajectory observed in recent Q1.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "Trading near 52W low (Rs 1103) vs 52W high (Rs 1768).",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Sectoral consolidation pressures remain.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 8,
+        "maxScore": 20,
+        "evidence": "LTP is significantly below MA120/MA180, indicating bearish trend.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [
+      "Rising NPL percentage compared to previous fiscal year",
+      "High volatility in earnings performance"
+    ],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-01",
+      "reportType": "Quarterly",
+      "revenue": "Rs 16.71 Crores (Net Interest Income)",
+      "netProfit": "Rs 1.05 Crores",
+      "eps": "Rs 10.36 (Annualized)",
+      "netWorthPerShare": "Rs 191.68",
+      "pe": "Unavailable",
+      "pb": "5.75x",
+      "roe": "Unavailable",
+      "roa": "Unavailable",
+      "reserves": "Rs 38.64 Crores",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Rs 4.58 Arba",
+      "totalLiabilities": "Rs 3.86 Arba",
+      "deposits": "Rs 1.05 Arba",
+      "loans": "Rs 3.42 Arba",
+      "npl": "4.15%",
+      "car": "11.20%",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2079/80: 31.57% Bonus, 1.66% Cash. FY 2080/81: No dividend proposed.",
+      "sectorSpecific": [
+        {
+          "label": "Paid-up Capital",
+          "value": "Rs 40.54 Crores"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "N/A",
+      "yoy": "Net profit decreased significantly compared to Q1 FY 2080/81.",
+      "annual": "Audited report for FY 2080/81 shows declining profitability trends.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 FY 2081/82 reported net profit of Rs 1.05 Cr.",
+          "NPL recorded at 4.15%."
+        ],
+        "interpretations": [
+          "The company is likely struggling with credit recovery due to high interest rate environments."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Aggressive expansion in prior years has led to asset quality issues; balance sheet is under pressure.",
+      "fundamentalStrengths": [
+        "Established presence in rural micro-credit markets.",
+        "Strong historical capital base."
+      ],
+      "majorRisksRedFlags": [
+        "Elevated NPLs above 4%.",
+        "Dividend pause in recent year."
+      ],
+      "growthOpportunities": [
+        "Digital lending migration.",
+        "Potential for sectoral consolidation."
+      ],
+      "financialTrendAnalysis": "Downward trend in profitability and rising provision for possible losses.",
+      "valuationAssessment": "P/B ratio indicates premium pricing relative to sector peers despite declining asset quality.",
+      "scenarios": {
+        "bull": "Significant NRB policy easing and rapid NPL recovery.",
+        "base": "Stagnant growth with minimal recovery in EPS.",
+        "bear": "Further NPL deterioration necessitating higher provisioning, eroding net worth."
+      },
+      "nextQuarterWatchlist": [
+        "NPL movement",
+        "Net Interest Margin (NIM)",
+        "Cost of Funds"
+      ],
+      "overallOutlook": "Cautious; the stock is currently not providing the requisite risk premium for the volatility inherent in the microfinance sector."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% - 7.5% per annum",
+      "benchmarkTBillText": "Unavailable",
+      "benchmarkBondYieldText": "Unavailable",
+      "benchmarkFdPct": 7,
+      "stockEarningsYieldPct": 0.94,
+      "expectedReturnThesis": "The stock's earnings yield is significantly lower than risk-free bank FD rates, creating a negative carry for equity investors.",
+      "beatsFixedIncome": false,
+      "verdict": "Equity risk does not justify the potential returns under current financial performance."
+    },
+    "summary": "CYC Nepal Laghubitta faces significant headwinds with declining asset quality and margin compression, characteristic of the broader microfinance sector. While the stock is trading near its 52-week low, the risk-adjusted return currently fails to provide a compelling premium over risk-free bank deposits. Investors should remain on the watchlist until NPLs stabilize and credit growth resumes under more favorable NRB regulatory conditions.",
+    "stance": "Cautious",
+    "opportunities": [
+      {
+        "title": "Portfolio Diversification",
+        "detail": "Expansion into non-credit financial services.",
+        "impact": "Medium",
+        "evidence": "Industry trends"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Asset Quality Deterioration",
+        "detail": "Persistent NPLs eroding capital reserves.",
+        "impact": "High",
+        "evidence": "Q1 FY 2081/82"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to NRB's interest rate ceiling directives and liquidity management in the banking system.",
+    "catalysts": [
+      {
+        "headline": "NRB Monetary Policy review",
+        "timeframe": "Next Quarter"
+      }
+    ],
+    "sources": []
+  },
+  "SHINE": {
+    "symbol": "SHINE",
+    "companyName": "Shine Resunga Development Bank Limited",
+    "sector": "Development Banks",
+    "generatedAt": "2026-11-26T13:21:27.340Z",
+    "retrievedAt": "2026-11-26T13:21:27.340Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-07-29",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Specific operating cash flow figures not explicitly isolated in Q1 summaries",
+      "Current day Nepal Bank FD/T-Bill rates are dynamic; used standard 6-7% average estimates for benchmark",
+      "Full-year 2080/81 audited report comparison relies on summary disclosures"
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 45,
+    "opportunityScore": 55,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Net profit reported at Rs 35.86 crore for Q1 FY 2081/82.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "NPL levels require monitoring as per sector-wide trends.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "P/E ratio remains competitive relative to banking sector peers.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 8,
+        "maxScore": 25,
+        "evidence": "Compliant with NRB regulatory capital directives.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 15,
+        "maxScore": 30,
+        "evidence": "Annualized EPS of Rs 14.54 provides a foundation for growth.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Consistent historical dividend payouts (Bonus/Cash).",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Focus on MSME lending remains a key growth driver.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 10,
+        "maxScore": 20,
+        "evidence": "Trading above MA120/MA180 indicates positive momentum.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-07-29",
+      "reportType": "Quarterly",
+      "revenue": "Net Interest Income: Rs 1.05 Arba (Q1 FY 2081/82)",
+      "netProfit": "Rs 35.86 Crore (Q1 FY 2081/82)",
+      "eps": "Rs 14.54 (Annualized)",
+      "netWorthPerShare": "Rs 158.46",
+      "pe": "Approximately 28.6x (Based on LTM)",
+      "pb": "2.63",
+      "roe": "Unavailable",
+      "roa": "Unavailable",
+      "reserves": "Rs 4.75 Arba",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Rs 81.33 Arba",
+      "totalLiabilities": "Rs 71.49 Arba",
+      "deposits": "Rs 66.19 Arba",
+      "loans": "Rs 54.49 Arba",
+      "npl": "2.98%",
+      "car": "13.91%",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 80/81: 10% Bonus + 0.526% Cash; FY 79/80: 10.93% Bonus + 0.57% Cash",
+      "sectorSpecific": [
+        {
+          "label": "CD Ratio",
+          "value": "82.88%"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "N/A - First quarter disclosure",
+      "yoy": "Net Profit increased compared to Q1 FY 2080/81 reflecting improved operational efficiency.",
+      "annual": "Consistent performance in FY 2080/81 relative to sector challenges.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 FY 2081/82 Net Profit: Rs 35.86 Crore",
+          "NPL: 2.98%"
+        ],
+        "interpretations": [
+          "Profit growth indicates potential recovery in net interest margins as credit demand picks up."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Strong balance sheet with adequate capital reserves exceeding regulatory minimums.",
+      "fundamentalStrengths": [
+        "High liquidity position",
+        "Consistent dividend track record",
+        "Stable deposit base."
+      ],
+      "majorRisksRedFlags": [
+        "Rising NPL sector-wide",
+        "Competitive pressure on interest spreads."
+      ],
+      "growthOpportunities": [
+        "Expansion of digital banking services",
+        "Improved credit demand from the SME sector."
+      ],
+      "financialTrendAnalysis": "Stable upward trajectory in profitability compared to the previous fiscal year.",
+      "valuationAssessment": "Trading at a fair premium reflecting market confidence in development bank recovery.",
+      "scenarios": {
+        "bull": "Significant decline in NPLs and lower interest rate environment boosting loan growth.",
+        "base": "Gradual profit expansion alongside economic recovery.",
+        "bear": "Sustained high NPLs and potential NRB tightening on development banks."
+      },
+      "nextQuarterWatchlist": [
+        "NPL percentage movement",
+        "Loan growth rate",
+        "CCD ratio trends"
+      ],
+      "overallOutlook": "SHINE is a solid contender in the development bank sector; a watchlist candidate suitable for accumulation on technical dips."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "Current commercial bank FD rates (~6.0% - 7.0%)",
+      "benchmarkTBillText": "Approximately 3% - 4%",
+      "benchmarkBondYieldText": "Approximately 7% - 8%",
+      "benchmarkFdPct": 6.5,
+      "stockEarningsYieldPct": 3.49,
+      "expectedReturnThesis": "Stock provides potential for capital appreciation beyond the fixed income yield, though immediate dividend yield is lower than current FD rates.",
+      "beatsFixedIncome": false,
+      "verdict": "Equity risk premium is currently narrow; income-focused investors may prefer FDs for safety, growth-focused may prefer SHINE."
+    },
+    "summary": "Shine Resunga Development Bank (SHINE) exhibits stable capitalization and a disciplined loan book, trading slightly above its 180-day moving average. While it provides a dividend cushion compared to current low-interest FD rates, persistent NPL pressure in the development bank sector necessitates a cautious wait-and-see approach. The current valuation offers a reasonable entry for long-term investors if the upcoming quarters show sustained NPL improvement.",
+    "stance": "Neutral",
+    "opportunities": [
+      {
+        "title": "SME Credit Expansion",
+        "detail": "Capitalizing on the resurgence of private sector credit demand.",
+        "impact": "High",
+        "evidence": "Q1 FY 2081/82 Loan growth"
+      }
+    ],
+    "risks": [
+      {
+        "title": "NPL Sensitivity",
+        "detail": "Risk of asset quality deterioration in a volatile economic environment.",
+        "impact": "High",
+        "evidence": "Sectoral NPL benchmarks"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to NRB's interest rate corridor policy and general liquidity in the banking system.",
+    "catalysts": [
+      {
+        "headline": "Dividend declaration and AGM outcome",
+        "timeframe": "AGM"
+      }
+    ],
+    "sources": []
+  },
+  "JSLBB": {
+    "symbol": "JSLBB",
+    "companyName": "Janautthan Samudayic Laghubitta Bittiya Sanstha Limited",
+    "sector": "Microfinance",
+    "generatedAt": "2026-11-26T13:21:33.107Z",
+    "retrievedAt": "2026-11-26T13:21:33.107Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-05 (2024-11-20)",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Q1 FY 2081/82 Cash Flow statement not explicitly detailed in summary disclosures",
+      "Audited FY 2080/81 Annual Report full audit notes/qualifications pending secondary verification",
+      "Detailed segmental loan portfolio breakdown (NPL by sector/product) is limited in summarized quarterly reports"
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 65,
+    "opportunityScore": 40,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Q1 FY 2081/82 report shows constrained net interest margins due to high cost of funds.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 8,
+        "maxScore": 25,
+        "evidence": "Industry-wide microfinance asset quality remains under pressure; sector NPLs remain high.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "LTP 850 vs historical highs; P/E remains high relative to current low EPS growth.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Regulatory oversight remains strict under NRB Unified Directives.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 10,
+        "maxScore": 30,
+        "evidence": "Earnings recovery is gradual; ROE remains below peak historical levels.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Low dividend payouts due to regulatory requirements for loss provisioning.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Potential for sector-wide consolidation if NRB mandates further mergers.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 10,
+        "maxScore": 20,
+        "evidence": "Technical downtrend confirmed by trading below MA120/MA180.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [
+      "Elevated NPL levels common to the microfinance sector per NRB's recent assessment",
+      "Declining trend in net interest income growth compared to previous fiscal years"
+    ],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-05 (2024-11-20)",
+      "reportType": "Quarterly",
+      "revenue": "Unavailable",
+      "netProfit": "Rs 1.01 Crore (Q1 FY 2081/82)",
+      "eps": "Rs 17.51 (Annualized)",
+      "netWorthPerShare": "Rs 205.99",
+      "pe": "48.54",
+      "pb": "4.13",
+      "roe": "8.50%",
+      "roa": "Unavailable",
+      "reserves": "Rs 25.84 Crore",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Rs 4.15 Arba",
+      "totalLiabilities": "Rs 3.52 Arba",
+      "deposits": "Rs 81.38 Crore",
+      "loans": "Rs 3.12 Arba",
+      "npl": "4.92%",
+      "car": "11.20%",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2079/80: 15% Bonus Shares",
+      "sectorSpecific": [
+        {
+          "label": "Cost of Funds",
+          "value": "Unavailable"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "Comparison shows marginal fluctuations typical of Q1 seasonal slowdowns.",
+      "yoy": "Reflects sector-wide struggle to maintain margins; YoY profit growth remains muted.",
+      "annual": "FY 2080/81 results showed significant pressure on bottom-line vs FY 2079/80.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 FY 2081/82 Net Profit reported at Rs 1.01 Cr.",
+          "LTP at Rs 850 (2026-11-26)."
+        ],
+        "interpretations": [
+          "High P/E suggests market is pricing in future recovery despite current weak growth.",
+          "Asset quality remains the primary threat to future book value growth."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "JSLBB is in a defensive mode, focusing on NPL recovery rather than aggressive expansion.",
+      "fundamentalStrengths": [
+        "Stable capital base",
+        "Established microfinance niche"
+      ],
+      "majorRisksRedFlags": [
+        "Rising NPLs",
+        "Regulatory pressure on interest rate caps"
+      ],
+      "growthOpportunities": [
+        "Digital lending integration",
+        "Merger & Acquisition potential"
+      ],
+      "financialTrendAnalysis": "Profitability is recovering from a deep trough but remains far below historical benchmarks.",
+      "valuationAssessment": "Trading at a significant premium to book value compared to peer microfinance firms, indicating overvaluation.",
+      "scenarios": {
+        "bull": "Rapid NPL resolution and NRB interest rate relaxation triggering a reversal.",
+        "base": "Slow, grinding recovery with limited capital appreciation.",
+        "bear": "Significant loan impairment leading to further erosion of equity."
+      },
+      "nextQuarterWatchlist": [
+        "NPL %",
+        "Operating expense ratios",
+        "Credit growth"
+      ],
+      "overallOutlook": "Neutral to Cautious; the stock lacks the momentum to outperform fixed-income assets in the short term."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% - 7.5% per annum for commercial banks",
+      "benchmarkTBillText": "3% - 4.5% depending on maturity",
+      "benchmarkBondYieldText": "Unavailable",
+      "benchmarkFdPct": 7,
+      "stockEarningsYieldPct": 2.06,
+      "expectedReturnThesis": "The stock's earnings yield (approx 2.06%) significantly underperforms the risk-free Bank FD rate (approx 7.0%), making the risk-adjusted return unattractive at the current price.",
+      "beatsFixedIncome": false,
+      "verdict": "Equity risk is currently not compensated by earnings potential relative to fixed income benchmarks."
+    },
+    "summary": "JSLBB exhibits a fragile recovery trend with high NPL pressure characteristic of the microfinance sector's ongoing structural adjustment. While the current price is nearing 52-week lows, the lack of robust earnings growth and persistent asset quality concerns limit immediate upside potential. Investors should prioritize capital preservation given that the current earnings yield provides a thin margin over risk-free bank FD alternatives.",
+    "stance": "Cautious",
+    "opportunities": [
+      {
+        "title": "Sector Consolidation",
+        "detail": "Potential for M&A activity to optimize operational costs.",
+        "impact": "Medium",
+        "evidence": "Regulatory push for mergers"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Asset Quality Deterioration",
+        "detail": "Rising NPLs impacting liquidity and profitability.",
+        "impact": "High",
+        "evidence": "Q1 FY 2081/82 NPL 4.92%"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to NRB Unified Directives, interest rate floors for depositors, and overall liquidity in the banking system.",
+    "catalysts": [
+      {
+        "headline": "Q2/Q3 Financial Results",
+        "timeframe": "Next Quarter"
+      },
+      {
+        "headline": "NRB Monetary Policy Review",
+        "timeframe": "Near-term"
+      }
+    ],
+    "sources": []
+  },
+  "SPDL": {
+    "symbol": "SPDL",
+    "companyName": "Synergy Power Development Limited",
+    "sector": "Hydropower",
+    "generatedAt": "2026-11-26T13:21:33.368Z",
+    "retrievedAt": "2026-11-26T13:21:33.368Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-07-29 (November 14, 2024)",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Complete audited annual report for FY 2080/81 is not yet fully synthesized against Q1 FY 2081/82 for granular YoY reconciliation in this specific snapshot.",
+      "Specific Operating Cash Flow per share for Q1 not explicitly detailed in summary disclosures."
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 45,
+    "opportunityScore": 55,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Q1 profit shows standard seasonal variance common to run-of-river hydro.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 18,
+        "maxScore": 25,
+        "evidence": "Debt service coverage remains stable, though long-term liability profiles are heavy.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "P/E ratio reflects market sentiment typical for mid-cap hydro, slightly elevated vs FD yield.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 20,
+        "maxScore": 25,
+        "evidence": "Compliance with SEBON/NEPSE listing requirements maintained.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 15,
+        "maxScore": 30,
+        "evidence": "Consistent revenue generation from existing 10MW capacity.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Historical dividend capacity exists but payout ratios fluctuate.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Limited immediate capacity expansion mentioned in Q1 disclosure.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 15,
+        "maxScore": 20,
+        "evidence": "LTP is currently trading near 120-day MA; supportive of a neutral-to-bullish base.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-07-29 (November 14, 2024)",
+      "reportType": "Quarterly",
+      "revenue": "Rs 8.41 Crore",
+      "netProfit": "Rs 4.14 Crore",
+      "eps": "Rs 16.56 (Annualized)",
+      "netWorthPerShare": "Rs 149.25",
+      "pe": "Approx 22.22x",
+      "pb": "2.46x",
+      "roe": "Unavailable",
+      "roa": "Unavailable",
+      "reserves": "Rs 49.33 Crore",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Rs 1.48 Arba",
+      "totalLiabilities": "Unavailable",
+      "deposits": "N/A",
+      "loans": "Unavailable",
+      "npl": "N/A",
+      "car": "N/A",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2079/80: 5% Bonus and 0.26% Cash",
+      "sectorSpecific": [
+        {
+          "label": "Installed Capacity",
+          "value": "10 MW"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "Comparison limited by seasonal hydro generation variance.",
+      "yoy": "Q1 FY 2081/82 net profit of 4.14 crore compared against previous fiscal year trends shows steady performance.",
+      "annual": "Audited Annual Report for FY 2080/81 confirms profitability alignment.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 profit is reported at Rs 4.14 Crore."
+        ],
+        "interpretations": [
+          "The profitability is considered healthy for a 10MW project, though dependent on PPA rate stability."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Stable balance sheet with core income derived from a single 10MW asset.",
+      "fundamentalStrengths": [
+        "Stable revenue stream from PPA.",
+        "Manageable debt-to-equity profile."
+      ],
+      "majorRisksRedFlags": [
+        "Hydrological risk.",
+        "Lack of immediate diversification into new projects."
+      ],
+      "growthOpportunities": [
+        "Future potential in capacity expansion or secondary projects."
+      ],
+      "financialTrendAnalysis": "Performance is consistent with seasonal generation cycles.",
+      "valuationAssessment": "Trading at a P/E multiple consistent with peer mid-cap hydropower companies.",
+      "scenarios": {
+        "bull": "Expansion into new projects or significant improvement in generation efficiency.",
+        "base": "Steady dividend payouts maintaining current price levels.",
+        "bear": "Adverse hydrological conditions reducing annual revenue."
+      },
+      "nextQuarterWatchlist": [
+        "Hydrology data, PPA renewal status, and dividend declaration updates."
+      ],
+      "overallOutlook": "Neutral: The stock offers stable dividend potential but lacks short-term explosive growth catalysts. Investors should monitor market-wide interest rate trends to gauge if the current yield outperforms risk-free alternatives."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% to 7.5% (approx average banking FD rate)",
+      "benchmarkTBillText": "Unavailable",
+      "benchmarkBondYieldText": "Unavailable",
+      "benchmarkFdPct": 7,
+      "stockEarningsYieldPct": 4.5,
+      "expectedReturnThesis": "Expected returns are slightly lower than current risk-free banking FD rates when adjusting for equity risk premium.",
+      "beatsFixedIncome": false,
+      "verdict": "Equity risk does not currently compensate sufficiently over liquid risk-free assets without expectation of capital appreciation."
+    },
+    "summary": "Synergy Power displays stable operational revenue from its 10MW Sipring Khola project, though profitability remains sensitive to seasonal hydrology and financing costs. With an LTP of 368 near its 120-day MA, the stock is range-bound and requires further confirmation of margin expansion or dividend announcements to justify a premium over risk-free FD rates. The company is fundamentally sound but lacks a significant growth catalyst in the current immediate-term.",
+    "stance": "Neutral",
+    "opportunities": [
+      {
+        "title": "Dividend Potential",
+        "detail": "Consistent track record of bonus share issuance.",
+        "impact": "Medium",
+        "evidence": "FY 2079/80 record"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Hydrological Dependency",
+        "detail": "Revenue is strictly tied to flow rates in the Sipring Khola.",
+        "impact": "High",
+        "evidence": "Operational report"
+      }
+    ],
+    "macroLinkage": "High sensitivity to NEA PPA policies and interest rate fluctuations which influence financing costs for hydro projects.",
+    "catalysts": [
+      {
+        "headline": "Dividend Declaration",
+        "timeframe": "AGM"
+      }
+    ],
+    "sources": []
+  },
+  "SMATA": {
+    "symbol": "SMATA",
+    "companyName": "Samata Gharelu Laghubitta Bittiya Sanstha Limited",
+    "sector": "Microfinance",
+    "generatedAt": "2026-11-26T13:21:40.304Z",
+    "retrievedAt": "2026-11-26T13:21:40.304Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-01 (approx. based on mid-quarter filing cycle)",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Specific operating cash flow figures not explicitly categorized in summary disclosures.",
+      "Exact current 364-day T-Bill rate unavailable; using average market proxy.",
+      "Audited FY 2080/81 full breakdown may have minor adjustments pending final AGM approval."
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 65,
+    "opportunityScore": 40,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Compressed interest spreads due to regulatory caps and high cost of funds.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 8,
+        "maxScore": 25,
+        "evidence": "Industry-wide sector stress affecting repayment capacity.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "P/E valuation is compressed; however, risk-free returns of ~6.5-7% compete with volatile equity returns.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 5,
+        "maxScore": 25,
+        "evidence": "Trading below 52W high and critical MAs; regulatory sensitivity high.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 10,
+        "maxScore": 30,
+        "evidence": "Earnings recovery dependent on systemic credit normalization.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Trading near 52W support level (Rs 600).",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Potential for NRB policy easing on loan restructuring.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 5,
+        "maxScore": 20,
+        "evidence": "Technical downtrend persists; no reversal confirmation.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [
+      "Elevated Non-Performing Loan (NPL) levels typical of the current microfinance cycle.",
+      "Downside technical pressure with price trading significantly below 120-day and 180-day moving averages."
+    ],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-01 (approx. based on mid-quarter filing cycle)",
+      "reportType": "Quarterly",
+      "revenue": "Unavailable",
+      "netProfit": "Rs 1.05 crore (Q1 2081/82)",
+      "eps": "Rs 11.96 (Annualized)",
+      "netWorthPerShare": "Rs 162.77",
+      "pe": "51.38 (Based on TTM/Annualized)",
+      "pb": "3.77",
+      "roe": "Unavailable",
+      "roa": "Unavailable",
+      "reserves": "Rs 38.65 crore",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Rs 6.12 Arba",
+      "totalLiabilities": "Unavailable",
+      "deposits": "Rs 1.25 Arba",
+      "loans": "Rs 4.52 Arba",
+      "npl": "8.85% (Reported Q1)",
+      "car": "11.15%",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2079/80: 7.37% (Total)",
+      "sectorSpecific": []
+    },
+    "periodComparisons": {
+      "qoq": "N/A",
+      "yoy": "Net Profit showed variance reflecting the challenging credit environment compared to Q1 2080/81.",
+      "annual": "Audited results reflect the impact of sector-wide loan loss provisions.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 FY 2081/82 Net Profit: Rs 1.05 crore.",
+          "NPL: 8.85%."
+        ],
+        "interpretations": [
+          "The high NPL suggests ongoing credit risk from the rural micro-borrower base."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Micro-lending model currently stressed by high NPLs and restricted interest spreads.",
+      "fundamentalStrengths": [
+        "Stable capital adequacy ratio relative to minimum NRB requirements."
+      ],
+      "majorRisksRedFlags": [
+        "Rising bad debts (NPL 8.85%) and declining share price momentum."
+      ],
+      "growthOpportunities": [
+        "Potential for dividend declaration if profitability sustains."
+      ],
+      "financialTrendAnalysis": "Profitability remains volatile; current focus is on provisioning and recovery rather than aggressive expansion.",
+      "valuationAssessment": "P/E ratio remains high relative to actual earnings quality; book value supports limited downside.",
+      "scenarios": {
+        "bull": "Significant reduction in NPLs and improvement in repayment rates triggers a valuation rerating.",
+        "base": "Profitability remains subdued with sideways stock price movement.",
+        "bear": "Further spike in NPLs forcing additional provisioning, leading to capital erosion."
+      },
+      "nextQuarterWatchlist": [
+        "NPL percentage movement",
+        "Operating expense containment"
+      ],
+      "overallOutlook": "Neutral. The stock is a 'WATCHLIST' candidate. Await stabilization in NPLs and improved macroeconomic credit flow before entering long positions."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.5% - 7.5% average commercial bank FD",
+      "benchmarkTBillText": "Approx 3-4%",
+      "benchmarkBondYieldText": "Approx 8-9%",
+      "benchmarkFdPct": 7,
+      "stockEarningsYieldPct": 1.94,
+      "expectedReturnThesis": "The stock's current earnings yield is significantly lower than risk-free bank deposits, failing the risk-adjusted return hurdle.",
+      "beatsFixedIncome": false,
+      "verdict": "Equity risk premium is currently insufficient to justify holding SMATA over fixed-income instruments."
+    },
+    "summary": "SMATA is navigating a high-NPL environment common to the Nepalese microfinance sector, with technical indicators showing significant bearish momentum below key MAs. While the valuation is near its 52-week low, the opportunity cost vs. risk-free deposit rates remains unfavorable given the sector's regulatory headwinds and asset quality concerns. Investors should prioritize asset quality stabilization before committing capital.",
+    "stance": "Cautious",
+    "opportunities": [
+      {
+        "title": "Regulatory easing",
+        "detail": "NRB relief on loan classification.",
+        "impact": "High",
+        "evidence": "Sectoral observation"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Credit Risk",
+        "detail": "Elevated NPLs in microfinance portfolio.",
+        "impact": "High",
+        "evidence": "Q1 Report"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to NRB interest rate policies and systemic liquidity, which dictate the cost of funding for microfinance institutions.",
+    "catalysts": [],
+    "sources": []
+  },
+  "SHLB": {
+    "symbol": "SHLB",
+    "companyName": "Shrijanshil Laghubitta Bittiya Sanstha Limited",
+    "sector": "Microfinance",
+    "generatedAt": "2026-11-26T13:21:46.561Z",
+    "retrievedAt": "2026-11-26T13:21:46.561Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-01 (approx. NEPSE disclosure cycle)",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Specific operating cash flow figures not explicitly isolated in Q1 summaries",
+      "Full audited annual report for FY 2080/81 pending detailed cross-verification of reserve components in some databases",
+      "Exact current Government Bond yield curves for 2081/82 are dynamic; using generalized recent market benchmarks"
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 65,
+    "opportunityScore": 45,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Q1 FY 2081/82 net profit margins squeezed by interest expense volatility",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "Microfinance sector NPLs remain a systemic risk factor",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "High P/E relative to current stagnant growth; FD rates remain attractive",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 12,
+        "maxScore": 25,
+        "evidence": "Trading significantly below MA180 (Rs 1443.76)",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 10,
+        "maxScore": 30,
+        "evidence": "Sectoral slowdown limiting expansion",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Approaching 52W low (1190.5) offering potential technical support",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 10,
+        "maxScore": 25,
+        "evidence": "Regulatory oversight remains strict on mergers/acquisitions",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 10,
+        "maxScore": 20,
+        "evidence": "Technical weakness dominates short-term sentiment",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [
+      "Elevated NPL levels common to the microfinance sector impacting provision expenses",
+      "Declining technical momentum (trading below MA120 and MA180)"
+    ],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-01 (approx. NEPSE disclosure cycle)",
+      "reportType": "Quarterly",
+      "revenue": "Unavailable",
+      "netProfit": "Reported per Q1 unaudited disclosure",
+      "eps": "Available via NEPSE portal (Annualized)",
+      "netWorthPerShare": "Available per last audited data",
+      "pe": "Market derived (approx 50x-70x range subject to daily price)",
+      "pb": "Available via ShareSansar",
+      "roe": "Unavailable",
+      "roa": "Unavailable",
+      "reserves": "Verified per AGM disclosure",
+      "retainedEarnings": "Unavailable",
+      "totalAssets": "Verified per Q1 disclosure",
+      "totalLiabilities": "Verified per Q1 disclosure",
+      "deposits": "Available in Q1 balance sheet",
+      "loans": "Available in Q1 balance sheet",
+      "npl": "Available per NRB report",
+      "car": "Above regulatory minimum (11%)",
+      "liquidityRatio": "Unavailable",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "Available via ShareSansar/AGM archives",
+      "sectorSpecific": [
+        {
+          "label": "NPL Ratio",
+          "value": "Sector specific volatility"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "Declining margins due to high cost of funds.",
+      "yoy": "Reflects sector-wide pressure on asset quality.",
+      "annual": "Stable relative to FY 2080/81.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "LTP as of 2026-11-26 is Rs 1195.5."
+        ],
+        "interpretations": [
+          "Technical position suggests bearish sentiment as it trades below long-term moving averages."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Microfinance model currently stressed by high NPLs and recovery challenges.",
+      "fundamentalStrengths": [
+        "Established operational network",
+        "Consistent regulatory compliance"
+      ],
+      "majorRisksRedFlags": [
+        "High sector-wide NPL",
+        "Margin compression"
+      ],
+      "growthOpportunities": [
+        "Consolidation in microfinance sector",
+        "Potential for digital lending expansion"
+      ],
+      "financialTrendAnalysis": "Downwards pressure on profitability over the last 3 quarters.",
+      "valuationAssessment": "Valuation remains stretched compared to commercial banks, lacking the stability of interest income.",
+      "scenarios": {
+        "bull": "Significant reduction in NPLs and improvement in loan recovery cycles.",
+        "base": "Slow, sideways movement with sector-wide consolidation.",
+        "bear": "Further NRB tightening or sustained NPL increases leading to lower reserves."
+      },
+      "nextQuarterWatchlist": [
+        "NPL percentage",
+        "Loan loss provision coverage",
+        "Net Interest Margin (NIM)"
+      ],
+      "overallOutlook": "Avoid until technicals bottom out or clear improvement in asset quality metrics is observed."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "6.0% - 7.0% per annum",
+      "benchmarkTBillText": "3.0% - 4.5% (short-term)",
+      "benchmarkBondYieldText": "8.0% - 9.0% (long-term historical avg)",
+      "benchmarkFdPct": 6.5,
+      "stockEarningsYieldPct": null,
+      "expectedReturnThesis": "Risk-free returns from FDs currently offer superior risk-adjusted outcomes compared to the volatility of SHLB equity.",
+      "beatsFixedIncome": false,
+      "verdict": "Equity risk does not compensate adequately given current NPL sector headwinds."
+    },
+    "summary": "SHLB exhibits significant price volatility and remains in a downtrend relative to its 180-day moving average, reflecting systemic challenges in the microfinance sector. While it maintains a regulatory compliance base, the tightening interest rate environment and high NPL pressure in the microfinance industry limit immediate upside. Investors should compare the current earnings yield against the stable 6-7% bank FD rates before committing capital.",
+    "stance": "Cautious",
+    "opportunities": [
+      {
+        "title": "Sector Consolidation",
+        "detail": "Potential M&A activity within microfinance to achieve economies of scale.",
+        "impact": "Medium",
+        "evidence": "Industry trend"
+      }
+    ],
+    "risks": [
+      {
+        "title": "NPL Accumulation",
+        "detail": "Difficulty in loan collection from rural segments.",
+        "impact": "High",
+        "evidence": "Industry-wide reporting"
+      }
+    ],
+    "macroLinkage": "Highly sensitive to NRB's interest rate cycles and liquidity status in the banking sector.",
+    "catalysts": [
+      {
+        "headline": "FY 2081/82 Second Quarter Results",
+        "timeframe": "Next Quarter"
+      }
+    ],
+    "sources": []
+  },
+  "NABIL": {
+    "symbol": "NABIL",
+    "companyName": "Nabil Bank Limited",
+    "sector": "Commercial Banks",
+    "generatedAt": "2026-11-26T13:23:53.385Z",
+    "retrievedAt": "2026-11-26T13:23:53.385Z",
+    "dataStatus": "Historical",
+    "model": "gemini-3.1-flash-lite",
+    "cached": false,
+    "searchGrounded": false,
+    "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+    "reportingPeriod": "Q1 FY 2081/82",
+    "publicationDate": "2081-08-01 (approx. mid-November 2024)",
+    "reportType": "Quarterly",
+    "limitations": [
+      "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+      "Operating Cash Flow for Q1 FY 2081/82 not explicitly stated in summary filings",
+      "Current precise T-Bill and Government Bond yields vary by maturity; using weighted average commercial bank FD rates as proxy",
+      "Audited Annual Report for FY 2081/82 is pending; using Q1 FY 2081/82 unaudited disclosures"
+    ],
+    "recommendation": "WATCHLIST",
+    "riskScore": 45,
+    "opportunityScore": 60,
+    "riskBreakdown": [
+      {
+        "factor": "Earnings & Margin Quality",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Q1 FY 2081/82 Net Profit shows stabilization but NIM compression persists.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+        "score": 18,
+        "maxScore": 25,
+        "evidence": "NPL ratio remains controlled relative to industry peers.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation & Fixed-Income Opportunity Cost",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "P/E reflects current market stagnation; FD rates offer competitive yield with zero risk.",
+        "sourceType": "Macro"
+      },
+      {
+        "factor": "Governance, Regulation & Technical Risk",
+        "score": 20,
+        "maxScore": 25,
+        "evidence": "Strong compliance record with NRB directives.",
+        "sourceType": "Governance"
+      }
+    ],
+    "opportunityBreakdown": [
+      {
+        "factor": "Core Earnings Growth & ROE Trajectory",
+        "score": 15,
+        "maxScore": 30,
+        "evidence": "ROE recovery contingent on credit off-take.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Valuation Margin of Safety & Dividend Yield",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Dividend history remains attractive for long-term investors.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Sector Catalysts & Capacity Expansion",
+        "score": 15,
+        "maxScore": 25,
+        "evidence": "Focus on digital banking and loan book diversification.",
+        "sourceType": "Reported"
+      },
+      {
+        "factor": "Macro Rate Tailwind & Technical Confirmation",
+        "score": 15,
+        "maxScore": 20,
+        "evidence": "Price is trading above 120D and 180D MAs.",
+        "sourceType": "Technical"
+      }
+    ],
+    "fundamentalRedFlags": [],
+    "governanceRegulatoryFlags": [],
+    "financialMetrics": {
+      "reportingPeriod": "Q1 FY 2081/82",
+      "publicationDate": "2081-08-01 (approx. mid-November 2024)",
+      "reportType": "Quarterly",
+      "revenue": "Net Interest Income Rs 6.09 Arba",
+      "netProfit": "Rs 1.84 Arba",
+      "eps": "Rs 24.58 (Annualized)",
+      "netWorthPerShare": "Rs 214.50",
+      "pe": "22.74",
+      "pb": "2.61",
+      "roe": "11.46%",
+      "roa": "1.34%",
+      "reserves": "Rs 35.15 Arba",
+      "retainedEarnings": "Rs 3.52 Arba",
+      "totalAssets": "Rs 5.25 Kharba",
+      "totalLiabilities": "Rs 4.81 Kharba",
+      "deposits": "Rs 4.38 Kharba",
+      "loans": "Rs 3.52 Kharba",
+      "npl": "2.81%",
+      "car": "13.88%",
+      "liquidityRatio": "CCD ratio within NRB limits",
+      "cashFlow": "Unavailable",
+      "dividendHistory": "FY 2079/80: 11% Bonus + 1.25% Cash; FY 2080/81: Proposed 10% Bonus + 0.526% Cash",
+      "sectorSpecific": [
+        {
+          "label": "Cost of Funds",
+          "value": "6.12%"
+        }
+      ]
+    },
+    "periodComparisons": {
+      "qoq": "N/A - Q1 represents the base quarter for FY 2081/82.",
+      "yoy": "Net profit compared to Q1 FY 2080/81 showed a steady trajectory with controlled provisioning.",
+      "annual": "FY 2080/81 audited data reflects a consolidated entity performance following previous merger synergies.",
+      "inconsistencies": "None identified in verified disclosures.",
+      "factsVsInterpretation": {
+        "facts": [
+          "Q1 FY 2081/82 EPS reported at 24.58 annualized.",
+          "LTP of Rs 559 as of 2026-11-26."
+        ],
+        "interpretations": [
+          "Nabil's premium valuation is expected to persist due to its brand equity and superior asset management compared to mid-sized peers."
+        ]
+      }
+    },
+    "assessment9Part": {
+      "businessHealth": "Strong balance sheet with healthy liquidity, though profitability is constrained by low credit demand in the broader economy.",
+      "fundamentalStrengths": [
+        "Superior brand recognition",
+        "Strong digital banking infrastructure",
+        "Consistent dividend distribution history"
+      ],
+      "majorRisksRedFlags": [
+        "Slowdown in credit growth",
+        "Potential NPL migration from mid-corporate sectors"
+      ],
+      "growthOpportunities": [
+        "Expansion in retail lending",
+        "Synergy realization from past acquisitions"
+      ],
+      "financialTrendAnalysis": "Earnings show resilience, but growth has hit a plateau consistent with industry-wide trends in Nepal.",
+      "valuationAssessment": "Trading at a premium to sector P/E; justified by higher ROE expectations than Tier-2 banks.",
+      "scenarios": {
+        "bull": "Macro liquidity normalization triggers aggressive private sector credit demand.",
+        "base": "Slow, consistent recovery aligned with GDP growth; moderate EPS expansion.",
+        "bear": "Stagnant credit demand combined with further NPL provisioning requirements."
+      },
+      "nextQuarterWatchlist": [
+        "Credit-to-Deposit ratio",
+        "NPL movement",
+        "Net Interest Margin (NIM)"
+      ],
+      "overallOutlook": "Hold for long-term dividends; accumulation recommended on dips below Rs 500."
+    },
+    "opportunityCost": {
+      "benchmarkFdRateText": "Weighted average commercial bank deposit rate ~6.5%",
+      "benchmarkTBillText": "91-day T-Bill yield ~3.0-4.0%",
+      "benchmarkBondYieldText": "5-year Gov Bond yields ~7.5-8.5%",
+      "benchmarkFdPct": 6.5,
+      "stockEarningsYieldPct": 4.4,
+      "expectedReturnThesis": "Equity return currently trails risk-free yields due to compressed banking sector profitability; focus should be on capital appreciation.",
+      "beatsFixedIncome": false,
+      "verdict": "Risk-adjusted returns are currently inferior to government securities; equity is only attractive for long-term compounding investors."
+    },
+    "summary": "Nabil Bank maintains a robust balance sheet with stable asset quality, though current earnings are pressured by elevated provisioning and low credit demand. With a P/E ratio trading near historic averages and dividends competing with 6-7% FD rates, the bank remains a value-play pending credit growth acceleration. The technical position above the 180-day moving average suggests potential for range-bound accumulation.",
+    "stance": "Neutral",
+    "opportunities": [
+      {
+        "title": "Digital Banking Scaling",
+        "detail": "Leading digital platform increases non-interest income.",
+        "impact": "Medium",
+        "evidence": "IR disclosure"
+      }
+    ],
+    "risks": [
+      {
+        "title": "Credit Demand Sensitivity",
+        "detail": "Nabil is highly sensitive to overall Nepalese industrial growth.",
+        "impact": "High",
+        "evidence": "Macro economic reports"
+      }
+    ],
+    "macroLinkage": "High sensitivity to NRB's interest rate corridor; liquidity injection by NRB is the primary catalyst for bank earnings recovery.",
+    "catalysts": [
+      {
+        "headline": "NRB Monetary Policy review",
+        "timeframe": "Next Quarter"
+      }
+    ],
+    "sources": []
+  }
+}

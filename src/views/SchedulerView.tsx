@@ -63,31 +63,41 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
   const [notice, setNotice] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   const loadStatus = async () => {
-    const res = await fetch('/api/scheduler/status');
-    const data = await res.json();
-    setStatus(data);
-    setBackfill(data.backfill ?? null);
-    if (data.config) {
-      setEnabled(data.config.enabled);
-      setTime(data.config.time);
-      setTimezone(data.config.timezone);
-      setDays(data.config.days);
-      setRetryIfNotUpdated(data.config.retryIfNotUpdated);
-      setRetryDelayMinutes(data.config.retryDelayMinutes);
-      setSourceMode(data.config.sourceMode || 'sharesansar');
-      setGithubRepo(data.config.githubRepo || '');
-      setGithubBranch(data.config.githubBranch || 'main');
-      setGithubDataPath(data.config.githubDataPath || 'data');
-      setPushToGitHub(Boolean(data.config.pushToGitHub));
-      if (data.config.githubRepo) {
-        setPushRepoName(data.config.githubRepo);
+    try {
+      const res = await fetch('/api/scheduler/status');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setStatus(data);
+      setBackfill(data.backfill ?? null);
+      if (data.config) {
+        setEnabled(data.config.enabled);
+        setTime(data.config.time);
+        setTimezone(data.config.timezone);
+        setDays(data.config.days);
+        setRetryIfNotUpdated(data.config.retryIfNotUpdated);
+        setRetryDelayMinutes(data.config.retryDelayMinutes);
+        setSourceMode(data.config.sourceMode || 'sharesansar');
+        setGithubRepo(data.config.githubRepo || '');
+        setGithubBranch(data.config.githubBranch || 'main');
+        setGithubDataPath(data.config.githubDataPath || 'data');
+        setPushToGitHub(Boolean(data.config.pushToGitHub));
+        if (data.config.githubRepo) {
+          setPushRepoName(data.config.githubRepo);
+        }
       }
-    }
-    if (data.hasGitHubToken) {
-      fetch('/api/github/account')
-        .then((r) => r.json())
-        .then((acc) => setGhAccount(acc))
-        .catch(() => null);
+      if (data.hasGitHubToken) {
+        fetch('/api/github/account')
+          .then((r) => (r.ok ? r.json() : null))
+          .then((acc) => {
+            if (acc) setGhAccount(acc);
+          })
+          .catch(() => null);
+      }
+    } catch (err) {
+      setNotice({
+        kind: 'error',
+        text: err instanceof Error ? err.message : 'Failed to load scheduler status',
+      });
     }
   };
 
@@ -99,12 +109,17 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
   useEffect(() => {
     if (!backfill?.active) return;
     const timer = setInterval(async () => {
-      const res = await fetch('/api/scraper/backfill/status');
-      const bf: BackfillStatus = await res.json();
-      setBackfill(bf);
-      if (!bf.active) {
-        await loadStatus();
-        onDataChanged();
+      try {
+        const res = await fetch('/api/scraper/backfill/status');
+        if (!res.ok) return;
+        const bf: BackfillStatus = await res.json();
+        setBackfill(bf);
+        if (!bf.active) {
+          await loadStatus();
+          onDataChanged();
+        }
+      } catch {
+        // ignore transient poll failures
       }
     }, 1200);
     return () => clearInterval(timer);
@@ -279,9 +294,17 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
   };
 
   const handleDeleteDate = async (d: string) => {
-    await fetch(`/api/data/${encodeURIComponent(d)}`, { method: 'DELETE' });
-    await loadStatus();
-    onDataChanged();
+    try {
+      const res = await fetch(`/api/data/${encodeURIComponent(d)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+      await loadStatus();
+      onDataChanged();
+    } catch (err) {
+      setNotice({
+        kind: 'error',
+        text: err instanceof Error ? err.message : 'Failed to delete session CSV',
+      });
+    }
   };
 
   const toggleDay = (id: number) => {

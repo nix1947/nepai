@@ -1,24 +1,30 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
+  AlertOctagon,
   BarChart3,
   BookOpen,
   CalendarClock,
   CandlestickChart,
   Compass,
+  FileWarning,
   Gauge,
   Globe,
   Menu,
   Moon,
   Radar,
   RefreshCw,
+  Scale,
   Search,
   Settings,
+  ShieldAlert,
+  Sparkles,
   Star,
   Sun,
   TrendingUp,
   X,
 } from 'lucide-react';
+import { InfoTip } from './components/InfoTip';
 import { useTradingSettings } from './hooks/useTradingSettings';
 import { useWatchlist } from './hooks/useWatchlist';
 import type { DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
@@ -26,7 +32,14 @@ import { formatTimeUntil } from './utils/format';
 import { AlgorithmsView } from './views/AlgorithmsView';
 import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
+import { OpportunityRadarView } from './views/OpportunityRadarView';
 import { OverviewView } from './views/OverviewView';
+import {
+  CompositeDoNotBuyView,
+  FundamentallyRiskyView,
+  MarketOpportunityVsRiskView,
+  TechnicallyRiskyView,
+} from './views/RiskIntelligenceViews';
 import { ScannersView } from './views/ScannersView';
 import { SchedulerView } from './views/SchedulerView';
 import { SettingsView } from './views/SettingsView';
@@ -38,10 +51,15 @@ type NavTab =
   | 'overview'
   | 'pulse'
   | 'turnover'
+  | 'radar'
   | 'direction'
   | 'scanners'
   | 'explorer'
   | 'macro'
+  | 'fundamentally-risky'
+  | 'technically-risky'
+  | 'do-not-buy'
+  | 'opportunity-vs-risk'
   | 'algorithms'
   | 'settings'
   | 'scheduler';
@@ -54,10 +72,15 @@ const NAV_ITEMS: Array<{
   { id: 'overview', label: 'Overview', icon: BarChart3 },
   { id: 'pulse', label: 'Market Pulse', icon: Gauge },
   { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
+  { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
   { id: 'direction', label: 'Turnover × Direction', icon: Activity },
   { id: 'scanners', label: 'Scanners', icon: Radar },
   { id: 'explorer', label: 'Stock Explorer', icon: CandlestickChart },
   { id: 'macro', label: 'Macro & Risks', icon: Globe },
+  { id: 'fundamentally-risky', label: 'Fundamentally Risky Stocks', icon: FileWarning },
+  { id: 'technically-risky', label: 'Technically Risky Stocks', icon: ShieldAlert },
+  { id: 'do-not-buy', label: 'DO NOT BUY – High Risk Stocks', icon: AlertOctagon },
+  { id: 'opportunity-vs-risk', label: 'Market Opportunity vs Risk', icon: Scale },
   { id: 'algorithms', label: 'Algorithms', icon: BookOpen },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'scheduler', label: 'Scheduler & Data', icon: CalendarClock },
@@ -88,18 +111,32 @@ export default function App() {
     else root.classList.remove('dark');
   }, [darkMode]);
 
-  const loadMeta = useCallback(async () => {
+  const loadMeta = useCallback(async (attempt = 0) => {
     try {
       const [metaRes, schedRes] = await Promise.all([
         fetch('/api/meta'),
         fetch('/api/scheduler/status'),
       ]);
+      if (!metaRes.ok || !schedRes.ok) {
+        throw new Error('Market server returned an unexpected response');
+      }
       const meta = await metaRes.json();
       const sched = await schedRes.json();
       setDates(meta.dates || []);
       setDaily(meta.daily || []);
       setSchedulerStatus(sched);
-    } finally {
+      setLoadingMeta(false);
+    } catch (err) {
+      if (attempt < 2) {
+        setTimeout(() => {
+          void loadMeta(attempt + 1);
+        }, 1000);
+        return;
+      }
+      setToast({
+        kind: 'error',
+        text: err instanceof Error ? `Unable to reach server: ${err.message}` : 'Unable to reach server',
+      });
       setLoadingMeta(false);
     }
   }, []);
@@ -241,6 +278,17 @@ export default function App() {
 
         <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800/70">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span>Data feed</span>
+            <span className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300">
+              <span>ShareSansar EOD</span>
+              <InfoTip
+                title="EOD / Historical Data Policy"
+                body="All prices, volumes, and rolling N-day signals are computed from loaded ShareSansar End-of-Day (EOD) CSV sessions rather than live streaming ticks."
+                align="left"
+              />
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span>Rolling window</span>
             <button
               type="button"
@@ -320,6 +368,11 @@ export default function App() {
               <h1 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                 {currentNav.label}
               </h1>
+              {dates.length > 0 && (
+                <span className="hidden md:inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                  EOD: {dates[dates.length - 1]}
+                </span>
+              )}
             </div>
           </div>
 
@@ -500,6 +553,13 @@ export default function App() {
                   onInspectSymbol={inspectSymbol}
                 />
               )}
+              {activeTab === 'radar' && (
+                <OpportunityRadarView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
               {activeTab === 'direction' && (
                 <TurnoverDirectionView
                   dates={dates}
@@ -523,6 +583,34 @@ export default function App() {
               )}
               {activeTab === 'macro' && (
                 <MacroRisksView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
+              {activeTab === 'fundamentally-risky' && (
+                <FundamentallyRiskyView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
+              {activeTab === 'technically-risky' && (
+                <TechnicallyRiskyView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
+              {activeTab === 'do-not-buy' && (
+                <CompositeDoNotBuyView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
+              {activeTab === 'opportunity-vs-risk' && (
+                <MarketOpportunityVsRiskView
                   dates={dates}
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}

@@ -1,0 +1,173 @@
+{
+  "macro": {
+    "macro:2026-11-26": {
+      "expiresAt": 1795698793934,
+      "data": {
+        "generatedAt": "2026-11-26T12:53:13.933Z",
+        "model": "gemini-3.1-flash-lite",
+        "cached": false,
+        "searchGrounded": false,
+        "notice": "Live Google Search Grounding quota was exceeded (429), so this analysis was generated using Gemini Flash Lite and your loaded ShareSansar market data.",
+        "nepalSummary": "The Nepalese economy faces a period of tepid market activity as NEPSE consolidates amidst cautious investor sentiment and liquidity constraints. While the banking sector exhibits improved liquidity, high interest rate sensitivity and sluggish capital expenditure by the government continue to weigh on market turnover and overall investor confidence.",
+        "worldSummary": "Global markets are grappling with a hawkish US Federal Reserve interest rate outlook and heightened geopolitical instability, which exerts upward pressure on the USD/NPR exchange rate. This volatility impacts Nepal through imported inflation and the potential volatility in remittance inflows from Gulf and Western economies.",
+        "nepalOpportunities": [
+          {
+            "title": "Monetary Easing Cycles",
+            "detail": "Gradual reduction in policy rates by the NRB is likely to lower the cost of funds for banks, supporting credit expansion and interest margin recovery.",
+            "impact": "High"
+          },
+          {
+            "title": "Hydropower Export Potential",
+            "detail": "Increasing cross-border electricity sales to India provide a structural shift in foreign exchange earnings and long-term profitability for the energy sector.",
+            "impact": "High"
+          },
+          {
+            "title": "Banking Liquidity Surplus",
+            "detail": "High CD ratios are trending toward optimal levels, allowing for more aggressive deployment of funds into the productive sector and stock market.",
+            "impact": "High"
+          }
+        ],
+        "nepalRisks": [
+          {
+            "title": "Sluggish Capital Expenditure",
+            "detail": "Failure of the government to execute budget plans hampers domestic demand and restricts the circulation of capital in the wider economy.",
+            "impact": "High"
+          },
+          {
+            "title": "Import-Dependent Inflation",
+            "detail": "Persistent reliance on imported goods makes Nepal vulnerable to global supply chain shocks and fluctuations in international commodity prices.",
+            "impact": "High"
+          },
+          {
+            "title": "Regulatory Uncertainty",
+            "detail": "Frequent and sometimes unpredictable policy shifts from regulators regarding margin lending and sectoral exposure create a 'wait and see' environment.",
+            "impact": "High"
+          }
+        ],
+        "worldOpportunities": [
+          {
+            "title": "Gold Price Stability",
+            "detail": "As a safe-haven asset, gold remains a hedge for the Nepalese central bank and households against currency devaluation.",
+            "impact": "Medium"
+          },
+          {
+            "title": "Technological Integration in Finance",
+            "detail": "Global trends in fintech are incentivizing local digital banking adoption, improving the efficiency of the financial system.",
+            "impact": "Medium"
+          }
+        ],
+        "worldRisks": [
+          {
+            "title": "USD Appreciation",
+            "detail": "A stronger US Dollar increases the burden of external debt servicing and inflates the cost of essential imports for Nepal.",
+            "impact": "High"
+          },
+          {
+            "title": "Geopolitical Oil Shocks",
+            "detail": "Instability in the Middle East poses a direct threat to fuel prices, which immediately impacts Nepal’s inflation and trade deficit.",
+            "impact": "High"
+          },
+          {
+            "title": "Indian Market Volatility",
+            "detail": "Close correlation with the Indian economy means Nifty-linked volatility often spills over into investor sentiment within Nepal.",
+            "impact": "High"
+          }
+        ],
+        "sectorsToWatch": [
+          {
+            "sector": "Hydropower",
+            "stance": "Positive",
+            "reason": "Clear export prospects to India and strong regulatory support for PPA agreements ensure long-term revenue visibility."
+          },
+          {
+            "sector": "Commercial Banks",
+            "stance": "Neutral",
+            "reason": "Excess liquidity is a positive signal, but muted credit demand and potential asset quality issues keep the outlook cautious."
+          },
+          {
+            "sector": "Non-Life Insurance",
+            "stance": "Positive",
+            "reason": "Rising compliance requirements and consistent premium growth provide stable fundamentals in a volatile market."
+          }
+        ],
+        "sources": []
+      }
+    }
+  },
+  "stock": {
+    "stock:NABIL:2026-11-26": {
+      "expiresAt": 1795698826311,
+      "data": {
+        "symbol": "NABIL",
+        "companyName": "Nabil Bank Limited",
+        "generatedAt": "2026-11-26T12:53:46.311Z",
+        "model": "gemini-3.1-flash-lite",
+        "cached": false,
+        "searchGrounded": false,
+        "notice": "Live Google Search Grounding quota was exceeded (429), so this analysis was generated using Gemini Flash Lite and your loaded ShareSansar market data. Select a billing-enabled API key in Settings > Secrets to enable Search Grounding.",
+        "summary": "Nabil Bank maintains its status as a bellwether of the Nepali banking sector, exhibiting resilient price action above its 120-day moving average despite recent market consolidation. While high liquidity levels in the banking system support credit expansion, the bank's outlook remains tempered by the need for sustained asset quality improvements and competitive credit growth in a slowing consumption environment.",
+        "stance": "Neutral",
+        "opportunities": [
+          {
+            "title": "Market Leadership & Scale",
+            "detail": "Nabil's significant market share and robust digital infrastructure provide a competitive edge in capturing low-cost deposit mobilization as the economy recovers.",
+            "impact": "High"
+          },
+          {
+            "title": "Liquidity Surplus",
+            "detail": "Excess investable funds in the banking system, driven by improved remittance inflows, provide Nabil with the necessary liquidity to expand its high-yield loan portfolio.",
+            "impact": "High"
+          },
+          {
+            "title": "Efficiency Gains",
+            "detail": "Continued synergies from the Nepal Bangladesh Bank acquisition are expected to optimize operational costs and improve long-term bottom-line profitability.",
+            "impact": "High"
+          },
+          {
+            "title": "Dividend Potential",
+            "detail": "Strong capital adequacy ratios position Nabil favorably to distribute competitive dividends once regulatory approvals are met, potentially attracting value-seeking investors.",
+            "impact": "High"
+          }
+        ],
+        "risks": [
+          {
+            "title": "Asset Quality Deterioration",
+            "detail": "The lingering impact of economic slowdown on SMEs and corporate borrowers poses a risk of increased Non-Performing Loans (NPLs) and higher provisioning costs.",
+            "impact": "High"
+          },
+          {
+            "title": "Credit Growth Sluggishness",
+            "detail": "Despite liquidity, actual private sector credit demand remains weak, limiting the bank's net interest margin expansion and core revenue growth.",
+            "impact": "High"
+          },
+          {
+            "title": "Regulatory Tightening",
+            "detail": "Unpredictable NRB policies regarding loan loss provisioning and directed lending mandates could curtail the bank's operational flexibility and profitability.",
+            "impact": "High"
+          },
+          {
+            "title": "Margin Compression",
+            "detail": "Increasing competition for high-quality corporate assets may force a reduction in lending rates, putting downward pressure on the Net Interest Margin (NIM).",
+            "impact": "High"
+          }
+        ],
+        "macroLinkage": "Nabil’s performance is highly sensitive to NRB’s base rate fluctuations and the Interbank rate, which dictate its cost of funds and NIM stability. Global economic spillovers, particularly volatile fuel prices affecting inflation and USD-NPR exchange rates, influence remittance inflows—the primary fuel for domestic banking liquidity.",
+        "catalysts": [
+          {
+            "headline": "Annual General Meeting (AGM) & Dividend Announcement",
+            "timeframe": "AGM"
+          },
+          {
+            "headline": "Q2 Financial Performance Disclosure",
+            "timeframe": "Q2"
+          },
+          {
+            "headline": "NRB Monetary Policy Review for Credit Expansion",
+            "timeframe": "Near-term"
+          }
+        ],
+        "sources": []
+      }
+    }
+  }
+}

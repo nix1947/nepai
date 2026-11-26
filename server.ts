@@ -3,7 +3,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { getGitHubAccount, pushProjectToGitHub } from './server/githubSync.ts';
 import { isValidDateStr, MarketStore } from './server/marketStore.ts';
-import { generateMacroResearch, generateStockResearch } from './server/researchAi.ts';
+import {
+  auditCohortStocks,
+  generateMacroResearch,
+  generateStockResearch,
+} from './server/researchAi.ts';
+import {
+  computeTechnicalRiskRows,
+  getCompositeDoNotBuyStocks,
+  getFundamentallyRiskyStocks,
+  getMarketOpportunityVsRisk,
+} from './server/riskEngine.ts';
 import { DailyScheduler } from './server/scheduler.ts';
 import type { ScannerKind } from './src/types/market.ts';
 
@@ -66,8 +76,63 @@ async function startServer() {
       res.status(404).json({ error: 'No trading day loaded' });
       return;
     }
+    const start =
+      typeof req.query.start === 'string' && isValidDateStr(req.query.start)
+        ? req.query.start
+        : undefined;
+    const end =
+      typeof req.query.end === 'string' && isValidDateStr(req.query.end)
+        ? req.query.end
+        : undefined;
+    const nDays = req.query.nDays ? Math.max(2, Math.min(250, Number(req.query.nDays))) : 20;
     const equityOnly = req.query.equityOnly !== 'false';
-    res.json(store.getMarketPulse(day, equityOnly));
+    res.json(store.getMarketPulse(day, equityOnly, { start, end, nDays }));
+  });
+
+  app.get('/api/top-turnover-analytics', (req, res) => {
+    const start = String(req.query.start || '');
+    const end = String(req.query.end || '');
+    if (!isValidDateStr(start) || !isValidDateStr(end)) {
+      res.status(400).json({ error: 'Invalid start or end date' });
+      return;
+    }
+    const equityOnly = req.query.equityOnly !== 'false';
+    const n = req.query.n ? Math.max(1, Math.min(200, Number(req.query.n))) : 20;
+    const nDays = req.query.nDays ? Math.max(2, Math.min(250, Number(req.query.nDays))) : 20;
+    res.json(store.getTopTurnoverAnalytics(start, end, nDays, n, equityOnly));
+  });
+
+  app.get('/api/opportunity-radar', (req, res) => {
+    const dates = store.getDates();
+    const day =
+      typeof req.query.day === 'string' && isValidDateStr(req.query.day)
+        ? req.query.day
+        : dates[dates.length - 1];
+    if (!day) {
+      res.status(404).json({ error: 'No trading day loaded' });
+      return;
+    }
+    const nDays = req.query.nDays ? Math.max(5, Math.min(250, Number(req.query.nDays))) : 20;
+    const equityOnly = req.query.equityOnly !== 'false';
+    res.json(store.getOpportunityRadar(day, nDays, equityOnly));
+  });
+
+  app.get('/api/compare', (req, res) => {
+    const rawSyms = String(req.query.symbols || '');
+    const symbols = rawSyms
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (symbols.length === 0) {
+      res.status(400).json({ error: 'Provide comma-separated symbols' });
+      return;
+    }
+    const nDays = req.query.nDays ? Math.max(2, Math.min(250, Number(req.query.nDays))) : 20;
+    const end =
+      typeof req.query.end === 'string' && isValidDateStr(req.query.end)
+        ? req.query.end
+        : undefined;
+    res.json(store.compareStocks(symbols, nDays, end));
   });
 
   app.get('/api/symbols', (req, res) => {
@@ -185,15 +250,79 @@ async function startServer() {
     try {
       const symbol = String(req.body?.symbol || '').trim();
       const force = Boolean(req.body?.force);
+      const nDays = req.body?.nDays ? Math.max(5, Math.min(250, Number(req.body.nDays))) : 20;
       if (!symbol) {
         res.status(400).json({ error: 'Symbol is required' });
         return;
       }
-      const data = await generateStockResearch(store, symbol, force);
+      const data = await generateStockResearch(store, symbol, force, nDays);
       res.json(data);
     } catch (err) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'Failed to fetch stock risks and opportunities',
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- Risk & Opportunity Intelligence Routes
+  app.get('/api/risk/technical', (req, res) => {
+    const dates = store.getDates();
+    const day =
+      typeof req.query.day === 'string' && isValidDateStr(req.query.day)
+        ? req.query.day
+        : dates[dates.length - 1];
+    const nDays = req.query.nDays ? Math.max(5, Math.min(250, Number(req.query.nDays))) : 20;
+    const equityOnly = req.query.equityOnly !== 'false';
+    res.json(computeTechnicalRiskRows(store, day, nDays, equityOnly));
+  });
+
+  app.get('/api/risk/fundamental', (req, res) => {
+    const dates = store.getDates();
+    const day =
+      typeof req.query.day === 'string' && isValidDateStr(req.query.day)
+        ? req.query.day
+        : dates[dates.length - 1];
+    const equityOnly = req.query.equityOnly !== 'false';
+    res.json(getFundamentallyRiskyStocks(store, day, equityOnly));
+  });
+
+  app.get('/api/risk/do-not-buy', (req, res) => {
+    const dates = store.getDates();
+    const day =
+      typeof req.query.day === 'string' && isValidDateStr(req.query.day)
+        ? req.query.day
+        : dates[dates.length - 1];
+    const nDays = req.query.nDays ? Math.max(5, Math.min(250, Number(req.query.nDays))) : 20;
+    const equityOnly = req.query.equityOnly !== 'false';
+    res.json(getCompositeDoNotBuyStocks(store, day, nDays, equityOnly));
+  });
+
+  app.get('/api/risk/opportunity-vs-risk', (req, res) => {
+    const dates = store.getDates();
+    const day =
+      typeof req.query.day === 'string' && isValidDateStr(req.query.day)
+        ? req.query.day
+        : dates[dates.length - 1];
+    const nDays = req.query.nDays ? Math.max(5, Math.min(250, Number(req.query.nDays))) : 20;
+    const equityOnly = req.query.equityOnly !== 'false';
+    res.json(getMarketOpportunityVsRisk(store, day, nDays, equityOnly));
+  });
+
+  app.post('/api/risk/audit-batch', async (req, res) => {
+    try {
+      const symbols = Array.isArray(req.body?.symbols)
+        ? req.body.symbols.map((s: unknown) => String(s || ''))
+        : [];
+      const nDays = req.body?.nDays ? Math.max(5, Math.min(250, Number(req.body.nDays))) : 20;
+      if (symbols.length === 0) {
+        res.status(400).json({ error: 'Provide at least one stock symbol to audit' });
+        return;
+      }
+      const data = await auditCohortStocks(store, symbols, nDays);
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Batch fundamental audit failed',
       });
     }
   });

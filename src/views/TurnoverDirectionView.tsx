@@ -55,7 +55,10 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
         resolved.end
       )}&topPct=${topPct}&consistent=${consistent}&equityOnly=${equityOnly}`
     )
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((res) => {
         if (!cancelled) {
           setData({
@@ -66,6 +69,11 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
             upTurnover: res.upTurnover || 0,
             downTurnover: res.downTurnover || 0,
           });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setData({ all: [], up: [], down: [], cutoff: 0, upTurnover: 0, downTurnover: 0 });
         }
       })
       .finally(() => {

@@ -67,8 +67,8 @@ export const SettingsView: React.FC = () => {
               Rolling Trading Window (N Days)
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Used for N-day Average Turnover, N-day Average Volume, SMA(N) overlay, N-day Support &amp;
-              Resistance levels, and Visual Alert baselines.
+              Globally updates N-day Average Turnover, Average Volume, Average Price, % Deviations,
+              Top Turnover Signals, Market Pulse Sector Rotation, Opportunity Radar, and Chart SMA(N).
             </p>
           </div>
         </div>
@@ -118,23 +118,46 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+        <div className="p-3.5 rounded-md bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs space-y-1.5">
+          <div className="font-semibold text-blue-900 dark:text-blue-200">
+            Beginner Guide: What N = {settings.lookbackDays} Trading Days Means
+          </div>
+          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+            A rolling average calculates the mean turnover, volume, and closing price over the most
+            recent <span className="font-mono font-semibold">{settings.lookbackDays}</span> NEPSE
+            sessions. Comparing today against that baseline instantly reveals whether activity is
+            unusually quiet or surging.
+          </p>
+          <p className="text-blue-800 dark:text-blue-300 leading-relaxed">
+            <span className="font-semibold">Practical Example:</span> If a bank averaged NPR 2.00 cr
+            daily over the past {settings.lookbackDays} days and trades NPR 5.00 cr today, the
+            dashboard flags{' '}
+            <span className="font-mono font-semibold">&ldquo;2.5x its {settings.lookbackDays}-day average&rdquo;</span>
+            . If price rises +3% while volume is only 0.6x its {settings.lookbackDays}-day average,
+            it flags a volume-price divergence warning.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
           <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <div className="font-medium text-slate-800 dark:text-slate-200">5 – 10 Days</div>
+            <div className="font-medium text-slate-800 dark:text-slate-200">5 – 10 Days (Fast Swing)</div>
             <p className="text-slate-500 dark:text-slate-400 mt-1">
-              Short-term swing trading sensitivity for sudden turnover and breakout spikes.
+              Highly responsive to the past 1–2 NEPSE weeks. Best for catching immediate shifts in
+              short-term trading interest.
             </p>
           </div>
           <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <div className="font-medium text-slate-800 dark:text-slate-200">20 Days (Default)</div>
+            <div className="font-medium text-slate-800 dark:text-slate-200">20 Days (Standard 1-Month)</div>
             <p className="text-slate-500 dark:text-slate-400 mt-1">
-              Standard 1-month NEPSE institutional liquidity baseline (approx. 4 trading weeks).
+              Balanced ~1-month institutional baseline. Filters out single-day noise while flagging
+              true breakouts above 1.8x–2.0x.
             </p>
           </div>
           <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <div className="font-medium text-slate-800 dark:text-slate-200">50 – 100 Days</div>
+            <div className="font-medium text-slate-800 dark:text-slate-200">50 – 100 Days (Structural)</div>
             <p className="text-slate-500 dark:text-slate-400 mt-1">
-              Quarterly / semi-annual trend baselines to filter out short-term noise.
+              Long-term quarterly/semi-annual benchmark. Ideal for spotting multi-month sector
+              rotations and deep value bases.
             </p>
           </div>
         </div>

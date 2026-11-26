@@ -39,6 +39,8 @@ export interface DailyAggregate {
 export interface RangeSummaryRow {
   symbol: string;
   name: string;
+  sector?: string;
+  ltp?: number;
   turnover: number;
   volume: number;
   trans: number;
@@ -58,6 +60,49 @@ export interface RangeSummaryRow {
   momentum_score?: number;
   flow_tag?: string;
   market_share_pct?: number;
+}
+
+export type TurnoverSignalType =
+  | 'rising_turnover'
+  | 'declining_activity'
+  | 'volume_spike'
+  | 'bullish_divergence'
+  | 'bearish_divergence'
+  | 'accumulation'
+  | 'unusual_attention';
+
+export interface TopTurnoverEnhancedRow extends RangeSummaryRow {
+  sector: string;
+  ltp: number;
+  avg_daily_turnover: number;
+  avg_daily_volume: number;
+  prev_turnover: number | null;
+  turnover_vs_prev_pct: number | null;
+  prev_change_pct: number | null;
+  avg_turnover_n: number;
+  avg_volume_n: number;
+  avg_price_n: number;
+  turnover_vs_avg_n: number;
+  volume_vs_avg_n: number;
+  price_vs_avg_n_pct: number | null;
+  up_down_vol_ratio: number;
+  signals: TurnoverSignalType[];
+  insight: string;
+  sparkline_close: number[];
+  sparkline_turnover: number[];
+}
+
+export interface TopTurnoverAnalyticsResponse {
+  start: string;
+  end: string;
+  prevStart: string | null;
+  prevEnd: string | null;
+  nDays: number;
+  total: number;
+  marketTotalTurnover: number;
+  prevMarketTotalTurnover: number | null;
+  insights: string[];
+  rows: TopTurnoverEnhancedRow[];
 }
 
 export interface WeeklyTopRow extends RangeSummaryRow {
@@ -118,15 +163,15 @@ export type SchedulerSourceMode = 'sharesansar' | 'github' | 'both';
 
 export interface SchedulerConfig {
   enabled: boolean;
-  time: string; // HH:mm in timezone
-  timezone: string; // e.g. 'Asia/Kathmandu'
-  days: number[]; // 0 = Sun ... 6 = Sat (NEPSE trading days: [0, 1, 2, 3, 4])
+  time: string;
+  timezone: string;
+  days: number[];
   retryIfNotUpdated: boolean;
   retryDelayMinutes: number;
   sourceMode: SchedulerSourceMode;
-  githubRepo: string; // e.g. 'username/nepse-data'
-  githubBranch: string; // e.g. 'main'
-  githubDataPath: string; // e.g. 'data'
+  githubRepo: string;
+  githubBranch: string;
+  githubDataPath: string;
   pushToGitHub: boolean;
 }
 
@@ -165,17 +210,53 @@ export interface BackfillStatus {
 }
 
 export interface MarketPulseRow extends PriceRow {
+  sector: string;
   avg_trade_size: number;
   close_pos_pct: number;
   pos_52w_pct: number | null;
   gap_52h_pct: number | null;
   vs_d120_pct: number | null;
   vs_d180_pct: number | null;
+  turnover_vs_avg_n: number;
+  volume_vs_avg_n: number;
+}
+
+export interface SectorPulseMetric {
+  sector: string;
+  stocks: number;
+  advancers: number;
+  decliners: number;
+  unchanged: number;
+  turnover: number;
+  turnoverSharePct: number;
+  avgTurnoverShareN: number;
+  rotationDeltaPct: number;
+  turnoverVsAvgN: number;
+  avgChangePct: number;
+  aboveVwapPct: number;
+  leaderSymbol: string;
+  leaderChangePct: number;
 }
 
 export interface MarketPulseSummary {
   date: string;
+  startDate: string;
+  endDate: string;
+  windowDays: number;
+  nDays: number;
   total: number;
+  advancers: number;
+  decliners: number;
+  unchanged: number;
+  adRatio: number;
+  totalTurnover: number;
+  totalVolume: number;
+  totalTrades: number;
+  turnoverVsAvgN: number;
+  top5ConcentrationPct: number;
+  top10ConcentrationPct: number;
+  sentimentScore: number;
+  sentimentLabel: 'Risk-On / Bullish' | 'Constructive' | 'Neutral / Selective' | 'Risk-Off / Cautious';
   aboveMa120: number;
   ma120Eligible: number;
   aboveMa180: number;
@@ -190,30 +271,143 @@ export interface MarketPulseSummary {
   lowerCircuitCount: number;
   medianAvgTradeSize: number;
   medianRangePct: number;
+  ticketDistribution: {
+    retailCount: number;      // < 50k NPR/tx
+    midCount: number;         // 50k - 250k
+    hniCount: number;         // 250k - 1M
+    institutionalCount: number; // >= 1M
+  };
 }
 
 export interface MarketPulseResponse {
   summary: MarketPulseSummary;
+  sectors: SectorPulseMetric[];
   rows: MarketPulseRow[];
 }
+
+export interface RadarPoint {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  close: number;
+  changePct: number;
+  periodReturnN: number;
+  turnover: number;
+  avgTurnoverN: number;
+  turnoverMult: number;
+  volumeMult: number;
+  priceVsAvgNPct: number;
+  upDownVolRatio: number;
+  rangeCompressionRatio: number;
+  vwapPct: number | null;
+  gap52hPct: number | null;
+  radarScore: number;
+  category: 'acceleration' | 'accumulation' | 'bullish_div' | 'bearish_div' | 'breakout_watch';
+  headline: string;
+}
+
+export interface OpportunityRadarResponse {
+  date: string;
+  nDays: number;
+  points: RadarPoint[];
+  accelerationAlerts: RadarPoint[];
+  stealthAccumulation: RadarPoint[];
+  divergences: RadarPoint[];
+  breakoutWatchlist: RadarPoint[];
+  sectorLeaders: SectorPulseMetric[];
+}
+
+export interface CompareStockSummary {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  close: number;
+  dayChangePct: number;
+  returnNPct: number | null;
+  avgTurnoverN: number;
+  avgVolumeN: number;
+  latestTurnover: number;
+  turnoverMultN: number;
+  volumeMultN: number;
+  vwapPct: number | null;
+  vsD120Pct: number | null;
+  pos52wPct: number | null;
+  avgTradeSize: number;
+  upDaysN: number;
+  daysN: number;
+  series: Array<{ date: string; close: number; indexedPct: number; turnover: number }>;
+}
+
+export interface StockComparisonResponse {
+  nDays: number;
+  dates: string[];
+  stocks: CompareStockSummary[];
+}
+
+export type DataFreshnessStatus = 'Live' | 'Cached' | 'Historical' | 'Unavailable';
 
 export interface ResearchSource {
   title: string;
   uri: string;
+  category?: 'Company/IR' | 'NEPSE/SEBON' | 'NRB/Gov' | 'Financial Portal' | 'Web';
 }
 
 export interface ResearchPoint {
   title: string;
   detail: string;
   impact: 'High' | 'Medium' | 'Low';
+  evidence?: string;
+}
+
+export interface FixedIncomeBenchmarks {
+  tbill28d: string;
+  tbill91d: string;
+  tbill182d: string;
+  tbill364d: string;
+  govBondYield: string;
+  devBondYield: string;
+  bankFdIndividualRate: string;
+  bankFdInstitutionalRate: string;
+  nrbPolicyRate: string;
+  rateTrend: 'Falling / Easing' | 'Stable' | 'Rising / Tightening' | 'Mixed / Unavailable';
+  asOfDate: string;
+  sourceNote: string;
+}
+
+export interface MacroIndicators {
+  cdRatio: string;
+  bankingLiquidity: string;
+  cpiInflation: string;
+  fxReserves: string;
+  creditGrowth: string;
+  remittanceTrend: string;
+  fiscalCapex: string;
+}
+
+export interface RegulatoryUpdate {
+  authority: 'NRB' | 'NIA' | 'SEBON' | 'NEPSE' | 'MoF/PDMO' | 'Other';
+  date: string;
+  title: string;
+  summary: string;
+  impact: 'Positive' | 'Negative' | 'Neutral' | 'Mixed';
+  impactedSectors: string[];
 }
 
 export interface MacroResearchResponse {
   generatedAt: string;
+  retrievedAt: string;
+  dataStatus: DataFreshnessStatus;
   model: string;
   cached: boolean;
+  searchGrounded?: boolean;
+  notice?: string;
   nepalSummary: string;
   worldSummary: string;
+  fixedIncomeBenchmarks?: FixedIncomeBenchmarks;
+  macroIndicators?: MacroIndicators;
+  regulatoryUpdates?: RegulatoryUpdate[];
   nepalOpportunities: ResearchPoint[];
   nepalRisks: ResearchPoint[];
   worldOpportunities: ResearchPoint[];
@@ -227,12 +421,106 @@ export interface MacroResearchResponse {
   rawFallback?: string;
 }
 
+export interface StockFinancialMetrics {
+  reportingPeriod: string;
+  publicationDate: string;
+  reportType: 'Quarterly' | 'Annual' | 'Mixed' | 'Unavailable';
+  revenue: string;
+  netProfit: string;
+  eps: string;
+  netWorthPerShare: string;
+  pe: string;
+  pb: string;
+  roe: string;
+  roa: string;
+  reserves: string;
+  retainedEarnings: string;
+  totalAssets: string;
+  totalLiabilities: string;
+  deposits: string;
+  loans: string;
+  npl: string;
+  car: string;
+  liquidityRatio: string;
+  cashFlow: string;
+  dividendHistory: string;
+  sectorSpecific: Array<{ label: string; value: string }>;
+}
+
+export interface StockPeriodComparisons {
+  qoq: string;
+  yoy: string;
+  annual: string;
+  inconsistencies: string;
+  factsVsInterpretation: {
+    facts: string[];
+    interpretations: string[];
+  };
+}
+
+export interface StockAssessment9Part {
+  businessHealth: string;
+  fundamentalStrengths: string[];
+  majorRisksRedFlags: string[];
+  growthOpportunities: string[];
+  financialTrendAnalysis: string;
+  valuationAssessment: string;
+  scenarios: {
+    bull: string;
+    base: string;
+    bear: string;
+  };
+  nextQuarterWatchlist: string[];
+  overallOutlook: string;
+}
+
+export interface OpportunityCostAssessment {
+  benchmarkFdRateText: string;
+  benchmarkTBillText: string;
+  benchmarkBondYieldText: string;
+  benchmarkFdPct: number | null;
+  stockEarningsYieldPct: number | null;
+  expectedReturnThesis: string;
+  beatsFixedIncome: boolean | null;
+  verdict: string;
+}
+
+export interface ScoreFactorItem {
+  factor: string;
+  score: number;
+  maxScore: number;
+  evidence: string;
+  sourceType: 'Reported' | 'Technical' | 'Macro' | 'Governance';
+}
+
+export type StockRecommendation = 'BUY' | 'HOLD' | 'WATCHLIST' | 'AVOID';
+
 export interface StockResearchResponse {
   symbol: string;
   companyName: string;
+  sector?: string;
   generatedAt: string;
+  retrievedAt: string;
+  dataStatus: DataFreshnessStatus;
   model: string;
   cached: boolean;
+  searchGrounded?: boolean;
+  notice?: string;
+  reportingPeriod: string;
+  publicationDate: string;
+  reportType: 'Quarterly' | 'Annual' | 'Mixed' | 'Unavailable';
+  limitations: string[];
+  recommendation: StockRecommendation;
+  riskScore: number;
+  opportunityScore: number;
+  riskBreakdown: ScoreFactorItem[];
+  opportunityBreakdown: ScoreFactorItem[];
+  fundamentalRedFlags: string[];
+  governanceRegulatoryFlags: string[];
+  financialMetrics?: StockFinancialMetrics;
+  periodComparisons?: StockPeriodComparisons;
+  assessment9Part?: StockAssessment9Part;
+  opportunityCost?: OpportunityCostAssessment;
   summary: string;
   stance: 'Bullish' | 'Neutral' | 'Cautious';
   opportunities: ResearchPoint[];
@@ -246,5 +534,168 @@ export interface StockResearchResponse {
   rawFallback?: string;
 }
 
+export interface TechnicalRiskRow {
+  symbol: string;
+  name: string;
+  sector: string;
+  date: string;
+  ltp: number;
+  changePct: number;
+  periodReturnNPct: number | null;
+  turnover: number;
+  turnoverMultN: number;
+  volMultN: number;
+  vwapPct: number | null;
+  vsD120Pct: number | null;
+  vsD180Pct: number | null;
+  pos52wPct: number | null;
+  gap52hPct: number | null;
+  upDownVolRatio: number;
+  avgVolatilityPct: number;
+  supportBreakPct: number | null;
+  technicalRiskScore: number;
+  riskLevel: 'Severe' | 'High' | 'Moderate';
+  breakdown: ScoreFactorItem[];
+  warningTags: string[];
+  explanation: string;
+  dataStatus: DataFreshnessStatus;
+}
 
+export interface TechnicallyRiskyResponse {
+  date: string;
+  nDays: number;
+  totalScreened: number;
+  severeCount: number;
+  highCount: number;
+  dataStatus: DataFreshnessStatus;
+  rows: TechnicalRiskRow[];
+}
 
+export interface FundamentalRiskRow {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  ltp: number | null;
+  changePct: number | null;
+  reportingPeriod: string;
+  publicationDate: string;
+  retrievedAt: string;
+  dataStatus: DataFreshnessStatus;
+  fundamentalRiskScore: number;
+  recommendation: StockRecommendation;
+  redFlags: string[];
+  governanceFlags: string[];
+  keyMetrics: {
+    eps: string;
+    pe: string;
+    pb: string;
+    roe: string;
+    npl: string;
+    cashFlow: string;
+    netWorthPerShare: string;
+    dividendHistory: string;
+  };
+  limitations: string[];
+  whyRisky: string;
+  sources: ResearchSource[];
+}
+
+export interface FundamentallyRiskyResponse {
+  date: string;
+  auditedCount: number;
+  flaggedCount: number;
+  rows: FundamentalRiskRow[];
+  candidateSymbols: Array<{ symbol: string; name: string; sector: string; ltp: number; changePct: number }>;
+}
+
+export interface CompositeDoNotBuyRow {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number | null;
+  changePct: number | null;
+  compositeRiskScore: number;
+  fundamentalRiskScore: number | null;
+  technicalRiskScore: number;
+  liquidityGovernanceScore: number;
+  hasFundamentalAudit: boolean;
+  confirmedRedFlags: string[];
+  technicalWarnings: string[];
+  whyNotBuy: string;
+  reportingPeriod: string;
+  publicationDate: string;
+  retrievedAt: string | null;
+  dataStatus: DataFreshnessStatus;
+  technicalSnapshot: {
+    vwapPct: number | null;
+    vsD120Pct: number | null;
+    upDownVolRatio: number;
+    turnoverMultN: number;
+  };
+  sources: ResearchSource[];
+}
+
+export interface CompositeDoNotBuyResponse {
+  date: string;
+  nDays: number;
+  auditedCount: number;
+  rows: CompositeDoNotBuyRow[];
+  priorityAuditSymbols: string[];
+}
+
+export interface MarketOpportunityRow {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  changePct: number;
+  periodReturnNPct: number | null;
+  opportunityScore: number;
+  riskScore: number;
+  hasFundamentalAudit: boolean;
+  recommendation: StockRecommendation | 'TECHNICAL_SETUP';
+  whyConsiderBuying: string;
+  opportunityCostVerdict: string;
+  beatsFixedIncome: boolean | null;
+  reportingPeriod: string;
+  publicationDate: string;
+  retrievedAt: string | null;
+  dataStatus: DataFreshnessStatus;
+  technicalSnapshot: {
+    vwapPct: number | null;
+    vsD120Pct: number | null;
+    turnoverMultN: number;
+    upDownVolRatio: number;
+  };
+  keyMetrics: {
+    eps: string;
+    pe: string;
+    roe: string;
+    dividendHistory: string;
+  } | null;
+  sources: ResearchSource[];
+}
+
+export interface MarketOpportunityVsRiskResponse {
+  date: string;
+  nDays: number;
+  macroAvailable: boolean;
+  macroRetrievedAt: string | null;
+  macroDataStatus: DataFreshnessStatus;
+  fixedIncomeBenchmarks: FixedIncomeBenchmarks | null;
+  opportunities: MarketOpportunityRow[];
+  insufficientCompensation: MarketOpportunityRow[];
+  candidateAuditSymbols: string[];
+}
+
+export interface CohortAuditResponse {
+  audited: Array<{
+    symbol: string;
+    ok: boolean;
+    dataStatus?: DataFreshnessStatus;
+    riskScore?: number;
+    opportunityScore?: number;
+    recommendation?: StockRecommendation;
+    error?: string;
+  }>;
+}

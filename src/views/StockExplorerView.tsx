@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Star } from 'lucide-react';
 import { DataTable, type ColumnDef } from '../components/DataTable';
+import { InfoTip } from '../components/InfoTip';
 import { NepseTradePlanner } from '../components/NepseTradePlanner';
 import { StockRiskOpportunitiesPanel } from '../components/StockRiskOpportunitiesPanel';
 import { StockVisualAlerts } from '../components/StockVisualAlerts';
@@ -38,7 +39,10 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
     const latest = dates[dates.length - 1];
     if (!latest) return;
     fetch(`/api/symbols?day=${encodeURIComponent(latest)}&equityOnly=${equityOnly}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         const list: SymbolInfo[] = d.symbols || [];
         setSymbols(list);
@@ -46,7 +50,8 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
           const def = list.find((s) => s.symbol === 'NABIL')?.symbol || list[0].symbol;
           setSelectedSymbol(def);
         }
-      });
+      })
+      .catch(() => null);
   }, [dates, equityOnly]);
 
   const filteredSymbols = useMemo(() => {
@@ -62,9 +67,15 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
     let cancelled = false;
     setLoading(true);
     fetch(`/api/symbol/${encodeURIComponent(selectedSymbol)}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         if (!cancelled) setHistory(d.history || []);
+      })
+      .catch(() => {
+        if (!cancelled) setHistory([]);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -270,14 +281,21 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
       {last && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
-            <div className="text-xs text-slate-500 dark:text-slate-400">Close</div>
-            <div className="mt-1 text-lg font-semibold font-mono tabular-nums">NPR {formatNum(last.close)}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">LTP / Close</div>
+            <div className="mt-1 text-lg font-semibold font-mono tabular-nums">NPR {formatNum(last.ltp || last.close)}</div>
             <div className={`text-xs font-mono ${last.diff >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
               {formatPct(last.diff_pct)}
             </div>
           </div>
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
-            <div className="text-xs text-slate-500 dark:text-slate-400">Volume ({nDays}d ×)</div>
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span>Volume ({nDays}d ×)</span>
+              <InfoTip
+                title="Volume vs N-Day Rolling Average"
+                body={`Compares today's traded shares to the average over the last ${nDays} trading days. Spikes above 1.8x often signal fresh accumulation or distribution.`}
+                example="5d reacts fast to sudden swings; 20d represents a normal 1-month NEPSE baseline."
+              />
+            </div>
             <div className="mt-1 text-lg font-semibold font-mono tabular-nums">{formatInt(last.volume)}</div>
             <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
               {rollingMetrics ? `${rollingMetrics.volMult.toFixed(2)}x of ${nDays}d avg` : '–'}
@@ -412,7 +430,7 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
         />
       )}
 
-      {/* Free TradingView Interactive Chart */}
+      {/* Free TradingView Interactive Chart (Full-Screen + Collapsible TA Sidebar) */}
       {loading ? (
         <div className="h-[470px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
       ) : (
@@ -422,6 +440,12 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
           lookbackDays={nDays}
           levels={srLevels}
           showSR={showSR}
+          onToggleSR={setShowSR}
+          symbols={symbols}
+          onSelectSymbol={setSelectedSymbol}
+          watchlist={watchlist}
+          isStarred={isStarred}
+          onToggleStar={() => selectedSymbol && toggleSymbol(selectedSymbol)}
         />
       )}
 
@@ -440,7 +464,7 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
         <StockRiskOpportunitiesPanel
           symbol={selectedSymbol}
           companyName={last?.name || symbols.find((s) => s.symbol === selectedSymbol)?.name}
-          autoLoad
+          autoLoad={false}
         />
       )}
 

@@ -147,12 +147,20 @@ export const ScannersView: React.FC<ScannersViewProps> = ({
         params: activeParams,
       }),
     })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         if (cancelled) return;
         const rows: ScannerResultRow[] = d.rows || [];
         setResults(rows);
         setSelectedSymbol(rows[0]?.symbol ?? null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setResults([]);
+        setSelectedSymbol(null);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -173,9 +181,15 @@ export const ScannersView: React.FC<ScannersViewProps> = ({
     fetch(
       `/api/symbol/${encodeURIComponent(selectedSymbol)}?end=${encodeURIComponent(asof)}&days=120`
     )
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         if (!cancelled) setChartHistory(d.history || []);
+      })
+      .catch(() => {
+        if (!cancelled) setChartHistory([]);
       })
       .finally(() => {
         if (!cancelled) setChartLoading(false);

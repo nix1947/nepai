@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Star } from 'lucide-react';
+import { Flame, Star } from 'lucide-react';
 import { HorizontalTurnoverBar, MarketHistoryCharts, TurnoverTreemap } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
+import { InfoTip } from '../components/InfoTip';
+import { useTradingSettings } from '../hooks/useTradingSettings';
 import { useWatchlist } from '../hooks/useWatchlist';
-import type { DailyAggregate, PriceRow } from '../types/market';
+import type { DailyAggregate, PriceRow, TopTurnoverEnhancedRow } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
 
 interface OverviewViewProps {
@@ -21,8 +23,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onInspectSymbol,
   onOpenScheduler,
 }) => {
+  const { settings } = useTradingSettings();
+  const nDays = settings.lookbackDays;
   const [selectedDay, setSelectedDay] = useState<string>(dates[dates.length - 1] ?? '');
   const [rows, setRows] = useState<PriceRow[]>([]);
+  const [unusualRows, setUnusualRows] = useState<TopTurnoverEnhancedRow[]>([]);
   const [loading, setLoading] = useState(false);
   const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
@@ -36,10 +41,31 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     if (!selectedDay) return;
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/day/${encodeURIComponent(selectedDay)}?equityOnly=${equityOnly}`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (!cancelled) setRows(d.rows || []);
+    Promise.all([
+      fetch(`/api/day/${encodeURIComponent(selectedDay)}?equityOnly=${equityOnly}`).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
+      fetch(
+        `/api/top-turnover-analytics?start=${encodeURIComponent(selectedDay)}&end=${encodeURIComponent(
+          selectedDay
+        )}&nDays=${nDays}&n=35&equityOnly=${equityOnly}`
+      ).then((r) => (r.ok ? r.json() : { rows: [] })),
+    ])
+      .then(([dayData, topData]) => {
+        if (cancelled) return;
+        setRows(dayData.rows || []);
+        const spikes = ((topData.rows || []) as TopTurnoverEnhancedRow[])
+          .filter((r) => r.turnover_vs_avg_n >= 1.4)
+          .sort((a, b) => b.turnover_vs_avg_n - a.turnover_vs_avg_n)
+          .slice(0, 4);
+        setUnusualRows(spikes);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRows([]);
+          setUnusualRows([]);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -47,7 +73,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [selectedDay, equityOnly]);
+  }, [selectedDay, equityOnly, nDays]);
 
   const agg = daily.find((d) => d.date === selectedDay);
   const idx = daily.findIndex((d) => d.date === selectedDay);
@@ -272,6 +298,47 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
               {agg.decliners}
             </div>
             <div className="mt-1 text-xs text-slate-400">Unchanged: {agg.unchanged}</div>
+          </div>
+        </div>
+      )}
+
+      {unusualRows.length > 0 && (
+        <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+              <Flame className="w-3.5 h-3.5 text-amber-500" />
+              <span>Unusual Liquidity Spotlight (vs {nDays}-Day Average)</span>
+              <InfoTip
+                title="Why Watch N-Day Turnover Spikes?"
+                body={`Highlights active leaders whose turnover on ${selectedDay} is significantly above their ${nDays}-day rolling average.`}
+                example="2.5x means today's rupee turnover is 250% of its normal daily pace."
+              />
+            </div>
+            <span className="text-[11px] font-mono text-slate-400">Click any stock to analyze</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {unusualRows.map((u) => (
+              <button
+                key={u.symbol}
+                type="button"
+                onClick={() => onInspectSymbol(u.symbol)}
+                className="text-left p-2.5 rounded-md border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-700 bg-slate-50/50 dark:bg-slate-950/50 transition-colors space-y-1"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">{u.symbol}</span>
+                  <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">
+                    {u.turnover_vs_avg_n.toFixed(1)}x {nDays}d avg
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-mono tabular-nums text-slate-600 dark:text-slate-300">
+                  <span>LTP {formatNum(u.ltp)}</span>
+                  <span className={(u.change_pct ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
+                    {formatPct(u.change_pct)}
+                  </span>
+                  <span>{formatCrore(u.turnover)} cr</span>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       )}

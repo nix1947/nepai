@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-11-26T13:23:48.304Z",
+  "retrievedAt": "2026-11-26T13:23:48.304Z",
+  "dataStatus": "Historical",
+  "model": "gemini-3.1-flash-lite",
+  "cached": false,
+  "searchGrounded": false,
+  "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+  "nepalSummary": "The Nepali economy is currently in a liquidity-surplus environment with softening interest rates, providing a supportive backdrop for equity valuations despite recent market volatility. While monetary policy remains accommodative to spur private sector credit, the NEPSE continues to navigate a consolidation phase amid mixed investor sentiment.",
+  "worldSummary": "Global markets remain sensitive to US Fed interest rate expectations and geopolitical tensions impacting commodity prices. For Nepal, the stable USD/NPR peg and persistent remittance inflows act as critical buffers against external global shocks.",
+  "fixedIncomeBenchmarks": {
+    "tbill28d": "3.01%",
+    "tbill91d": "3.02%",
+    "tbill182d": "3.11%",
+    "tbill364d": "3.28%",
+    "govBondYield": "Unavailable",
+    "devBondYield": "3.50% - 5.50% range",
+    "bankFdIndividualRate": "5.50% - 7.50% avg",
+    "bankFdInstitutionalRate": "4.50% - 6.00% avg",
+    "nrbPolicyRate": "Policy 5.0% / Bank Rate 6.5% / Deposit Collection Rate 3.0%",
+    "rateTrend": "Falling / Easing",
+    "asOfDate": "November 2024",
+    "sourceNote": "NRB Monetary Policy Review and PDMO Auction Results"
+  },
+  "macroIndicators": {
+    "cdRatio": "80.12%",
+    "bankingLiquidity": "High liquidity surplus; interbank rate significantly below policy corridor floor.",
+    "cpiInflation": "3.84% YoY (As of Oct 2024)",
+    "fxReserves": "USD 15.6 bn / 14.8 months of imports",
+    "creditGrowth": "Private sector credit growth recovering to ~5.5%",
+    "remittanceTrend": "Strong double-digit growth; key driver for domestic consumption and liquidity.",
+    "fiscalCapex": "Slow execution in Q1-Q2 of FY 2081/82; remains a structural constraint."
+  },
+  "regulatoryUpdates": [
+    {
+      "authority": "NRB",
+      "date": "2024-11",
+      "title": "First Quarter Review of Monetary Policy",
+      "summary": "Maintained status quo on key rates while focusing on further easing working capital guidelines.",
+      "impact": "Positive",
+      "impactedSectors": [
+        "Commercial Banks",
+        "Manufacturing"
+      ]
+    }
+  ],
+  "nepalOpportunities": [
+    {
+      "title": "Hydropower Export",
+      "detail": "Increased grid capacity and long-term energy sales agreements with India.",
+      "impact": "High"
+    }
+  ],
+  "nepalRisks": [
+    {
+      "title": "Low Credit Offtake",
+      "detail": "Lack of robust private sector demand despite ample banking liquidity.",
+      "impact": "High"
+    }
+  ],
+  "worldOpportunities": [
+    {
+      "title": "Remittance Stability",
+      "detail": "Sustained employment of Nepali workers in Gulf and European markets.",
+      "impact": "Medium"
+    }
+  ],
+  "worldRisks": [
+    {
+      "title": "Import Price Volatility",
+      "detail": "Fluctuations in global crude oil and food prices impacting trade deficit.",
+      "impact": "High"
+    }
+  ],
+  "sectorsToWatch": [
+    {
+      "sector": "Hydropower",
+      "stance": "Positive",
+      "reason": "Consistent PPA growth and export potential to India."
+    },
+    {
+      "sector": "Commercial Banks",
+      "stance": "Neutral",
+      "reason": "Compressed Net Interest Margins (NIM) due to lower lending rates."
+    }
+  ],
+  "sources": []
+}

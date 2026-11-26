@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, Globe, RefreshCw, ShieldAlert, TrendingUp } from 'lucide-react';
-import type { AppLanguage, StockResearchResponse } from '../types/market';
-import { biText } from '../utils/i18n';
+import type { StockResearchResponse } from '../types/market';
 
 interface StockRiskOpportunitiesPanelProps {
   symbol: string;
   companyName?: string;
-  lang: AppLanguage;
   autoLoad?: boolean;
 }
 
@@ -15,7 +13,6 @@ const clientStockCache = new Map<string, StockResearchResponse>();
 export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelProps> = ({
   symbol,
   companyName,
-  lang,
   autoLoad = true,
 }) => {
   const [data, setData] = useState<StockResearchResponse | null>(
@@ -71,9 +68,6 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
     return () => clearTimeout(timer);
   }, [symbol, autoLoad, fetchResearch]);
 
-  const showEn = lang === 'en' || lang === 'bi';
-  const showNe = lang === 'ne' || lang === 'bi';
-
   if (!symbol) return null;
 
   const stanceColor =
@@ -90,11 +84,7 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
           <div className="flex flex-wrap items-center gap-2">
             <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {biText(
-                `${symbol} Live Risks & Opportunities (Google Search Grounded)`,
-                `${symbol} जोखिम र अवसर विश्लेषण (प्रत्यक्ष गुगल सर्च)`,
-                lang
-              )}
+              {symbol} Live Risks &amp; Opportunities (Google Search Grounded)
             </h3>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -102,9 +92,7 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
             {data && (
               <>
                 {' · '}
-                <span className={`font-semibold ${stanceColor}`}>
-                  {data.stance} outlook
-                </span>
+                <span className={`font-semibold ${stanceColor}`}>{data.stance} outlook</span>
                 {' · '}
                 <span className="font-mono tabular-nums">
                   {new Date(data.generatedAt).toLocaleTimeString([], {
@@ -124,11 +112,7 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>
-            {loading
-              ? biText('Searching web…', 'खोजिँदैछ…', lang)
-              : biText('Refresh Live Search', 'ताजा खोज गर्नुहोस्', lang)}
-          </span>
+          <span>{loading ? 'Searching web…' : 'Refresh Live Search'}</span>
         </button>
       </div>
 
@@ -156,18 +140,15 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
       ) : !data && !error ? (
         <div className="text-xs text-slate-500 py-4 flex items-center justify-between">
           <span>
-            {biText(
-              `Run live Google Search research for ${symbol} earnings, dividends, sector risks, and opportunities.`,
-              `${symbol} को ताजा समाचार, लाभांश, जोखिम र अवसरहरू विश्लेषण गर्नुहोस्।`,
-              lang
-            )}
+            Run live Google Search research for {symbol} earnings, dividends, sector risks, and
+            opportunities.
           </span>
           <button
             type="button"
             onClick={() => void fetchResearch(false)}
             className="px-3 py-1.5 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700"
           >
-            {biText(`Analyze ${symbol}`, `${symbol} विश्लेषण`, lang)}
+            Analyze {symbol}
           </button>
         </div>
       ) : data ? (
@@ -178,135 +159,83 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
             </div>
           ) : (
             <>
-              <div className="space-y-1.5">
-                {showEn && data.summaryEn && (
-                  <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
-                    {data.summaryEn}
-                  </p>
-                )}
-                {showNe && data.summaryNe && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {data.summaryNe}
-                  </p>
-                )}
-              </div>
+              {data.summary && (
+                <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+                  {data.summary}
+                </p>
+              )}
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {/* Opportunities */}
                 <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-3">
                   <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                     <TrendingUp className="w-4 h-4" />
-                    <span>{biText('Opportunities & Tailwinds', 'अवसर र सकारात्मक पक्ष', lang)}</span>
+                    <span>Opportunities &amp; Tailwinds</span>
                   </div>
                   <ul className="divide-y divide-slate-100 dark:divide-slate-800/80">
                     {data.opportunities.map((item, idx) => (
                       <li key={idx} className="py-2.5 first:pt-0 last:pb-0 space-y-1 text-xs">
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="font-semibold text-slate-900 dark:text-slate-100">
-                            {showEn ? item.title : item.titleNe}
+                            {item.title}
                           </span>
                           <span className="font-mono text-[11px] text-emerald-600 dark:text-emerald-400 shrink-0">
                             {item.impact}
                           </span>
                         </div>
-                        {lang === 'bi' && item.titleNe && (
-                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                            {item.titleNe}
-                          </div>
-                        )}
-                        {showEn && (
-                          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                            {item.detail}
-                          </p>
-                        )}
-                        {showNe && item.detailNe && (
-                          <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                            {item.detailNe}
-                          </p>
-                        )}
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {item.detail}
+                        </p>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Risks */}
                 <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-3">
                   <div className="flex items-center gap-2 text-xs font-semibold text-red-700 dark:text-red-400">
                     <ShieldAlert className="w-4 h-4" />
-                    <span>{biText('Key Risks & Headwinds', 'मुख्य जोखिम र चुनौतीहरू', lang)}</span>
+                    <span>Key Risks &amp; Headwinds</span>
                   </div>
                   <ul className="divide-y divide-slate-100 dark:divide-slate-800/80">
                     {data.risks.map((item, idx) => (
                       <li key={idx} className="py-2.5 first:pt-0 last:pb-0 space-y-1 text-xs">
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="font-semibold text-slate-900 dark:text-slate-100">
-                            {showEn ? item.title : item.titleNe}
+                            {item.title}
                           </span>
                           <span className="font-mono text-[11px] text-red-600 dark:text-red-400 shrink-0">
                             {item.impact}
                           </span>
                         </div>
-                        {lang === 'bi' && item.titleNe && (
-                          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                            {item.titleNe}
-                          </div>
-                        )}
-                        {showEn && (
-                          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                            {item.detail}
-                          </p>
-                        )}
-                        {showNe && item.detailNe && (
-                          <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                            {item.detailNe}
-                          </p>
-                        )}
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {item.detail}
+                        </p>
                       </li>
                     ))}
                   </ul>
                 </div>
               </div>
 
-              {/* Nepal & World Macro Linkage + Catalysts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 text-xs">
-                {(data.macroLinkageEn || data.macroLinkageNe) && (
+                {data.macroLinkage && (
                   <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-1.5 bg-slate-50 dark:bg-slate-950">
                     <h4 className="font-semibold text-slate-800 dark:text-slate-200">
-                      {biText(
-                        'Nepal & World Economy Sensitivity',
-                        'नेपाल र विश्व अर्थतन्त्रसँगको सम्बन्ध',
-                        lang
-                      )}
+                      Nepal &amp; World Economy Sensitivity
                     </h4>
-                    {showEn && data.macroLinkageEn && (
-                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                        {data.macroLinkageEn}
-                      </p>
-                    )}
-                    {showNe && data.macroLinkageNe && (
-                      <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                        {data.macroLinkageNe}
-                      </p>
-                    )}
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {data.macroLinkage}
+                    </p>
                   </div>
                 )}
 
                 {data.catalysts.length > 0 && (
                   <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-2">
                     <h4 className="font-semibold text-slate-800 dark:text-slate-200">
-                      {biText('Recent News & Upcoming Catalysts', 'ताजा समाचार र आगामी उत्प्रेरक', lang)}
+                      Recent News &amp; Upcoming Catalysts
                     </h4>
                     <ul className="space-y-1.5">
                       {data.catalysts.map((c, idx) => (
                         <li key={idx} className="flex items-start justify-between gap-3">
-                          <div className="space-y-0.5">
-                            {showEn && (
-                              <div className="text-slate-700 dark:text-slate-200">{c.headline}</div>
-                            )}
-                            {showNe && c.headlineNe && (
-                              <div className="text-slate-500 dark:text-slate-400">{c.headlineNe}</div>
-                            )}
-                          </div>
+                          <span className="text-slate-700 dark:text-slate-200">{c.headline}</span>
                           <span className="font-mono text-[11px] text-blue-600 dark:text-blue-400 shrink-0">
                             {c.timeframe}
                           </span>
@@ -319,11 +248,10 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
             </>
           )}
 
-          {/* Grounded Web Sources */}
           {data.sources.length > 0 && (
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
               <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                {biText('Google Search Grounded Sources', 'गुगल सर्च स्रोतहरू', lang)}
+                Google Search Grounded Sources
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
                 {data.sources.slice(0, 8).map((src, i) => (

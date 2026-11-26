@@ -1,31 +1,30 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Star } from 'lucide-react';
-import { CandlestickVolumeChart, type HorizontalLevel } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { NepseTradePlanner } from '../components/NepseTradePlanner';
 import { StockRiskOpportunitiesPanel } from '../components/StockRiskOpportunitiesPanel';
+import { StockVisualAlerts } from '../components/StockVisualAlerts';
+import { TradingViewChart, type ChartLevel } from '../components/TradingViewChart';
+import { LOOKBACK_PRESETS, useTradingSettings } from '../hooks/useTradingSettings';
 import { useWatchlist } from '../hooks/useWatchlist';
-import type { AppLanguage, PriceRow, SymbolInfo } from '../types/market';
+import type { PriceRow, SymbolInfo } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
-import { biText } from '../utils/i18n';
 
 interface StockExplorerViewProps {
   dates: string[];
   equityOnly: boolean;
-  lang: AppLanguage;
   initialSymbol?: string | null;
 }
 
 export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
   dates,
   equityOnly,
-  lang,
   initialSymbol,
 }) => {
+  const { settings, updateSettings } = useTradingSettings();
   const [symbols, setSymbols] = useState<SymbolInfo[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>(initialSymbol || '');
   const [symbolFilter, setSymbolFilter] = useState<string>('');
-  const [daysShown, setDaysShown] = useState(90);
   const [showSR, setShowSR] = useState(true);
   const [history, setHistory] = useState<PriceRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,17 +74,46 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
     };
   }, [selectedSymbol]);
 
-  const sliced = useMemo(() => history.slice(-daysShown), [history, daysShown]);
   const last = history[history.length - 1] ?? null;
+  const nDays = settings.lookbackDays;
 
-  const srLevels = useMemo((): HorizontalLevel[] => {
-    if (!showSR || history.length <= 5) return [];
-    const prior = history.slice(0, -1).slice(-20);
+  const rollingMetrics = useMemo(() => {
+    if (history.length === 0) return null;
+    const windowRows = history.slice(-nDays);
+    const priorRows = history.slice(0, -1).slice(-nDays);
+    const avgTurnoverN =
+      windowRows.reduce((s, r) => s + r.turnover, 0) / Math.max(1, windowRows.length);
+    const avgVolumeN =
+      windowRows.reduce((s, r) => s + r.volume, 0) / Math.max(1, windowRows.length);
+    const smaN = windowRows.reduce((s, r) => s + r.close, 0) / Math.max(1, windowRows.length);
+    const firstClose = windowRows[0]?.close ?? last?.close ?? 0;
+    const latestClose = last?.close ?? 0;
+    const periodChgPct = firstClose > 0 ? ((latestClose - firstClose) / firstClose) * 100 : null;
+    const resN =
+      priorRows.length > 0 ? Math.max(...priorRows.map((r) => r.high)) : last?.high ?? 0;
+    const supN =
+      priorRows.length > 0 ? Math.min(...priorRows.map((r) => r.low)) : last?.low ?? 0;
+
+    return {
+      sampleCount: windowRows.length,
+      avgTurnoverN,
+      avgVolumeN,
+      smaN,
+      periodChgPct,
+      resN,
+      supN,
+      volMult: avgVolumeN > 0 && last ? last.volume / avgVolumeN : 1,
+      turnMult: avgTurnoverN > 0 && last ? last.turnover / avgTurnoverN : 1,
+    };
+  }, [history, nDays, last]);
+
+  const srLevels = useMemo((): ChartLevel[] => {
+    if (!showSR || !rollingMetrics || history.length <= 3) return [];
     return [
-      { label: '20d resistance', value: Math.max(...prior.map((r) => r.high)), color: '#d97706' },
-      { label: '20d support', value: Math.min(...prior.map((r) => r.low)), color: '#16a34a' },
+      { label: `${nDays}d Res`, value: rollingMetrics.resN, color: '#d97706' },
+      { label: `${nDays}d Sup`, value: rollingMetrics.supN, color: '#16a34a' },
     ];
-  }, [showSR, history]);
+  }, [showSR, rollingMetrics, history.length, nDays]);
 
   const ma120Delta =
     last && last.d120 && last.d120 > 0 ? ((last.close / last.d120 - 1) * 100).toFixed(1) : null;
@@ -205,21 +233,26 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-6 text-xs">
-          <label className="space-y-1">
-            <span className="flex justify-between gap-4 text-slate-600 dark:text-slate-300">
-              <span>Sessions shown</span>
-              <span className="font-mono font-semibold">{daysShown}</span>
-            </span>
-            <input
-              type="range"
-              min={20}
-              max={250}
-              value={daysShown}
-              onChange={(e) => setDaysShown(Number(e.target.value))}
-              className="w-36 accent-blue-600"
-            />
-          </label>
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 dark:text-slate-400">Rolling Window (N):</span>
+            <div className="inline-flex items-center gap-0.5 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-md">
+              {LOOKBACK_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => updateSettings({ lookbackDays: preset })}
+                  className={`px-2 py-1 rounded font-mono text-[11px] font-medium transition-colors ${
+                    nDays === preset
+                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {preset}d
+                </button>
+              ))}
+            </div>
+          </div>
 
           <label className="inline-flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300">
             <input
@@ -228,45 +261,68 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
               onChange={(e) => setShowSR(e.target.checked)}
               className="rounded border-slate-300 text-blue-600"
             />
-            <span>20-day Support / Resistance</span>
+            <span>{nDays}-day Support / Resistance</span>
           </label>
         </div>
       </div>
 
+      {/* Latest Session KPIs */}
       {last && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
             <div className="text-xs text-slate-500 dark:text-slate-400">Close</div>
-            <div className="mt-1 text-lg font-semibold font-mono tabular-nums">{formatNum(last.close)}</div>
+            <div className="mt-1 text-lg font-semibold font-mono tabular-nums">NPR {formatNum(last.close)}</div>
             <div className={`text-xs font-mono ${last.diff >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
               {formatPct(last.diff_pct)}
             </div>
           </div>
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
-            <div className="text-xs text-slate-500 dark:text-slate-400">Volume</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Volume ({nDays}d ×)</div>
             <div className="mt-1 text-lg font-semibold font-mono tabular-nums">{formatInt(last.volume)}</div>
+            <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              {rollingMetrics ? `${rollingMetrics.volMult.toFixed(2)}x of ${nDays}d avg` : '–'}
+            </div>
           </div>
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
             <div className="text-xs text-slate-500 dark:text-slate-400">Turnover (Rs cr)</div>
             <div className="mt-1 text-lg font-semibold font-mono tabular-nums">{formatCrore(last.turnover)}</div>
+            <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              {rollingMetrics ? `${rollingMetrics.turnMult.toFixed(2)}x of ${nDays}d avg` : '–'}
+            </div>
           </div>
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
-            <div className="text-xs text-slate-500 dark:text-slate-400">52w High</div>
-            <div className="mt-1 text-lg font-semibold font-mono tabular-nums">{formatNum(last.w52_high, 1)}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{nDays}d Avg Turnover</div>
+            <div className="mt-1 text-lg font-semibold font-mono tabular-nums">
+              {rollingMetrics ? `${formatCrore(rollingMetrics.avgTurnoverN)} cr` : '–'}
+            </div>
+            <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              {rollingMetrics ? `Avg Vol ${formatInt(rollingMetrics.avgVolumeN)}` : '–'}
+            </div>
           </div>
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
-            <div className="text-xs text-slate-500 dark:text-slate-400">52w Low</div>
-            <div className="mt-1 text-lg font-semibold font-mono tabular-nums">{formatNum(last.w52_low, 1)}</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">52w High / Low</div>
+            <div className="mt-1 text-sm font-semibold font-mono tabular-nums">
+              {formatNum(last.w52_high, 1)} / {formatNum(last.w52_low, 1)}
+            </div>
+            <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              {rollingMetrics && rollingMetrics.periodChgPct !== null
+                ? `${nDays}d Return ${formatPct(rollingMetrics.periodChgPct)}`
+                : '–'}
+            </div>
           </div>
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5">
-            <div className="text-xs text-slate-500 dark:text-slate-400">vs MA120</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">vs MA120 / SMA{nDays}</div>
             <div className="mt-1 text-lg font-semibold font-mono tabular-nums">
               {ma120Delta !== null ? `${Number(ma120Delta) >= 0 ? '+' : ''}${ma120Delta}%` : '–'}
+            </div>
+            <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              {rollingMetrics ? `SMA(${nDays}): ${formatNum(rollingMetrics.smaN)}` : '–'}
             </div>
           </div>
         </div>
       )}
 
+      {/* 52w & Intraday Microstructure Strip */}
       {last && (
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-4 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
           <div className="flex-1 min-w-[220px] max-w-sm space-y-1">
@@ -346,40 +402,54 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
         </div>
       )}
 
+      {/* Visual Alert Engine */}
+      {!loading && history.length >= 2 && (
+        <StockVisualAlerts
+          symbol={selectedSymbol}
+          history={history}
+          settings={settings}
+          onUpdateSettings={updateSettings}
+        />
+      )}
+
+      {/* Free TradingView Interactive Chart */}
+      {loading ? (
+        <div className="h-[470px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
+      ) : (
+        <TradingViewChart
+          symbol={selectedSymbol}
+          history={history}
+          lookbackDays={nDays}
+          levels={srLevels}
+          showSR={showSR}
+        />
+      )}
+
+      {/* NEPSE Position Size Calculator (Open by Default) */}
       {last && (
         <NepseTradePlanner
           symbol={selectedSymbol}
           lastClose={last.close}
-          suggestedStop={
-            srLevels.find((l) => l.label.includes('support'))?.value ?? last.low
-          }
-          suggestedTarget={
-            srLevels.find((l) => l.label.includes('resistance'))?.value ?? last.w52_high
-          }
+          suggestedStop={rollingMetrics?.supN ?? last.low}
+          suggestedTarget={rollingMetrics?.resN ?? last.w52_high}
         />
       )}
 
-      {loading ? (
-        <div className="h-[360px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
-      ) : (
-        <CandlestickVolumeChart history={sliced} levels={srLevels} />
-      )}
-
+      {/* Live Risk & Opportunity Research */}
       {selectedSymbol && (
         <StockRiskOpportunitiesPanel
           symbol={selectedSymbol}
           companyName={last?.name || symbols.find((s) => s.symbol === selectedSymbol)?.name}
-          lang={lang}
           autoLoad
         />
       )}
 
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {biText('Recent Daily Sessions', 'पछिल्ला दैनिक कारोबार', lang)}
+          Recent Daily Sessions
         </h3>
         <DataTable
-          rows={[...sliced].reverse().slice(0, 30)}
+          rows={[...history].reverse().slice(0, 40)}
           columns={cols}
           rowKey={(r) => r.date}
           exportFilename={`${selectedSymbol || 'stock'}-sessions.csv`}

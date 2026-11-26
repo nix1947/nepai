@@ -127,9 +127,7 @@ function normalizePoints(raw: unknown): ResearchPoint[] {
         imp === 'High' || imp === 'Low' ? imp : 'Medium';
       return {
         title: String(o.title || '').trim(),
-        titleNe: String(o.titleNe || o.title || '').trim(),
         detail: String(o.detail || '').trim(),
-        detailNe: String(o.detailNe || o.detail || '').trim(),
         impact,
       };
     })
@@ -174,32 +172,29 @@ Use Google Search right now to find the latest up-to-date news and indicators fo
 Local market context:
 ${marketContext}
 
-Return ONLY valid JSON (no markdown outside the JSON object) matching this exact structure, with natural accurate English AND Devanagari Nepali translations:
+Return ONLY valid JSON in English (no markdown outside the JSON object) matching this exact structure:
 {
-  "nepalSummaryEn": "2-3 sentence executive summary of current Nepal economy & NEPSE macro environment.",
-  "nepalSummaryNe": "नेपालको अर्थतन्त्र र नेप्से बजारको हालको अवस्थाको २–३ वाक्यमा सारांश।",
-  "worldSummaryEn": "2-3 sentence executive summary of global macro conditions and spillover impact on Nepal.",
-  "worldSummaryNe": "विश्व अर्थतन्त्र र त्यसले नेपालको बजारमा पार्ने प्रभावको २–३ वाक्यमा सारांश।",
+  "nepalSummary": "2-3 sentence executive summary of current Nepal economy & NEPSE macro environment.",
+  "worldSummary": "2-3 sentence executive summary of global macro conditions and spillover impact on Nepal.",
   "nepalOpportunities": [
-    { "title": "...", "titleNe": "...", "detail": "...", "detailNe": "...", "impact": "High" }
+    { "title": "...", "detail": "...", "impact": "High" }
   ],
   "nepalRisks": [
-    { "title": "...", "titleNe": "...", "detail": "...", "detailNe": "...", "impact": "High" }
+    { "title": "...", "detail": "...", "impact": "High" }
   ],
   "worldOpportunities": [
-    { "title": "...", "titleNe": "...", "detail": "...", "detailNe": "...", "impact": "Medium" }
+    { "title": "...", "detail": "...", "impact": "Medium" }
   ],
   "worldRisks": [
-    { "title": "...", "titleNe": "...", "detail": "...", "detailNe": "...", "impact": "High" }
+    { "title": "...", "detail": "...", "impact": "High" }
   ],
   "sectorsToWatch": [
-    { "sector": "Commercial Banks / Hydropower / etc.", "sectorNe": "...", "stance": "Positive", "reason": "...", "reasonNe": "..." }
+    { "sector": "Commercial Banks / Hydropower / etc.", "stance": "Positive", "reason": "..." }
   ]
 }
 Provide 3–4 concrete items in each opportunities/risks array and 3–4 NEPSE sectors in sectorsToWatch.`;
 
   const response = await callSearchGroundedModel(prompt);
-
   const text = (response.text || '').trim();
   const sources = extractSources(response);
   const parsed = extractJsonObject(text);
@@ -209,10 +204,8 @@ Provide 3–4 concrete items in each opportunities/risks array and 3–4 NEPSE s
         generatedAt: new Date().toISOString(),
         model: MODEL,
         cached: false,
-        nepalSummaryEn: String(parsed.nepalSummaryEn || '').trim(),
-        nepalSummaryNe: String(parsed.nepalSummaryNe || '').trim(),
-        worldSummaryEn: String(parsed.worldSummaryEn || '').trim(),
-        worldSummaryNe: String(parsed.worldSummaryNe || '').trim(),
+        nepalSummary: String(parsed.nepalSummary || '').trim(),
+        worldSummary: String(parsed.worldSummary || '').trim(),
         nepalOpportunities: normalizePoints(parsed.nepalOpportunities),
         nepalRisks: normalizePoints(parsed.nepalRisks),
         worldOpportunities: normalizePoints(parsed.worldOpportunities),
@@ -225,10 +218,8 @@ Provide 3–4 concrete items in each opportunities/risks array and 3–4 NEPSE s
                 st === 'Positive' || st === 'Cautious' ? st : 'Neutral';
               return {
                 sector: String(o.sector || '').trim(),
-                sectorNe: String(o.sectorNe || o.sector || '').trim(),
                 stance,
                 reason: String(o.reason || '').trim(),
-                reasonNe: String(o.reasonNe || o.reason || '').trim(),
               };
             })
           : [],
@@ -238,10 +229,8 @@ Provide 3–4 concrete items in each opportunities/risks array and 3–4 NEPSE s
         generatedAt: new Date().toISOString(),
         model: MODEL,
         cached: false,
-        nepalSummaryEn: text,
-        nepalSummaryNe: '',
-        worldSummaryEn: '',
-        worldSummaryNe: '',
+        nepalSummary: text,
+        worldSummary: '',
         nepalOpportunities: [],
         nepalRisks: [],
         worldOpportunities: [],
@@ -286,27 +275,24 @@ export async function generateStockResearch(
 Market snapshot:
 ${priceContext}
 
-Return ONLY valid JSON (no prose outside the JSON object) matching this exact structure, with accurate English AND natural Devanagari Nepali translations:
+Return ONLY valid JSON in English (no prose outside the JSON object) matching this exact structure:
 {
-  "summaryEn": "2-3 sentence thesis covering the company's current business position, latest price/liquidity action, and outlook.",
-  "summaryNe": "कम्पनीको वर्तमान अवस्था, हालैको मूल्य/कारोबार र दृष्टिकोणबारे २–३ वाक्यमा नेपाली सारांश।",
+  "summary": "2-3 sentence thesis covering the company's current business position, latest price/liquidity action, and outlook.",
   "stance": "Bullish" | "Neutral" | "Cautious",
   "opportunities": [
-    { "title": "...", "titleNe": "...", "detail": "...", "detailNe": "...", "impact": "High" }
+    { "title": "...", "detail": "...", "impact": "High" }
   ],
   "risks": [
-    { "title": "...", "titleNe": "...", "detail": "...", "detailNe": "...", "impact": "High" }
+    { "title": "...", "detail": "...", "impact": "High" }
   ],
-  "macroLinkageEn": "2 sentences explaining how Nepal economy (NRB rates/liquidity/policy) and global economy (oil, USD, rates, commodity/remittance trends) specifically impact this stock.",
-  "macroLinkageNe": "नेपाल र विश्व अर्थतन्त्रका सूचकहरूले यो स्टकलाई कसरी असर गर्छन् भन्ने २ वाक्यमा व्याख्या।",
+  "macroLinkage": "2 sentences explaining how Nepal economy (NRB rates/liquidity/policy) and global economy (oil, USD, rates, commodity/remittance trends) specifically impact this stock.",
   "catalysts": [
-    { "headline": "...", "headlineNe": "...", "timeframe": "Near-term / Q2 / AGM" }
+    { "headline": "...", "timeframe": "Near-term / Q2 / AGM" }
   ]
 }
 Provide 3–4 items in opportunities, 3–4 items in risks, and 2–3 recent or upcoming catalysts.`;
 
   const response = await callSearchGroundedModel(prompt);
-
   const text = (response.text || '').trim();
   const sources = extractSources(response);
   const parsed = extractJsonObject(text);
@@ -322,19 +308,16 @@ Provide 3–4 items in opportunities, 3–4 items in risks, and 2–3 recent or 
         generatedAt: new Date().toISOString(),
         model: MODEL,
         cached: false,
-        summaryEn: String(parsed.summaryEn || '').trim(),
-        summaryNe: String(parsed.summaryNe || '').trim(),
+        summary: String(parsed.summary || '').trim(),
         stance,
         opportunities: normalizePoints(parsed.opportunities),
         risks: normalizePoints(parsed.risks),
-        macroLinkageEn: String(parsed.macroLinkageEn || '').trim(),
-        macroLinkageNe: String(parsed.macroLinkageNe || '').trim(),
+        macroLinkage: String(parsed.macroLinkage || '').trim(),
         catalysts: Array.isArray(parsed.catalysts)
           ? parsed.catalysts.map((c) => {
               const o = c && typeof c === 'object' ? (c as Record<string, unknown>) : {};
               return {
                 headline: String(o.headline || '').trim(),
-                headlineNe: String(o.headlineNe || o.headline || '').trim(),
                 timeframe: String(o.timeframe || 'Upcoming').trim(),
               };
             })
@@ -347,13 +330,11 @@ Provide 3–4 items in opportunities, 3–4 items in risks, and 2–3 recent or 
         generatedAt: new Date().toISOString(),
         model: MODEL,
         cached: false,
-        summaryEn: text,
-        summaryNe: '',
+        summary: text,
         stance: 'Neutral',
         opportunities: [],
         risks: [],
-        macroLinkageEn: '',
-        macroLinkageNe: '',
+        macroLinkage: '',
         catalysts: [],
         sources,
         rawFallback: text,

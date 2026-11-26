@@ -2,9 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, RotateCcw, Search, Sliders } from 'lucide-react';
 import { AlgorithmExplainPanel } from '../components/AlgorithmExplainPanel';
 import { ALGORITHM_DOCS, type AlgorithmDoc } from '../data/algorithmDocs';
-import type { AppLanguage, PriceRow, RangeSummaryRow } from '../types/market';
+import type { PriceRow, RangeSummaryRow } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
-import { biText } from '../utils/i18n';
 
 type CategoryFilter = 'All' | AlgorithmDoc['category'];
 type LabMode = 'simulator' | 'tracer';
@@ -22,7 +21,6 @@ const CATEGORIES: CategoryFilter[] = [
 interface AlgorithmsViewProps {
   dates: string[];
   equityOnly: boolean;
-  lang: AppLanguage;
   onInspectSymbol: (symbol: string) => void;
 }
 
@@ -31,7 +29,6 @@ const clip = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v)
 export const AlgorithmsView: React.FC<AlgorithmsViewProps> = ({
   dates,
   equityOnly,
-  lang,
   onInspectSymbol,
 }) => {
   const [category, setCategory] = useState<CategoryFilter>('All');
@@ -313,18 +310,11 @@ export const AlgorithmsView: React.FC<AlgorithmsViewProps> = ({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {biText(
-              'Algorithm Reference & Interactive Score Lab',
-              'एल्गोरिदम गाइड र अन्तरक्रियात्मक स्कोर प्रयोगशाला',
-              lang
-            )}
+            Algorithm Reference &amp; Interactive Score Lab
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {biText(
-              'Step-by-step execution pipelines, worked NEPSE math examples, live stock formula tracer, and interactive what-if conviction simulator',
-              'चरणबद्ध व्याख्या, व्यावहारिक नेप्से उदाहरण, प्रत्यक्ष स्टक ट्रेसर र स्कोर सिमुलेटर',
-              lang
-            )}
+            Step-by-step execution pipelines, worked NEPSE math examples, live stock formula tracer,
+            and interactive what-if conviction simulator
           </p>
         </div>
 
@@ -987,7 +977,7 @@ export const AlgorithmsView: React.FC<AlgorithmsViewProps> = ({
 
       <div className="space-y-6">
         {filteredDocs.map((doc) => (
-          <AlgorithmExplainPanel key={doc.id} doc={doc} lang={lang} />
+          <AlgorithmExplainPanel key={doc.id} doc={doc} />
         ))}
       </div>
     </div>

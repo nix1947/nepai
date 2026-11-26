@@ -13,21 +13,23 @@ import {
   Radar,
   RefreshCw,
   Search,
+  Settings,
   Star,
   Sun,
   TrendingUp,
   X,
 } from 'lucide-react';
+import { useTradingSettings } from './hooks/useTradingSettings';
 import { useWatchlist } from './hooks/useWatchlist';
-import type { AppLanguage, DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
+import type { DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
 import { formatTimeUntil } from './utils/format';
-import { biText, NAV_LABELS } from './utils/i18n';
 import { AlgorithmsView } from './views/AlgorithmsView';
 import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
 import { OverviewView } from './views/OverviewView';
 import { ScannersView } from './views/ScannersView';
 import { SchedulerView } from './views/SchedulerView';
+import { SettingsView } from './views/SettingsView';
 import { StockExplorerView } from './views/StockExplorerView';
 import { TopTurnoverView } from './views/TopTurnoverView';
 import { TurnoverDirectionView } from './views/TurnoverDirectionView';
@@ -41,18 +43,24 @@ type NavTab =
   | 'explorer'
   | 'macro'
   | 'algorithms'
+  | 'settings'
   | 'scheduler';
 
-const NAV_ITEMS: Array<{ id: NavTab; icon: React.ComponentType<{ className?: string }> }> = [
-  { id: 'overview', icon: BarChart3 },
-  { id: 'pulse', icon: Gauge },
-  { id: 'turnover', icon: TrendingUp },
-  { id: 'direction', icon: Activity },
-  { id: 'scanners', icon: Radar },
-  { id: 'explorer', icon: CandlestickChart },
-  { id: 'macro', icon: Globe },
-  { id: 'algorithms', icon: BookOpen },
-  { id: 'scheduler', icon: CalendarClock },
+const NAV_ITEMS: Array<{
+  id: NavTab;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'overview', label: 'Overview', icon: BarChart3 },
+  { id: 'pulse', label: 'Market Pulse', icon: Gauge },
+  { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
+  { id: 'direction', label: 'Turnover × Direction', icon: Activity },
+  { id: 'scanners', label: 'Scanners', icon: Radar },
+  { id: 'explorer', label: 'Stock Explorer', icon: CandlestickChart },
+  { id: 'macro', label: 'Macro & Risks', icon: Globe },
+  { id: 'algorithms', label: 'Algorithms', icon: BookOpen },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'scheduler', label: 'Scheduler & Data', icon: CalendarClock },
 ];
 
 export default function App() {
@@ -67,12 +75,12 @@ export default function App() {
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [lang, setLang] = useState<AppLanguage>('bi');
   const [allSymbols, setAllSymbols] = useState<SymbolInfo[]>([]);
   const [quickQuery, setQuickQuery] = useState<string>('');
   const [quickOpen, setQuickOpen] = useState<boolean>(false);
   const quickInputRef = useRef<HTMLInputElement | null>(null);
   const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
+  const { settings } = useTradingSettings();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -165,13 +173,11 @@ export default function App() {
   };
 
   const currentNav = NAV_ITEMS.find((n) => n.id === activeTab)!;
-  const currentNavLabel = biText(
-    NAV_LABELS[currentNav.id].en,
-    NAV_LABELS[currentNav.id].ne,
-    lang
-  );
   const needsMarketData =
-    activeTab !== 'algorithms' && activeTab !== 'scheduler' && activeTab !== 'macro';
+    activeTab !== 'algorithms' &&
+    activeTab !== 'scheduler' &&
+    activeTab !== 'macro' &&
+    activeTab !== 'settings';
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -196,7 +202,6 @@ export default function App() {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = activeTab === item.id;
-          const lbl = NAV_LABELS[item.id];
           return (
             <button
               key={item.id}
@@ -212,41 +217,13 @@ export default function App() {
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span className="truncate">{biText(lbl.en, lbl.ne, lang)}</span>
+              <span className="truncate">{item.label}</span>
             </button>
           );
         })}
       </nav>
 
       <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-4 text-xs">
-        <div className="space-y-1.5">
-          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            Language · भाषा
-          </div>
-          <div className="grid grid-cols-3 gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-[11px]">
-            {(
-              [
-                { id: 'bi', label: 'EN+ने' },
-                { id: 'en', label: 'English' },
-                { id: 'ne', label: 'नेपाली' },
-              ] as const
-            ).map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setLang(opt.id)}
-                className={`py-1 rounded font-medium transition-colors whitespace-nowrap ${
-                  lang === opt.id
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <label className="flex items-start gap-2.5 cursor-pointer text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
@@ -255,7 +232,7 @@ export default function App() {
             className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
           />
           <span>
-            <span className="font-medium block">{biText('Equities only', 'इक्विटी मात्र', lang)}</span>
+            <span className="font-medium block">Equities only</span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug block">
               Exclude funds &amp; debentures
             </span>
@@ -263,6 +240,19 @@ export default function App() {
         </label>
 
         <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800/70">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span>Rolling window</span>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('settings');
+                setMobileMenuOpen(false);
+              }}
+              className="font-mono font-semibold text-blue-600 dark:text-blue-400 hover:underline tabular-nums"
+            >
+              N = {settings.lookbackDays}d
+            </button>
+          </div>
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span>Sessions loaded</span>
             <span className="font-mono font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
@@ -295,12 +285,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      {/* Desktop Sidebar */}
       <aside className="hidden lg:block w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 h-screen">
         {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 lg:hidden flex">
           <div
@@ -313,7 +301,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -331,7 +318,7 @@ export default function App() {
               </span>
               <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">/</span>
               <h1 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
-                {currentNavLabel}
+                {currentNav.label}
               </h1>
             </div>
           </div>
@@ -510,7 +497,6 @@ export default function App() {
                 <TopTurnoverView
                   dates={dates}
                   equityOnly={equityOnly}
-                  lang={lang}
                   onInspectSymbol={inspectSymbol}
                 />
               )}
@@ -532,7 +518,6 @@ export default function App() {
                 <StockExplorerView
                   dates={dates}
                   equityOnly={equityOnly}
-                  lang={lang}
                   initialSymbol={explorerSymbol}
                 />
               )}
@@ -540,7 +525,6 @@ export default function App() {
                 <MacroRisksView
                   dates={dates}
                   equityOnly={equityOnly}
-                  lang={lang}
                   onInspectSymbol={inspectSymbol}
                 />
               )}
@@ -548,10 +532,10 @@ export default function App() {
                 <AlgorithmsView
                   dates={dates}
                   equityOnly={equityOnly}
-                  lang={lang}
                   onInspectSymbol={inspectSymbol}
                 />
               )}
+              {activeTab === 'settings' && <SettingsView />}
               {activeTab === 'scheduler' && <SchedulerView onDataChanged={loadMeta} />}
             </>
           )}

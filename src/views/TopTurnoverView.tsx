@@ -3,15 +3,14 @@ import { ArrowUpRight, Star } from 'lucide-react';
 import { HorizontalTurnoverBar, WeeklyHeatmapChart } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { PeriodPicker, resolvePeriodRange, type PeriodMode } from '../components/PeriodPicker';
+import { LOOKBACK_PRESETS, useTradingSettings } from '../hooks/useTradingSettings';
 import { useWatchlist } from '../hooks/useWatchlist';
-import type { AppLanguage, RangeSummaryRow, WeeklyTopRow } from '../types/market';
+import type { RangeSummaryRow, WeeklyTopRow } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
-import { biText } from '../utils/i18n';
 
 interface TopTurnoverViewProps {
   dates: string[];
   equityOnly: boolean;
-  lang: AppLanguage;
   onInspectSymbol: (symbol: string) => void;
 }
 
@@ -20,12 +19,12 @@ type TurnoverQuickFilter = 'all' | 'gainers' | 'losers' | 'aboveVwap' | 'near52'
 export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
   dates,
   equityOnly,
-  lang,
   onInspectSymbol,
 }) => {
+  const { settings, updateSettings } = useTradingSettings();
   const [mode, setMode] = useState<PeriodMode>('last1');
   const [customStart, setCustomStart] = useState(
-    dates[Math.max(0, dates.length - 6)] ?? ''
+    dates[Math.max(0, dates.length - Math.min(dates.length, settings.lookbackDays))] ?? ''
   );
   const [customEnd, setCustomEnd] = useState(dates[dates.length - 1] ?? '');
   const [limitN, setLimitN] = useState(15);
@@ -44,10 +43,12 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     if (dates.length > 0) {
       if (!customEnd) setCustomEnd(dates[dates.length - 1]);
       if (!customStart) {
-        setCustomStart(dates[Math.max(0, dates.length - (mode === 'weekly' ? 20 : 6))]);
+        setCustomStart(
+          dates[Math.max(0, dates.length - (mode === 'weekly' ? 20 : settings.lookbackDays))]
+        );
       }
     }
-  }, [dates, customEnd, customStart, mode]);
+  }, [dates, customEnd, customStart, mode, settings.lookbackDays]);
 
   const resolved = resolvePeriodRange(dates, mode, customStart, customEnd);
 
@@ -80,17 +81,32 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     };
   }, [resolved?.start, resolved?.end, limitN, equityOnly, mode]);
 
+  const applyRollingWindow = (nDays: number) => {
+    updateSettings({ lookbackDays: nDays });
+    if (dates.length > 0) {
+      const end = dates[dates.length - 1];
+      const start = dates[Math.max(0, dates.length - nDays)];
+      setCustomStart(start);
+      setCustomEnd(end);
+      setMode('custom');
+    }
+  };
+
   const filteredRangeRows = useMemo(() => {
     return rangeRows.filter((r) => {
       if (quickFilter === 'gainers') return (r.change_pct ?? 0) > 0;
       if (quickFilter === 'losers') return (r.change_pct ?? 0) < 0;
       if (quickFilter === 'aboveVwap') return (r.vwap_pct ?? 0) > 0;
       if (quickFilter === 'near52')
-        return r.gap_52h_pct !== null && r.gap_52h_pct !== undefined && r.gap_52h_pct <= 5;
-      if (quickFilter === 'bigTicket') return (r.avg_trade_size ?? 0) >= 350_000;
+        return (
+          r.gap_52h_pct !== null &&
+          r.gap_52h_pct !== undefined &&
+          r.gap_52h_pct <= settings.near52Pct
+        );
+      if (quickFilter === 'bigTicket') return (r.avg_trade_size ?? 0) >= settings.blockTicketMinRs;
       return true;
     });
-  }, [rangeRows, quickFilter]);
+  }, [rangeRows, quickFilter, settings.near52Pct, settings.blockTicketMinRs]);
 
   const summaryStats = useMemo(() => {
     const topTurn = rangeRows.reduce((s, r) => s + r.turnover, 0);
@@ -103,7 +119,9 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     const concentrationPct = marketTotalTurnover > 0 ? (topTurn / marketTotalTurnover) * 100 : 0;
     const top5SharePct = marketTotalTurnover > 0 ? (top5Turn / marketTotalTurnover) * 100 : 0;
     const avgTicket = topTrades > 0 ? topTurn / topTrades : 0;
-    const bigTicketCount = rangeRows.filter((r) => (r.avg_trade_size ?? 0) >= 350_000).length;
+    const bigTicketCount = rangeRows.filter(
+      (r) => (r.avg_trade_size ?? 0) >= settings.blockTicketMinRs
+    ).length;
     return {
       topTurn,
       concentrationPct,
@@ -116,7 +134,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
       bigTicketCount,
       leader: rangeRows[0] ?? null,
     };
-  }, [rangeRows, marketTotalTurnover]);
+  }, [rangeRows, marketTotalTurnover, settings.blockTicketMinRs]);
 
   const weeklyOrder = useMemo(() => {
     const totals = new Map<string, number>();
@@ -154,7 +172,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     },
     {
       key: 'symbol',
-      label: biText('Symbol', 'संकेत', lang),
+      label: 'Symbol',
       align: 'left',
       render: (r) => (
         <span className="font-semibold text-blue-600 dark:text-blue-400">{r.symbol}</span>
@@ -162,7 +180,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     },
     {
       key: 'name',
-      label: biText('Company', 'कम्पनी', lang),
+      label: 'Company',
       align: 'left',
       render: (r) => (
         <span className="text-slate-600 dark:text-slate-300 truncate max-w-[200px] inline-block">
@@ -172,7 +190,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     },
     {
       key: 'turnover',
-      label: biText('Turn (cr)', 'कारोबार (करोड)', lang),
+      label: 'Turn (cr)',
       align: 'right',
       csvValue: (r) => (r.turnover / 1e7).toFixed(4),
       render: (r) => formatCrore(r.turnover),
@@ -181,7 +199,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
       ? [
           {
             key: 'market_share_pct',
-            label: biText('Share %', 'हिस्सा %', lang),
+            label: 'Share %',
             align: 'right' as const,
             render: (r: RangeSummaryRow) =>
               r.market_share_pct !== undefined ? `${r.market_share_pct.toFixed(1)}%` : '–',
@@ -190,7 +208,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
       : []),
     {
       key: 'change_pct',
-      label: biText('Chg %', 'परिवर्तन %', lang),
+      label: 'Chg %',
       align: 'right',
       render: (r) => (
         <span
@@ -206,7 +224,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     },
     {
       key: 'vwap_pct',
-      label: biText('vs VWAP', 'औसत मूल्य तुलना', lang),
+      label: 'vs VWAP',
       align: 'right',
       render: (r) => (
         <span
@@ -222,11 +240,11 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     },
     {
       key: 'avg_trade_size',
-      label: biText('Rs/Trade', 'प्रति कारोबार', lang),
+      label: 'Rs/Trade',
       align: 'right',
       render: (r) => {
         const val = r.avg_trade_size ?? (r.trans > 0 ? r.turnover / r.trans : 0);
-        const isHigh = val >= 350_000;
+        const isHigh = val >= settings.blockTicketMinRs;
         return (
           <span className={isHigh ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}>
             {formatInt(val)}
@@ -236,45 +254,45 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
     },
     {
       key: 'close_pos_pct',
-      label: biText('Close Str', 'बन्द बल', lang),
+      label: 'Close Str',
       align: 'right',
       render: (r) =>
         r.close_pos_pct !== undefined ? `${r.close_pos_pct.toFixed(0)}%` : '–',
     },
     {
       key: 'up_days',
-      label: biText('Up/Days', 'हरियो दिन', lang),
+      label: 'Up/Days',
       align: 'right',
       render: (r) => `${r.up_days}/${r.days_traded}`,
     },
     {
       key: 'trans',
-      label: biText('Trades', 'कारोबार संख्या', lang),
+      label: 'Trades',
       align: 'right',
       render: (r) => formatInt(r.trans),
     },
     {
       key: 'end_price',
-      label: biText('Close', 'अन्तिम मूल्य', lang),
+      label: 'Close',
       align: 'right',
       render: (r) => formatNum(r.end_price),
     },
   ];
 
   const weeklyCols: ColumnDef<WeeklyTopRow>[] = [
-    { key: 'week_start', label: biText('Week Start', 'हप्ता सुरु', lang), align: 'left', render: (r) => <span className="font-mono">{r.week_start}</span> },
-    { key: 'week_end', label: biText('Week End', 'हप्ता अन्त्य', lang), align: 'left', render: (r) => <span className="font-mono">{r.week_end}</span> },
-    { key: 'rank', label: biText('Rank', 'क्रम', lang), align: 'right', render: (r) => r.rank },
+    { key: 'week_start', label: 'Week Start', align: 'left', render: (r) => <span className="font-mono">{r.week_start}</span> },
+    { key: 'week_end', label: 'Week End', align: 'left', render: (r) => <span className="font-mono">{r.week_end}</span> },
+    { key: 'rank', label: 'Rank', align: 'right', render: (r) => r.rank },
     ...rangeCols,
   ];
 
-  const filterButtons: Array<{ id: TurnoverQuickFilter; en: string; ne: string }> = [
-    { id: 'all', en: `All Top ${limitN}`, ne: `सबै शीर्ष ${limitN}` },
-    { id: 'gainers', en: 'Gainers', ne: 'बढेका' },
-    { id: 'losers', en: 'Losers', ne: 'घटेका' },
-    { id: 'aboveVwap', en: 'Above VWAP', ne: 'VWAP माथि' },
-    { id: 'near52', en: 'Near 52w High', ne: '५२ हप्ता उच्च नजिक' },
-    { id: 'bigTicket', en: 'Big Ticket (≥3.5L/tx)', ne: 'ठूलो टिकट' },
+  const filterButtons: Array<{ id: TurnoverQuickFilter; label: string }> = [
+    { id: 'all', label: `All Top ${limitN}` },
+    { id: 'gainers', label: 'Gainers' },
+    { id: 'losers', label: 'Losers' },
+    { id: 'aboveVwap', label: 'Above VWAP' },
+    { id: 'near52', label: `Near 52w High (≤${settings.near52Pct}%)` },
+    { id: 'bigTicket', label: `Big Ticket (≥NPR ${Math.round(settings.blockTicketMinRs / 1000)}k/tx)` },
   ];
 
   return (
@@ -282,32 +300,51 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {biText('Top Turnover Leaders', 'शीर्ष कारोबार गर्ने कम्पनीहरू', lang)}
+            Top Turnover Leaders
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {biText(
-              'Measures liquidity concentration, VWAP control, ticket size (retail vs institutional), and price change anchored to pre-period close',
-              'बजार तरलता केन्द्रिकरण, VWAP नियन्त्रण, प्रति-कारोबार आकार र अवधि अघिको बन्द मूल्यबाट वास्तविक परिवर्तन विश्लेषण',
-              lang
-            )}
+            Measures liquidity concentration, VWAP control, ticket size (retail vs institutional),
+            and price change anchored to pre-period close
           </p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs">
-          <label htmlFor="tt-limit" className="text-slate-600 dark:text-slate-400 font-medium">
-            {biText('Top N', 'शीर्ष N', lang)}:{' '}
-            <span className="font-mono text-slate-900 dark:text-slate-100">{limitN}</span>
-          </label>
-          <input
-            id="tt-limit"
-            type="range"
-            min={5}
-            max={50}
-            step={5}
-            value={limitN}
-            onChange={(e) => setLimitN(Number(e.target.value))}
-            className="w-32 accent-blue-600"
-          />
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 dark:text-slate-400">Rolling N-Day Range:</span>
+            <div className="inline-flex items-center gap-0.5 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-md">
+              {LOOKBACK_PRESETS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => applyRollingWindow(n)}
+                  className={`px-2 py-1 rounded font-mono text-[11px] font-medium transition-colors ${
+                    mode === 'custom' && settings.lookbackDays === n
+                      ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {n}d
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="tt-limit" className="text-slate-600 dark:text-slate-400 font-medium">
+              Top N:{' '}
+              <span className="font-mono text-slate-900 dark:text-slate-100">{limitN}</span>
+            </label>
+            <input
+              id="tt-limit"
+              type="range"
+              min={5}
+              max={50}
+              step={5}
+              value={limitN}
+              onChange={(e) => setLimitN(Number(e.target.value))}
+              className="w-28 accent-blue-600"
+            />
+          </div>
         </div>
       </div>
 
@@ -330,11 +367,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
         <div className="space-y-6">
           <div className="space-y-2">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {biText(
-                'Trading weeks start on Monday (Mon–Fri). Matrix values show turnover in Rs crore.',
-                'कारोबार हप्ता सोमबार–शुक्रबार आधारमा वर्गीकृत छ। म्याट्रिक्स मानहरू करोड रुपैयाँमा छन्।',
-                lang
-              )}
+              Trading weeks start on Monday (Mon–Fri). Matrix values show turnover in Rs crore.
             </p>
             <WeeklyHeatmapChart weeks={weeklyData.weeks} symbols={weeklyOrder} />
           </div>
@@ -350,29 +383,33 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Top Turnover KPI & Concentration Strip */}
           {rangeRows.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-1">
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  {biText(`Top ${limitN} Turnover`, `शीर्ष ${limitN} कुल कारोबार`, lang)}
+                  Top {limitN} Turnover
                 </div>
                 <div className="text-lg font-mono tabular-nums font-semibold text-slate-900 dark:text-slate-100">
                   Rs {formatCrore(summaryStats.topTurn)} cr
                 </div>
                 <div className="text-[11px] font-mono tabular-nums text-blue-600 dark:text-blue-400">
-                  {summaryStats.concentrationPct.toFixed(1)}% {biText('of NEPSE turnover', 'कुल बजार हिस्सा', lang)} · Top 5: {summaryStats.top5SharePct.toFixed(1)}%
+                  {summaryStats.concentrationPct.toFixed(1)}% of NEPSE turnover · Top 5:{' '}
+                  {summaryStats.top5SharePct.toFixed(1)}%
                 </div>
               </div>
 
               <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-1">
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  {biText('Direction Split in Top N', 'शीर्ष N मा बढेका vs घटेका', lang)}
+                  Direction Split in Top {limitN}
                 </div>
                 <div className="text-lg font-mono tabular-nums font-semibold">
-                  <span className="text-emerald-600 dark:text-emerald-400">{summaryStats.gainersCount} ↑</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {summaryStats.gainersCount} ↑
+                  </span>
                   <span className="text-slate-400 mx-1.5">/</span>
-                  <span className="text-red-600 dark:text-red-400">{summaryStats.losersCount} ↓</span>
+                  <span className="text-red-600 dark:text-red-400">
+                    {summaryStats.losersCount} ↓
+                  </span>
                 </div>
                 <div className="text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400">
                   +{formatCrore(summaryStats.upTurn, 1)} cr vs -{formatCrore(summaryStats.downTurn, 1)} cr
@@ -381,19 +418,19 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
 
               <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-1">
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  {biText('Avg Ticket Size (Rs/Tx)', 'औसत प्रति-कारोबार रकम', lang)}
+                  Avg Ticket Size (Rs/Tx)
                 </div>
                 <div className="text-lg font-mono tabular-nums font-semibold text-slate-900 dark:text-slate-100">
                   Rs {formatInt(summaryStats.avgTicket)}
                 </div>
                 <div className="text-[11px] text-amber-600 dark:text-amber-400 font-mono tabular-nums">
-                  {summaryStats.bigTicketCount} {biText('big-ticket names (≥3.5L/tx)', 'ठूलो टिकट स्टक', lang)}
+                  {summaryStats.bigTicketCount} big-ticket names (≥NPR {Math.round(settings.blockTicketMinRs / 1000)}k/tx)
                 </div>
               </div>
 
               <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-1">
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  {biText('#1 Liquidity Magnet', 'सर्वाधिक कारोबार लिडर', lang)}
+                  #1 Liquidity Magnet
                 </div>
                 {summaryStats.leader ? (
                   <>
@@ -417,7 +454,8 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
                       </span>
                     </div>
                     <div className="text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                      Rs {formatCrore(summaryStats.leader.turnover)} cr ({summaryStats.leader.market_share_pct?.toFixed(1)}% share)
+                      Rs {formatCrore(summaryStats.leader.turnover)} cr (
+                      {summaryStats.leader.market_share_pct?.toFixed(1)}% share)
                     </div>
                   </>
                 ) : (
@@ -427,7 +465,6 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
             </div>
           )}
 
-          {/* Quick Filters Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               {filterButtons.map((btn) => (
@@ -441,12 +478,12 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
                       : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300'
                   }`}
                 >
-                  {biText(btn.en, btn.ne, lang)}
+                  {btn.label}
                 </button>
               ))}
             </div>
             <span className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-              {filteredRangeRows.length} / {rangeRows.length} {biText('shown', 'देखाइएको', lang)}
+              {filteredRangeRows.length} / {rangeRows.length} shown
             </span>
           </div>
 

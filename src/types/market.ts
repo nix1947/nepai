@@ -197,8 +197,6 @@ export interface MarketPulseResponse {
   rows: MarketPulseRow[];
 }
 
-export type AppLanguage = 'bi' | 'en' | 'ne';
-
 export interface ResearchSource {
   title: string;
   uri: string;
@@ -206,9 +204,7 @@ export interface ResearchSource {
 
 export interface ResearchPoint {
   title: string;
-  titleNe: string;
   detail: string;
-  detailNe: string;
   impact: 'High' | 'Medium' | 'Low';
 }
 
@@ -216,20 +212,16 @@ export interface MacroResearchResponse {
   generatedAt: string;
   model: string;
   cached: boolean;
-  nepalSummaryEn: string;
-  nepalSummaryNe: string;
-  worldSummaryEn: string;
-  worldSummaryNe: string;
+  nepalSummary: string;
+  worldSummary: string;
   nepalOpportunities: ResearchPoint[];
   nepalRisks: ResearchPoint[];
   worldOpportunities: ResearchPoint[];
   worldRisks: ResearchPoint[];
   sectorsToWatch: Array<{
     sector: string;
-    sectorNe: string;
     stance: 'Positive' | 'Neutral' | 'Cautious';
     reason: string;
-    reasonNe: string;
   }>;
   sources: ResearchSource[];
   rawFallback?: string;
@@ -241,20 +233,18 @@ export interface StockResearchResponse {
   generatedAt: string;
   model: string;
   cached: boolean;
-  summaryEn: string;
-  summaryNe: string;
+  summary: string;
   stance: 'Bullish' | 'Neutral' | 'Cautious';
   opportunities: ResearchPoint[];
   risks: ResearchPoint[];
-  macroLinkageEn: string;
-  macroLinkageNe: string;
+  macroLinkage: string;
   catalysts: Array<{
     headline: string;
-    headlineNe: string;
     timeframe: string;
   }>;
   sources: ResearchSource[];
   rawFallback?: string;
 }
+
 
 

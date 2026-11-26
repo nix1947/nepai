@@ -267,6 +267,22 @@ export class MarketStore {
       const diffPct =
         toNum(f[iDiffPct], prevClose > 0 ? round2((diff / prevClose) * 100) : 0) ?? 0;
 
+      const vwap = toNum(f[iVwap]);
+      const rawRangePct = toNum(f[iRangePct]);
+      const rawVwapPct = toNum(f[iVwapPct]);
+      const rangePct =
+        rawRangePct !== null
+          ? rawRangePct
+          : low > 0 && high >= low
+            ? round2(((high - low) / low) * 100)
+            : null;
+      const vwapPct =
+        rawVwapPct !== null
+          ? rawVwapPct
+          : vwap !== null && vwap > 0 && close > 0
+            ? round2(((close - vwap) / vwap) * 100)
+            : null;
+
       rows.push({
         date: dateStr,
         symbol,
@@ -279,7 +295,7 @@ export class MarketStore {
         ltp,
         close_ltp: toNum(f[iCloseLtp]),
         close_ltp_pct: toNum(f[iCloseLtpPct]),
-        vwap: toNum(f[iVwap]),
+        vwap,
         volume,
         prev_close: prevClose,
         turnover,
@@ -287,8 +303,8 @@ export class MarketStore {
         diff,
         price_range: toNum(f[iRange], round2(high - low)),
         diff_pct: diffPct,
-        range_pct: toNum(f[iRangePct]),
-        vwap_pct: toNum(f[iVwapPct]),
+        range_pct: rangePct,
+        vwap_pct: vwapPct,
         d120: toNum(f[iD120]),
         d180: toNum(f[iD180]),
         w52_high: toNum(f[iW52H]),

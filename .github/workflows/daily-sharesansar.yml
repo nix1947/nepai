@@ -24,13 +24,10 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
-        run: |
-          node --version
-          npm --version
-          npm install --no-audit --no-fund --verbose
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Pull latest ShareSansar daily share prices
-        run: npx --yes tsx scripts/pull-sharesansar.ts
+        run: npx tsx scripts/pull-sharesansar.ts
 
       - name: Commit and push updated data CSV
         run: |

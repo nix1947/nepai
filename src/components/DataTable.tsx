@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, Download, Search, Star } from 'lucide-react';
 
 export interface ColumnDef<T> {
   key: keyof T | string;
@@ -7,6 +7,7 @@ export interface ColumnDef<T> {
   align?: 'left' | 'right';
   sortable?: boolean;
   sortValue?: (row: T) => number | string | null | undefined;
+  csvValue?: (row: T) => number | string | null | undefined;
   render: (row: T) => React.ReactNode;
   widthClass?: string;
 }
@@ -21,6 +22,20 @@ interface DataTableProps<T> {
   searchPlaceholder?: string;
   emptyMessage?: string;
   maxHeightClass?: string;
+  exportFilename?: string;
+  watchlistFilter?: {
+    watchlist: string[];
+    getSymbol: (row: T) => string;
+  };
+}
+
+function escapeCsvCell(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  const str = String(val);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
 }
 
 export function DataTable<T>({
@@ -33,21 +48,35 @@ export function DataTable<T>({
   searchPlaceholder = 'Filter symbol or name…',
   emptyMessage = 'No matching records.',
   maxHeightClass = 'max-h-[520px]',
+  exportFilename,
+  watchlistFilter,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('');
+  const [onlyWatchlist, setOnlyWatchlist] = useState(false);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
+  const watchlistSet = useMemo(
+    () => new Set((watchlistFilter?.watchlist || []).map((s) => s.toUpperCase())),
+    [watchlistFilter?.watchlist]
+  );
+
   const filtered = useMemo(() => {
+    let base = rows;
+    if (onlyWatchlist && watchlistFilter) {
+      base = base.filter((row) =>
+        watchlistSet.has(watchlistFilter.getSymbol(row).toUpperCase())
+      );
+    }
     const q = query.trim().toLowerCase();
-    if (!q || !searchKeys || searchKeys.length === 0) return rows;
-    return rows.filter((row) =>
+    if (!q || !searchKeys || searchKeys.length === 0) return base;
+    return base.filter((row) =>
       searchKeys.some((k) => {
         const val = row[k];
         return val !== null && val !== undefined && String(val).toLowerCase().includes(q);
       })
     );
-  }, [rows, query, searchKeys]);
+  }, [rows, query, searchKeys, onlyWatchlist, watchlistFilter, watchlistSet]);
 
   const sorted = useMemo(() => {
     if (!sortKey) return filtered;
@@ -85,23 +114,88 @@ export function DataTable<T>({
     }
   };
 
+  const handleExportCsv = () => {
+    if (!exportFilename || sorted.length === 0) return;
+    const exportCols = columns.filter((c) => c.key !== '_star');
+    const header = exportCols.map((c) => escapeCsvCell(c.label)).join(',');
+    const body = sorted
+      .map((row) =>
+        exportCols
+          .map((c) => {
+            const raw = c.csvValue
+              ? c.csvValue(row)
+              : c.sortValue
+                ? c.sortValue(row)
+                : (row as Record<string, unknown>)[String(c.key)];
+            return escapeCsvCell(raw);
+          })
+          .join(',')
+      )
+      .join('\n');
+
+    const blob = new Blob([`${header}\n${body}\n`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = exportFilename.endsWith('.csv') ? exportFilename : `${exportFilename}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const showToolbar =
+    (searchKeys && searchKeys.length > 0) || Boolean(exportFilename) || Boolean(watchlistFilter);
+
   return (
     <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 overflow-hidden">
-      {searchKeys && searchKeys.length > 0 && (
-        <div className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600"
-            />
+      {showToolbar && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[200px]">
+            {searchKeys && searchKeys.length > 0 && (
+              <div className="relative flex-1 max-w-xs min-w-[180px]">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                />
+              </div>
+            )}
+
+            {watchlistFilter && (
+              <button
+                type="button"
+                onClick={() => setOnlyWatchlist((v) => !v)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border transition-colors whitespace-nowrap ${
+                  onlyWatchlist
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+                    : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                <Star className={`w-3 h-3 ${onlyWatchlist ? 'fill-amber-500 text-amber-500' : ''}`} />
+                <span>Watchlist ({watchlistFilter.watchlist.length})</span>
+              </button>
+            )}
           </div>
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
-            {sorted.length} {sorted.length === 1 ? 'row' : 'rows'}
-          </span>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+              {sorted.length} {sorted.length === 1 ? 'row' : 'rows'}
+            </span>
+            {exportFilename && sorted.length > 0 && (
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+              >
+                <Download className="w-3 h-3" />
+                <span>CSV</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 

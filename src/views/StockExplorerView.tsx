@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Search, Star } from 'lucide-react';
 import { CandlestickVolumeChart, type HorizontalLevel } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
+import { useWatchlist } from '../hooks/useWatchlist';
 import type { PriceRow, SymbolInfo } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
 
@@ -17,10 +19,12 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
 }) => {
   const [symbols, setSymbols] = useState<SymbolInfo[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>(initialSymbol || '');
+  const [symbolFilter, setSymbolFilter] = useState<string>('');
   const [daysShown, setDaysShown] = useState(90);
   const [showSR, setShowSR] = useState(true);
   const [history, setHistory] = useState<PriceRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
   useEffect(() => {
     if (initialSymbol) setSelectedSymbol(initialSymbol);
@@ -40,6 +44,14 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
         }
       });
   }, [dates, equityOnly]);
+
+  const filteredSymbols = useMemo(() => {
+    const q = symbolFilter.trim().toLowerCase();
+    if (!q) return symbols;
+    return symbols.filter(
+      (s) => s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
+    );
+  }, [symbols, symbolFilter]);
 
   useEffect(() => {
     if (!selectedSymbol) return;
@@ -90,30 +102,102 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
       ),
     },
     { key: 'volume', label: 'Volume', align: 'right', render: (r) => formatInt(r.volume) },
-    { key: 'turnover', label: 'Turnover (cr)', align: 'right', render: (r) => formatCrore(r.turnover) },
+    {
+      key: 'turnover',
+      label: 'Turnover (cr)',
+      align: 'right',
+      csvValue: (r) => (r.turnover / 1e7).toFixed(4),
+      render: (r) => formatCrore(r.turnover),
+    },
     { key: 'trans', label: 'Trades', align: 'right', render: (r) => formatInt(r.trans) },
   ];
+
+  const isStarred = selectedSymbol ? hasSymbol(selectedSymbol) : false;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex-1 min-w-[260px]">
-          <label htmlFor="ex-sym" className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
-            Security Symbol
+        <div className="flex-1 min-w-[280px] space-y-2">
+          <label htmlFor="ex-search" className="block text-xs font-medium text-slate-500 dark:text-slate-400">
+            Find &amp; Select Security ({symbols.length} listed)
           </label>
-          <select
-            id="ex-sym"
-            value={selectedSymbol}
-            onChange={(e) => setSelectedSymbol(e.target.value)}
-            className="w-full max-w-md px-3 py-2 text-sm font-medium rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-          >
-            {symbols.map((s) => (
-              <option key={s.symbol} value={s.symbol}>
-                {s.symbol}
-                {s.name ? ` — ${s.name}` : ''}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-44">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="ex-search"
+                type="text"
+                value={symbolFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSymbolFilter(val);
+                  const q = val.trim().toLowerCase();
+                  if (q) {
+                    const exact = symbols.find((s) => s.symbol.toLowerCase() === q);
+                    const first =
+                      exact ||
+                      symbols.find(
+                        (s) =>
+                          s.symbol.toLowerCase().startsWith(q) ||
+                          s.name.toLowerCase().includes(q)
+                      );
+                    if (first) setSelectedSymbol(first.symbol);
+                  }
+                }}
+                placeholder="Type symbol (NABIL)…"
+                className="w-full pl-8 pr-2.5 py-2 text-xs rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+              />
+            </div>
+
+            <select
+              id="ex-sym"
+              value={selectedSymbol}
+              onChange={(e) => setSelectedSymbol(e.target.value)}
+              className="flex-1 min-w-[200px] max-w-sm px-3 py-2 text-sm font-medium rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+            >
+              {filteredSymbols.map((s) => (
+                <option key={s.symbol} value={s.symbol}>
+                  {s.symbol}
+                  {s.name ? ` — ${s.name}` : ''}
+                </option>
+              ))}
+            </select>
+
+            {selectedSymbol && (
+              <button
+                type="button"
+                onClick={() => toggleSymbol(selectedSymbol)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border transition-colors ${
+                  isStarred
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-500 text-amber-500' : ''}`} />
+                <span>{isStarred ? 'Starred' : 'Watchlist'}</span>
+              </button>
+            )}
+          </div>
+
+          {watchlist.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[11px] text-slate-400 mr-1">Watchlist:</span>
+              {watchlist.map((sym) => (
+                <button
+                  key={sym}
+                  type="button"
+                  onClick={() => setSelectedSymbol(sym)}
+                  className={`px-2 py-0.5 text-[11px] font-mono rounded border transition-colors ${
+                    selectedSymbol === sym
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+                  }`}
+                >
+                  {sym}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-6 text-xs">
@@ -192,6 +276,7 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
           rows={[...sliced].reverse().slice(0, 30)}
           columns={cols}
           rowKey={(r) => r.date}
+          exportFilename={`${selectedSymbol || 'stock'}-sessions.csv`}
           maxHeightClass="max-h-[340px]"
         />
       </div>

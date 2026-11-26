@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronUp, Star } from 'lucide-react';
 import { AlgorithmExplainPanel } from '../components/AlgorithmExplainPanel';
 import { CandlestickVolumeChart, type HorizontalLevel } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { SCANNER_DOC_MAP } from '../data/algorithmDocs';
+import { useWatchlist } from '../hooks/useWatchlist';
 import type { PriceRow, ScannerKind, ScannerResultRow } from '../types/market';
 import { formatCrore, formatNum, formatPct } from '../utils/format';
 
 interface ScannersViewProps {
   dates: string[];
   equityOnly: boolean;
+  onInspectSymbol: (symbol: string) => void;
 }
 
 const SCANNER_OPTIONS: Array<{ id: ScannerKind; label: string }> = [
@@ -23,11 +25,16 @@ const SCANNER_OPTIONS: Array<{ id: ScannerKind; label: string }> = [
   { id: 'rs', label: 'Relative Strength Leaders' },
 ];
 
-export const ScannersView: React.FC<ScannersViewProps> = ({ dates, equityOnly }) => {
+export const ScannersView: React.FC<ScannersViewProps> = ({
+  dates,
+  equityOnly,
+  onInspectSymbol,
+}) => {
   const [kind, setKind] = useState<ScannerKind>('potential');
   const [asof, setAsof] = useState<string>(dates[dates.length - 1] ?? '');
   const [minLakh, setMinLakh] = useState<number>(10);
   const [showAlgoDocs, setShowAlgoDocs] = useState<boolean>(false);
+  const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
   // Parameters per scanner
   const [baseMin, setBaseMin] = useState(20);
@@ -187,6 +194,29 @@ export const ScannersView: React.FC<ScannersViewProps> = ({ dates, equityOnly })
 
   const columns = useMemo((): ColumnDef<ScannerResultRow>[] => {
     const baseCols: ColumnDef<ScannerResultRow>[] = [
+      {
+        key: '_star',
+        label: '',
+        align: 'left',
+        sortable: false,
+        widthClass: 'w-8',
+        render: (r) => {
+          const starred = hasSymbol(r.symbol);
+          return (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSymbol(r.symbol);
+              }}
+              aria-label={starred ? `Remove ${r.symbol} from watchlist` : `Add ${r.symbol} to watchlist`}
+              className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
+            >
+              <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+            </button>
+          );
+        },
+      },
       {
         key: 'symbol',
         label: 'Symbol',
@@ -374,7 +404,7 @@ export const ScannersView: React.FC<ScannersViewProps> = ({ dates, equityOnly })
       { key: 'return_pct', label: 'Return %', align: 'right', render: (r) => formatPct(r.return_pct) },
       { key: 'market_median_pct', label: 'Mkt Median %', align: 'right', render: (r) => formatPct(r.market_median_pct) },
     ];
-  }, [kind]);
+  }, [kind, hasSymbol, toggleSymbol]);
 
   // Chart overlay derivation
   const chartLevels = useMemo((): HorizontalLevel[] => {
@@ -697,21 +727,33 @@ export const ScannersView: React.FC<ScannersViewProps> = ({ dates, equityOnly })
             selectedKey={pickedRow?.symbol ?? null}
             onRowClick={(r) => setSelectedSymbol(r.symbol)}
             searchKeys={['symbol', 'name', 'signals']}
+            exportFilename={`nepse-scanner-${kind}-${asof || 'latest'}.csv`}
+            watchlistFilter={{ watchlist, getSymbol: (r) => r.symbol }}
             maxHeightClass="max-h-[380px]"
           />
 
           {pickedRow && (
             <div className="space-y-2">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-                  {pickedRow.symbol}
-                  {pickedRow.name ? ` — ${pickedRow.name}` : ''}
-                </h3>
-                {pickedRow.signals && (
-                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
-                    Signals: {pickedRow.signals}
-                  </span>
-                )}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                    {pickedRow.symbol}
+                    {pickedRow.name ? ` — ${pickedRow.name}` : ''}
+                  </h3>
+                  {pickedRow.signals && (
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                      Signals: {pickedRow.signals}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onInspectSymbol(pickedRow.symbol)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span>Open in Stock Explorer</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </button>
               </div>
               {chartLoading ? (
                 <div className="h-[360px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />

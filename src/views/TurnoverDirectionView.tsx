@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Star } from 'lucide-react';
 import { TurnoverScatterChart } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { PeriodPicker, resolvePeriodRange, type PeriodMode } from '../components/PeriodPicker';
+import { useWatchlist } from '../hooks/useWatchlist';
 import type { RangeSummaryRow } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
 
@@ -23,6 +25,7 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
   const [customEnd, setCustomEnd] = useState(dates[dates.length - 1] ?? '');
   const [topPct, setTopPct] = useState(10);
   const [consistent, setConsistent] = useState(false);
+  const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
   const [data, setData] = useState<{
     all: RangeSummaryRow[];
@@ -63,6 +66,29 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
   }, [resolved?.start, resolved?.end, topPct, consistent, equityOnly]);
 
   const makeCols = (dir: 'up' | 'down'): ColumnDef<RangeSummaryRow>[] => [
+    {
+      key: '_star',
+      label: '',
+      align: 'left',
+      sortable: false,
+      widthClass: 'w-8',
+      render: (r) => {
+        const starred = hasSymbol(r.symbol);
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSymbol(r.symbol);
+            }}
+            aria-label={starred ? `Remove ${r.symbol} from watchlist` : `Add ${r.symbol} to watchlist`}
+            className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
+          >
+            <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+          </button>
+        );
+      },
+    },
     {
       key: 'symbol',
       label: 'Symbol',
@@ -172,6 +198,8 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
                 rowKey={(r) => r.symbol}
                 onRowClick={(r) => onInspectSymbol(r.symbol)}
                 searchKeys={['symbol', 'name']}
+                exportFilename={`nepse-high-turnover-up-${resolved?.end || 'latest'}.csv`}
+                watchlistFilter={{ watchlist, getSymbol: (r) => r.symbol }}
               />
             </div>
 
@@ -185,6 +213,8 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
                 rowKey={(r) => r.symbol}
                 onRowClick={(r) => onInspectSymbol(r.symbol)}
                 searchKeys={['symbol', 'name']}
+                exportFilename={`nepse-high-turnover-down-${resolved?.end || 'latest'}.csv`}
+                watchlistFilter={{ watchlist, getSymbol: (r) => r.symbol }}
               />
             </div>
           </div>

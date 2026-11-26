@@ -14,6 +14,7 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react';
+import { useWatchlist } from './hooks/useWatchlist';
 import type { DailyAggregate, SchedulerStatus } from './types/market';
 import { formatTimeUntil } from './utils/format';
 import { AlgorithmsView } from './views/AlgorithmsView';
@@ -55,6 +56,7 @@ export default function App() {
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  const { watchlist } = useWatchlist();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -184,6 +186,12 @@ export default function App() {
               {dates[0]} → {dates[dates.length - 1]}
             </div>
           )}
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 pt-1">
+            <span>Watchlist</span>
+            <span className="font-mono font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
+              {watchlist.length}
+            </span>
+          </div>
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 pt-1">
             <span>Daily pull</span>
             <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">
@@ -330,6 +338,7 @@ export default function App() {
                   daily={daily}
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}
+                  onOpenScheduler={() => setActiveTab('scheduler')}
                 />
               )}
               {activeTab === 'turnover' && (
@@ -347,7 +356,11 @@ export default function App() {
                 />
               )}
               {activeTab === 'scanners' && (
-                <ScannersView dates={dates} equityOnly={equityOnly} />
+                <ScannersView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
               )}
               {activeTab === 'explorer' && (
                 <StockExplorerView

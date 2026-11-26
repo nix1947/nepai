@@ -655,11 +655,30 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
         {/* Backfill, CSV Import & GitHub Actions Info */}
         <div className="lg:col-span-6 space-y-6">
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-              <Download className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Historical Date-Range Backfill
-              </h3>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Download className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Historical Date-Range Backfill
+                </h3>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                {[30, 90, 180].map((span) => (
+                  <button
+                    key={span}
+                    type="button"
+                    onClick={() => {
+                      const end = new Date();
+                      const start = new Date(end.getTime() - span * 86400 * 1000);
+                      setBfFrom(start.toISOString().slice(0, 10));
+                      setBfTo(end.toISOString().slice(0, 10));
+                    }}
+                    className="text-blue-600 dark:text-blue-400 hover:underline font-mono"
+                  >
+                    Last {span}d
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">

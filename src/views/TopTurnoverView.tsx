@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Star } from 'lucide-react';
 import { HorizontalTurnoverBar, WeeklyHeatmapChart } from '../components/Charts';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { PeriodPicker, resolvePeriodRange, type PeriodMode } from '../components/PeriodPicker';
+import { useWatchlist } from '../hooks/useWatchlist';
 import type { RangeSummaryRow, WeeklyTopRow } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
 
@@ -22,6 +24,7 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
   );
   const [customEnd, setCustomEnd] = useState(dates[dates.length - 1] ?? '');
   const [limitN, setLimitN] = useState(15);
+  const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
   const [rangeRows, setRangeRows] = useState<RangeSummaryRow[]>([]);
   const [weeklyData, setWeeklyData] = useState<{
@@ -80,6 +83,29 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
   }, [weeklyData.rows]);
 
   const rangeCols: ColumnDef<RangeSummaryRow>[] = [
+    {
+      key: '_star',
+      label: '',
+      align: 'left',
+      sortable: false,
+      widthClass: 'w-8',
+      render: (r) => {
+        const starred = hasSymbol(r.symbol);
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSymbol(r.symbol);
+            }}
+            aria-label={starred ? `Remove ${r.symbol} from watchlist` : `Add ${r.symbol} to watchlist`}
+            className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
+          >
+            <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+          </button>
+        );
+      },
+    },
     {
       key: 'symbol',
       label: 'Symbol',
@@ -217,6 +243,8 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
             rowKey={(r) => `${r.week_start}-${r.symbol}`}
             onRowClick={(r) => onInspectSymbol(r.symbol)}
             searchKeys={['symbol', 'name']}
+            exportFilename={`nepse-weekly-turnover-${resolved?.end || 'latest'}.csv`}
+            watchlistFilter={{ watchlist, getSymbol: (r) => r.symbol }}
           />
         </div>
       ) : (
@@ -237,6 +265,8 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
             rowKey={(r) => r.symbol}
             onRowClick={(r) => onInspectSymbol(r.symbol)}
             searchKeys={['symbol', 'name']}
+            exportFilename={`nepse-top-turnover-${resolved?.end || 'latest'}.csv`}
+            watchlistFilter={{ watchlist, getSymbol: (r) => r.symbol }}
           />
         </div>
       )}

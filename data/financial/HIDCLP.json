@@ -1,0 +1,64 @@
+{
+  "symbol": "HIDCLP",
+  "companyName": "Hydroelectricity Investment and Development Company Limited Promoter Share",
+  "sector": "Promoter Share",
+  "companyId": "1183",
+  "scrapedAt": "2026-11-27T08:30:51.578Z",
+  "sourceUrl": "https://www.sharesansar.com/company/hidclp",
+  "periods": [
+    "Duration"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "keymetrics",
+      "title": "KEY METRICS",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    }
+  ]
+}

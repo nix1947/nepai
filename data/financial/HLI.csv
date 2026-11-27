@@ -1,0 +1,89 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+HLI,BALANCE SHEET,Assets,Goodwill & Intangible Assets,"28,072.34"
+HLI,BALANCE SHEET,Assets,Property and Equipment,"561,346.62"
+HLI,BALANCE SHEET,Assets,Investment Properties,"758,160.00"
+HLI,BALANCE SHEET,Assets,Deferred Tax Assets,"629,308.57"
+HLI,BALANCE SHEET,Assets,Investment in Subsidiaries,"150,000.00"
+HLI,BALANCE SHEET,Assets,Investment in Associates,"86,206.96"
+HLI,BALANCE SHEET,Assets,Investments,"83,916,643.93"
+HLI,BALANCE SHEET,Assets,Loans,"8,792,010.37"
+HLI,BALANCE SHEET,Assets,Reinsurance Assets,"8,212.50"
+HLI,BALANCE SHEET,Assets,Current Tax Assets,"1,390,190.79"
+HLI,BALANCE SHEET,Assets,Insurance Receivables,472.23
+HLI,BALANCE SHEET,Assets,Other Assets,"36,694.98"
+HLI,BALANCE SHEET,Assets,Other Financial Assets,"2,389,088.73"
+HLI,BALANCE SHEET,Assets,Cash and Cash Equivalent,"7,001,076.29"
+HLI,BALANCE SHEET,Assets,Total Assets,"105,747,484.31"
+HLI,BALANCE SHEET,Equity,Share Capital,"9,143,237.31"
+HLI,BALANCE SHEET,Equity,Share Application Money Pending Allotment,0.00
+HLI,BALANCE SHEET,Equity,Share Premium,0.00
+HLI,BALANCE SHEET,Equity,Catastrophe Reserve,"466,382.73"
+HLI,BALANCE SHEET,Equity,Retained Earnings,"1,145,624.66"
+HLI,BALANCE SHEET,Equity,Other Equity,"-2,625,545.63"
+HLI,BALANCE SHEET,Equity,Total Equity,"8,129,699.06"
+HLI,BALANCE SHEET,Liabilities,Provisions,"454,512.34"
+HLI,BALANCE SHEET,Liabilities,Gross Insurance Contract Liabilities,"93,473,958.58"
+HLI,BALANCE SHEET,Liabilities,Deferred Tax Liabilities,0.00
+HLI,BALANCE SHEET,Liabilities,Insurance Payable,"257,557.53"
+HLI,BALANCE SHEET,Liabilities,Current Tax Liabilities,0.00
+HLI,BALANCE SHEET,Liabilities,Borrowings,0.00
+HLI,BALANCE SHEET,Liabilities,Other Liabilities,"2,901,297.31"
+HLI,BALANCE SHEET,Liabilities,Other Financial Liabilities,"530,459.49"
+HLI,BALANCE SHEET,Liabilities,Total Liabilities,"97,617,785.25"
+HLI,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"105,747,484.31"
+HLI,PROFIT & LOSS ACCOUNT,Income,Gross Earned Premiums,"5,152,562.73"
+HLI,PROFIT & LOSS ACCOUNT,Income,Premium Ceded,"-116,398.03"
+HLI,PROFIT & LOSS ACCOUNT,Income,Net Earned Premiums,"5,036,164.71"
+HLI,PROFIT & LOSS ACCOUNT,Income,Commission Income,0.00
+HLI,PROFIT & LOSS ACCOUNT,Income,Other Direct Income,"34,752.82"
+HLI,PROFIT & LOSS ACCOUNT,Income,Interest Income on Loan to Policyholders,"212,411.66"
+HLI,PROFIT & LOSS ACCOUNT,Income,Income from Investments and Loans,"1,231,196.31"
+HLI,PROFIT & LOSS ACCOUNT,Income,Net Gain/(Loss) of Fair Value Changes,0.00
+HLI,PROFIT & LOSS ACCOUNT,Income,Net Realized Gains/(Losses),"4,971.09"
+HLI,PROFIT & LOSS ACCOUNT,Income,Other Income,"1,777.93"
+HLI,PROFIT & LOSS ACCOUNT,Income,Total Income,"6,521,274.53"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Gross Benefits and Claims Paid,"1,870,119.17"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Claims Ceded,"-25,528.80"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Gross Change in Contract Liabilities,"3,834,016.85"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Change in Contract Liabilities Ceded to Reinsurers,-877.50
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Net Benefits and Claims Paid,"5,677,729.73"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Commission Expenses,"404,116.73"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Service Fees,"37,754.14"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Other Direct Expenses,0.00
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"202,229.59"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Depreciation and Amortization Expenses,"16,635.99"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Impairment Losses,0.00
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,"71,266.47"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Finance Cost,"5,252.95"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"6,414,985.59"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/ (Loss) Before Share of Net Profits of Associates,"106,288.94"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Share of Net Profit of Associates,358.83
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"105,930.11"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Income Tax Expenses,"6,913.99"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/(Loss) for The Year,"99,016.12"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Other Comprehensive Income,"-512,045.76"
+HLI,PROFIT & LOSS ACCOUNT,Expenses,Total Comprehensive Income,"-413,029.64"
+HLI,RATIO ANALYSIS,General,Net Premium To Gross Premium (in %),97.74
+HLI,RATIO ANALYSIS,General,Net Profit To Gross Premium (in %),1.92
+HLI,RATIO ANALYSIS,General,Gross Premium To Total Assets (Annualized) (in %),19.49
+HLI,RATIO ANALYSIS,General,Agent Commission To Gross Premium (in %),7.84
+HLI,RATIO ANALYSIS,General,No. of Unpaid Claims To No. of Policies (in %),53.01
+HLI,KEY RATIOS,General,Earning Per Share (EPS),4.33
+HLI,KEY RATIOS,General,Price Earning Ratio (PE ratio),70.64
+HLI,KEY RATIOS,General,Networth per share (Rs.),88.91
+HLI,KEY RATIOS,General,Price to Book Ratio,3.44
+HLI,KEY RATIOS,General,Return on Equity (ROE %),4.87
+HLI,KEY RATIOS,General,Return on Assets (ROA %),0.37
+HLI,KEY RATIOS,General,Solvency Ratio,1.32
+HLI,OTHERS,General,Total Inforce Policy Count,437.68
+HLI,OTHERS,General,Total no. of Policies Issued during the Period,"10,362.00"
+HLI,OTHERS,General,First Year Premium ('000'),"694,302.00"
+HLI,OTHERS,General,Single Premium ('000'),"118,479.59"
+HLI,OTHERS,General,Renewal Premium ('000'),"4,458,260.74"
+HLI,OTHERS,General,Total Benefits and Claims Paid in Count,"6,935.00"
+HLI,OTHERS,General,Outstanding Benefits and Claims in Count,232.00
+HLI,OTHERS,General,Declared Profit (Bonus) Rate,30-86
+HLI,OTHERS,General,Interim Profit (Bonus) Rate,30-86
+HLI,OTHERS,General,Long Term Investments ('000'),"52,424,766.70"
+HLI,OTHERS,General,Short Term Investments ('000'),"32,486,244.20"
+HLI,OTHERS,General,Total Assets per Share,"1,156.57"

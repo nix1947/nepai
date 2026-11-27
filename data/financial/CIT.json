@@ -1,0 +1,632 @@
+{
+  "symbol": "CIT",
+  "companyName": "Citizen Investment Trust",
+  "sector": "Investment",
+  "companyId": "33",
+  "scrapedAt": "2026-11-27T08:30:58.853Z",
+  "sourceUrl": "https://www.sharesansar.com/company/cit",
+  "periods": [
+    "1st Quarter 2083/2084"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars (Rs. in '00000)",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": true,
+          "particulars": "Capital and Liabilities",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Share Capital",
+          "values": [
+            "68,057.98"
+          ],
+          "numericValues": [
+            68057.98
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Reserve & Surplus",
+          "values": [
+            "3,635,105.06"
+          ],
+          "numericValues": [
+            3635105.06
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Pension Fund",
+          "values": [
+            "2,407,573.77"
+          ],
+          "numericValues": [
+            2407573.77
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Citezen investment Scheme",
+          "values": [
+            "21,848.45"
+          ],
+          "numericValues": [
+            21848.45
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Gratuty Fund",
+          "values": [
+            "735,905.18"
+          ],
+          "numericValues": [
+            735905.18
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Investors Fund",
+          "values": [
+            "127,119.61"
+          ],
+          "numericValues": [
+            127119.61
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Civil Servent Insurance Fund",
+          "values": [
+            "73,773.15"
+          ],
+          "numericValues": [
+            73773.15
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Teacher Insurance Fund",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "NARC Insurance Fund",
+          "values": [
+            "1,647.50"
+          ],
+          "numericValues": [
+            1647.5
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Army Insurance Fund",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Armed Police Insurance Fund",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Nepal Police Insurance Fund",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Other Liabalities",
+          "values": [
+            "35,649.82"
+          ],
+          "numericValues": [
+            35649.82
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Reserve",
+          "values": [
+            "231,587.58"
+          ],
+          "numericValues": [
+            231587.58
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Current Liabalities",
+          "values": [
+            "126,540.65"
+          ],
+          "numericValues": [
+            126540.65
+          ]
+        },
+        {
+          "section": "Capital and Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Total Equity & Liabalities",
+          "values": [
+            "3,829,703.69"
+          ],
+          "numericValues": [
+            3829703.69
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": true,
+          "particulars": "Assets",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Net Fixed Asset",
+          "values": [
+            "27,757.23"
+          ],
+          "numericValues": [
+            27757.23
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Investment",
+          "values": [
+            "3,497,096.96"
+          ],
+          "numericValues": [
+            3497096.96
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Government Bonds",
+          "values": [
+            "388,187.07"
+          ],
+          "numericValues": [
+            388187.07
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Fixed Deposit",
+          "values": [
+            "1,406,772.48"
+          ],
+          "numericValues": [
+            1406772.48
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Term Loan",
+          "values": [
+            "281,526.01"
+          ],
+          "numericValues": [
+            281526.01
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Investment In Shares",
+          "values": [
+            "27,246.75"
+          ],
+          "numericValues": [
+            27246.75
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Loan for Subsidairy Company",
+          "values": [
+            "738,889.49"
+          ],
+          "numericValues": [
+            738889.49
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Other Investment",
+          "values": [
+            "654,475.16"
+          ],
+          "numericValues": [
+            654475.16
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Bank Deposit",
+          "values": [
+            "230,492.37"
+          ],
+          "numericValues": [
+            230492.37
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Current Asset",
+          "values": [
+            "74,357.15"
+          ],
+          "numericValues": [
+            74357.15
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Other Assets",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Total",
+          "values": [
+            "3,829,703.71"
+          ],
+          "numericValues": [
+            3829703.71
+          ]
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars (Rs. in '00000)",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": true,
+          "particulars": "Profit and Loss Statement",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Interest Income",
+          "values": [
+            "582.97"
+          ],
+          "numericValues": [
+            582.97
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Service and Commision Interest",
+          "values": [
+            "4,696.24"
+          ],
+          "numericValues": [
+            4696.24
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Dividind Income",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Other Income",
+          "values": [
+            "302.19"
+          ],
+          "numericValues": [
+            302.19
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Total Income",
+          "values": [
+            "5,581.00"
+          ],
+          "numericValues": [
+            5581
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Adminstrative Expenses",
+          "values": [
+            "948.61"
+          ],
+          "numericValues": [
+            948.61
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Hars katti kharcha",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Bonus Provision",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Other Expenses",
+          "values": [
+            "407.72"
+          ],
+          "numericValues": [
+            407.72
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Total Expense",
+          "values": [
+            "1,356.33"
+          ],
+          "numericValues": [
+            1356.33
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Profit Before Tax",
+          "values": [
+            "4,225.07"
+          ],
+          "numericValues": [
+            4225.07
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Tax Provision",
+          "values": [
+            "1,063.91"
+          ],
+          "numericValues": [
+            1063.91
+          ]
+        },
+        {
+          "section": "Profit and Loss Statement",
+          "isSectionHeader": false,
+          "particulars": "Net Profit",
+          "values": [
+            "3,161.16"
+          ],
+          "numericValues": [
+            3161.16
+          ]
+        }
+      ]
+    },
+    {
+      "key": "keyratios",
+      "title": "KEY RATIOS",
+      "headers": [
+        "Particulars",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": true,
+          "particulars": "Financial Ratios & Other Information",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Return on Investment (ROI)",
+          "values": [
+            "4.27"
+          ],
+          "numericValues": [
+            4.27
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Fund to Investment ratio",
+          "values": [
+            "94.31"
+          ],
+          "numericValues": [
+            94.31
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Weighted average cost of fund",
+          "values": [
+            "4.04"
+          ],
+          "numericValues": [
+            4.04
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Net Worth (Rs. in Lakh)",
+          "values": [
+            "106,926.91"
+          ],
+          "numericValues": [
+            106926.91
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Net Worth (Value per share)",
+          "values": [
+            "157.11"
+          ],
+          "numericValues": [
+            157.11
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Earning Per Share (in Rs.)",
+          "values": [
+            "18.58"
+          ],
+          "numericValues": [
+            18.58
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Price to Earning Ratio",
+          "values": [
+            "93.38"
+          ],
+          "numericValues": [
+            93.38
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Price to Book Ratio",
+          "values": [
+            "11.04"
+          ],
+          "numericValues": [
+            11.04
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Return on Equity (ROE %)",
+          "values": [
+            "11.83"
+          ],
+          "numericValues": [
+            11.83
+          ]
+        },
+        {
+          "section": "Financial Ratios & Other Information",
+          "isSectionHeader": false,
+          "particulars": "Return on Assets (ROA %)",
+          "values": [
+            "0.33"
+          ],
+          "numericValues": [
+            0.33
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,967 @@
+{
+  "symbol": "EDBL",
+  "companyName": "Excel Development Bank Limited",
+  "sector": "Development Bank",
+  "companyId": "182",
+  "scrapedAt": "2026-11-27T08:31:27.859Z",
+  "sourceUrl": "https://www.sharesansar.com/company/edbl",
+  "periods": [
+    "1st Quarter 2083/2084"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Cash and cash equivalent",
+          "values": [
+            "834,806.39"
+          ],
+          "numericValues": [
+            834806.39
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Due from Nepal Rastra Bank",
+          "values": [
+            "1,252,559.23"
+          ],
+          "numericValues": [
+            1252559.23
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Placement with Bank and Financial Institutions",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Derivative financial instruments",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other trading assets",
+          "values": [
+            "61,795.42"
+          ],
+          "numericValues": [
+            61795.42
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Loan and advances to B/FIs",
+          "values": [
+            "262,967.06"
+          ],
+          "numericValues": [
+            262967.06
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Loans and advances to customers",
+          "values": [
+            "13,540,779.18"
+          ],
+          "numericValues": [
+            13540779.18
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Investment securities",
+          "values": [
+            "3,972,064.41"
+          ],
+          "numericValues": [
+            3972064.41
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Current tax assets",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Investment in subsidiaries",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Investment in associates",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Investment property",
+          "values": [
+            "627,569.49"
+          ],
+          "numericValues": [
+            627569.49
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Property and equipment",
+          "values": [
+            "187,293.82"
+          ],
+          "numericValues": [
+            187293.82
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Goodwill and Intangible assets",
+          "values": [
+            "2,672.39"
+          ],
+          "numericValues": [
+            2672.39
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Deferred tax assets",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other assets",
+          "values": [
+            "46,269.98"
+          ],
+          "numericValues": [
+            46269.98
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Assets",
+          "values": [
+            "20,788,777.36"
+          ],
+          "numericValues": [
+            20788777.36
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Due to Bank and Financial Institutions",
+          "values": [
+            "107,553.33"
+          ],
+          "numericValues": [
+            107553.33
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Due to Nepal Rastra Bank",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Derivative financial instruments",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Deposits from customers",
+          "values": [
+            "18,160,262.51"
+          ],
+          "numericValues": [
+            18160262.51
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Borrowing",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Current Tax Liabilities",
+          "values": [
+            "15,072.27"
+          ],
+          "numericValues": [
+            15072.27
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Provisions",
+          "values": [
+            "18,278.90"
+          ],
+          "numericValues": [
+            18278.9
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Deferred tax liabilities",
+          "values": [
+            "56,072.05"
+          ],
+          "numericValues": [
+            56072.05
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other liabilities",
+          "values": [
+            "224,142.70"
+          ],
+          "numericValues": [
+            224142.7
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Debt securities issued",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Subordinated Liabilities",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total liabilities",
+          "values": [
+            "18,581,381.75"
+          ],
+          "numericValues": [
+            18581381.75
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Share capital",
+          "values": [
+            "1,249,694.47"
+          ],
+          "numericValues": [
+            1249694.47
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Share premium",
+          "values": [
+            "9,075.47"
+          ],
+          "numericValues": [
+            9075.47
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Retained earnings",
+          "values": [
+            "148,614.60"
+          ],
+          "numericValues": [
+            148614.6
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Reserves",
+          "values": [
+            "800,011.07"
+          ],
+          "numericValues": [
+            800011.07
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total equity",
+          "values": [
+            "2,207,395.61"
+          ],
+          "numericValues": [
+            2207395.61
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total liabilities and equity",
+          "values": [
+            "20,788,777.36"
+          ],
+          "numericValues": [
+            20788777.36
+          ]
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Interest income",
+          "values": [
+            "282,304.22"
+          ],
+          "numericValues": [
+            282304.22
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Interest expense",
+          "values": [
+            "129,460.86"
+          ],
+          "numericValues": [
+            129460.86
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net interest income",
+          "values": [
+            "152,843.37"
+          ],
+          "numericValues": [
+            152843.37
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Fees and commission income",
+          "values": [
+            "33,617.61"
+          ],
+          "numericValues": [
+            33617.61
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Fees and commission expense",
+          "values": [
+            "4,456.75"
+          ],
+          "numericValues": [
+            4456.75
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net fee and commission income",
+          "values": [
+            "29,160.86"
+          ],
+          "numericValues": [
+            29160.86
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net interest, fee and commission income",
+          "values": [
+            "182,004.22"
+          ],
+          "numericValues": [
+            182004.22
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net trading income",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other operating income",
+          "values": [
+            "3,697.26"
+          ],
+          "numericValues": [
+            3697.26
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total operating income",
+          "values": [
+            "185,701.48"
+          ],
+          "numericValues": [
+            185701.48
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Impairment charge/(reversal) for loan and other losses",
+          "values": [
+            "80,418.98"
+          ],
+          "numericValues": [
+            80418.98
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net operating income",
+          "values": [
+            "105,282.51"
+          ],
+          "numericValues": [
+            105282.51
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Personnel expense",
+          "values": [
+            "56,672.92"
+          ],
+          "numericValues": [
+            56672.92
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other operating expense",
+          "values": [
+            "34,806.85"
+          ],
+          "numericValues": [
+            34806.85
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Depreciation & Amortisation",
+          "values": [
+            "6,305.11"
+          ],
+          "numericValues": [
+            6305.11
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Operating Profit",
+          "values": [
+            "7,497.63"
+          ],
+          "numericValues": [
+            7497.63
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Non operating income",
+          "values": [
+            "105.37"
+          ],
+          "numericValues": [
+            105.37
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Non operating expense",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Profit before income tax",
+          "values": [
+            "7,603.00"
+          ],
+          "numericValues": [
+            7603
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Current Tax",
+          "values": [
+            "2,280.90"
+          ],
+          "numericValues": [
+            2280.9
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Deferred Tax",
+          "values": [
+            "1,314.54"
+          ],
+          "numericValues": [
+            1314.54
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Profit for the period",
+          "values": [
+            "4,007.57"
+          ],
+          "numericValues": [
+            4007.57
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Gains/(losses) from investments in equity instruments measured at fair value",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Gains/(losses) on revalution",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Actuarial gains/(losses) on defined benefit plans",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Income tax relating to above items",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net other comprehsive income that will not be reclassified to profit or loss",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Gains/(losses) on cash flow hedge",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Exchange gains/(losses) (arising from translating financial assets of foreign operation)",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Income tax relating to above items",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net other comprehsive income that are or may be reclassified to profit or loss",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other Comprehensive Income For The Period, Net Of Income Tax",
+          "values": [
+            "-19,232.34"
+          ],
+          "numericValues": [
+            -19232.34
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Comprehensive Income For The Period",
+          "values": [
+            "-15,224.77"
+          ],
+          "numericValues": [
+            -15224.77
+          ]
+        }
+      ]
+    },
+    {
+      "key": "keymetrics",
+      "title": "KEY METRICS",
+      "headers": [
+        "Particulars",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Basic Earnings Per Share(Annualized EPS)",
+          "values": [
+            "1.28"
+          ],
+          "numericValues": [
+            1.28
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Diluted Earnings Per Share",
+          "values": [
+            "1.28"
+          ],
+          "numericValues": [
+            1.28
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Capital fund to RWA",
+          "values": [
+            "14.21"
+          ],
+          "numericValues": [
+            14.21
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Non-Performing loan(NPL) to Total Loan",
+          "values": [
+            "4.85"
+          ],
+          "numericValues": [
+            4.85
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Loan loss provision to Total NPL",
+          "values": [
+            "107.02"
+          ],
+          "numericValues": [
+            107.02
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Cost of Funds",
+          "values": [
+            "2.76"
+          ],
+          "numericValues": [
+            2.76
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Credit to Deposit Ratio",
+          "values": [
+            "78.09"
+          ],
+          "numericValues": [
+            78.09
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Base Rate",
+          "values": [
+            "5.06"
+          ],
+          "numericValues": [
+            5.06
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Interest Spread Rate",
+          "values": [
+            "4.23"
+          ],
+          "numericValues": [
+            4.23
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Shareholder's Equity (in Rs '000')",
+          "values": [
+            "2,207,395.61"
+          ],
+          "numericValues": [
+            2207395.61
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "No. of Outstanding Shares",
+          "values": [
+            "12,496,944.70"
+          ],
+          "numericValues": [
+            12496944.7
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net Worth Per Share",
+          "values": [
+            "176.63"
+          ],
+          "numericValues": [
+            176.63
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "P/E Ratio",
+          "values": [
+            "449.43"
+          ],
+          "numericValues": [
+            449.43
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Price to Book (P/B) Ratio",
+          "values": [
+            "3.26"
+          ],
+          "numericValues": [
+            3.26
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Equity",
+          "values": [
+            "0.73"
+          ],
+          "numericValues": [
+            0.73
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Assets",
+          "values": [
+            "0.08"
+          ],
+          "numericValues": [
+            0.08
+          ]
+        }
+      ]
+    }
+  ]
+}

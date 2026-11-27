@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+ANLB,BALANCE SHEET,General,Cash and cash equivalent,"179,255.60"
+ANLB,BALANCE SHEET,General,Statutory Balances and Due from NRB,0.00
+ANLB,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+ANLB,BALANCE SHEET,General,Derivative financial instruments,0.00
+ANLB,BALANCE SHEET,General,Other trading assets,0.00
+ANLB,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+ANLB,BALANCE SHEET,General,Loans and advances to customers,"1,934,738.62"
+ANLB,BALANCE SHEET,General,Investment securities,0.00
+ANLB,BALANCE SHEET,General,Current tax assets,0.00
+ANLB,BALANCE SHEET,General,Investment in subsidiaries,0.00
+ANLB,BALANCE SHEET,General,Investment in associates,0.00
+ANLB,BALANCE SHEET,General,Investment property,0.00
+ANLB,BALANCE SHEET,General,Property and equipment,"4,529.26"
+ANLB,BALANCE SHEET,General,Goodwill and Intangible assets,0.00
+ANLB,BALANCE SHEET,General,Deferred tax assets,0.00
+ANLB,BALANCE SHEET,General,Other assets,"156,738.50"
+ANLB,BALANCE SHEET,General,Total Assets,"2,275,261.98"
+ANLB,BALANCE SHEET,General,Due to Bank and Financial Institutions,0.00
+ANLB,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+ANLB,BALANCE SHEET,General,Derivative financial instruments,0.00
+ANLB,BALANCE SHEET,General,Deposits from customers,"1,155,222.84"
+ANLB,BALANCE SHEET,General,Borrowing,"200,000.00"
+ANLB,BALANCE SHEET,General,Current Tax Liabilities,"19,296.07"
+ANLB,BALANCE SHEET,General,Provisions,0.00
+ANLB,BALANCE SHEET,General,Deferred tax liabilities,0.00
+ANLB,BALANCE SHEET,General,Other liabilities,"559,012.42"
+ANLB,BALANCE SHEET,General,Debt securities issued,0.00
+ANLB,BALANCE SHEET,General,Subordinated Liabilities,0.00
+ANLB,BALANCE SHEET,General,Total liabilities,"1,933,531.33"
+ANLB,BALANCE SHEET,General,Share capital,"89,507.20"
+ANLB,BALANCE SHEET,General,Share premium,0.00
+ANLB,BALANCE SHEET,General,Retained earnings,0.00
+ANLB,BALANCE SHEET,General,Reserves,"252,223.42"
+ANLB,BALANCE SHEET,General,Total equity,"341,730.62"
+ANLB,BALANCE SHEET,General,Total liabilities and equity,"2,275,261.95"
+ANLB,PROFIT & LOSS ACCOUNT,General,Interest income,"69,573.98"
+ANLB,PROFIT & LOSS ACCOUNT,General,Interest expense,"22,275.64"
+ANLB,PROFIT & LOSS ACCOUNT,General,Net interest income,"47,298.34"
+ANLB,PROFIT & LOSS ACCOUNT,General,Fees and commission income,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","47,298.34"
+ANLB,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Other operating income,"5,481.92"
+ANLB,PROFIT & LOSS ACCOUNT,General,Total operating income,"52,780.26"
+ANLB,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"7,590.20"
+ANLB,PROFIT & LOSS ACCOUNT,General,Net operating income,"45,190.06"
+ANLB,PROFIT & LOSS ACCOUNT,General,Personnel expense,"19,695.82"
+ANLB,PROFIT & LOSS ACCOUNT,General,Other operating expense,"3,340.53"
+ANLB,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Operating Profit,"22,153.71"
+ANLB,PROFIT & LOSS ACCOUNT,General,Non operating income,"8,331.79"
+ANLB,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"30,485.50"
+ANLB,PROFIT & LOSS ACCOUNT,General,Current Tax,"9,145.65"
+ANLB,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Profit for the period,"21,339.85"
+ANLB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+ANLB,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"21,339.85"
+ANLB,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),95.37
+ANLB,KEY METRICS,General,Diluted Earnings Per Share,95.37
+ANLB,KEY METRICS,General,Capital fund to RWA,16.33
+ANLB,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,10.51
+ANLB,KEY METRICS,General,Total Loan loss provision to Total NPL,101.12
+ANLB,KEY METRICS,General,Cost of Funds,6.78
+ANLB,KEY METRICS,General,Credit to Deposit Ratio,0.00
+ANLB,KEY METRICS,General,Base Rate,0.00
+ANLB,KEY METRICS,General,Interest Spread Rate,0.00
+ANLB,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"341,730.62"
+ANLB,KEY METRICS,General,No. of Outstanding Shares,"895,072.00"
+ANLB,KEY METRICS,General,Net Worth Per Share,381.79
+ANLB,KEY METRICS,General,P/E Ratio,51.67
+ANLB,KEY METRICS,General,Price to Book (P/B) Ratio,12.91
+ANLB,KEY METRICS,General,Return on Equity,24.98
+ANLB,KEY METRICS,General,Return on Assets,3.75

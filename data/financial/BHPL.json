@@ -1,0 +1,416 @@
+{
+  "symbol": "BHPL",
+  "companyName": "Barahi Hydropower Public Limited",
+  "sector": "Hydropower",
+  "companyId": "674",
+  "scrapedAt": "2026-11-27T08:31:29.799Z",
+  "sourceUrl": "https://www.sharesansar.com/company/bhpl",
+  "periods": [
+    "1st Quarter 2083/2084"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Sources of Fund/Capital & Liabilities",
+          "values": [
+            "306,336.18"
+          ],
+          "numericValues": [
+            306336.18
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Paid Up Capital",
+          "values": [
+            "250,000.00"
+          ],
+          "numericValues": [
+            250000
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Reserve & Surplus",
+          "values": [
+            "-124,057.03"
+          ],
+          "numericValues": [
+            -124057.03
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Loans & Long-Term Liabilities",
+          "values": [
+            "180,393.20"
+          ],
+          "numericValues": [
+            180393.2
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Application of Fund/Assets",
+          "values": [
+            "306,336.18"
+          ],
+          "numericValues": [
+            306336.18
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Property, Plant & Equipment - Net Block (Net Fixed Assets)",
+          "values": [
+            "599.59"
+          ],
+          "numericValues": [
+            599.59
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Capital Work in Progress",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Investments",
+          "values": [
+            "1,222.00"
+          ],
+          "numericValues": [
+            1222
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Current Assets",
+          "values": [
+            "76,368.22"
+          ],
+          "numericValues": [
+            76368.22
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Current Liabilities",
+          "values": [
+            "52,634.82"
+          ],
+          "numericValues": [
+            52634.82
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net Current Assets",
+          "values": [
+            "23,733.40"
+          ],
+          "numericValues": [
+            23733.4
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other Assets",
+          "values": [
+            "280,781.18"
+          ],
+          "numericValues": [
+            280781.18
+          ]
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Operating Income",
+          "values": [
+            "14,470.62"
+          ],
+          "numericValues": [
+            14470.62
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Income from Sales of Electricity",
+          "values": [
+            "14,466.66"
+          ],
+          "numericValues": [
+            14466.66
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Income from Other Sources",
+          "values": [
+            "3.95"
+          ],
+          "numericValues": [
+            3.95
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Operating Expenses",
+          "values": [
+            "1,901.32"
+          ],
+          "numericValues": [
+            1901.32
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Royalty",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Project Operating Expenses (including Cost of Sales)",
+          "values": [
+            "1,237.81"
+          ],
+          "numericValues": [
+            1237.81
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Administrative Expenses",
+          "values": [
+            "663.51"
+          ],
+          "numericValues": [
+            663.51
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other Operating Expenses",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Non-Operating Expenses",
+          "values": [
+            "6,089.11"
+          ],
+          "numericValues": [
+            6089.11
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Depreciation",
+          "values": [
+            "3,181.51"
+          ],
+          "numericValues": [
+            3181.51
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Financial Expenses",
+          "values": [
+            "2,907.61"
+          ],
+          "numericValues": [
+            2907.61
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Provision for Employee Bonus",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Provision for Tax",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net Profit",
+          "values": [
+            "6,480.19"
+          ],
+          "numericValues": [
+            6480.19
+          ]
+        }
+      ]
+    },
+    {
+      "key": "keymetrics",
+      "title": "KEY METRICS",
+      "headers": [
+        "Particulars",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Current Ratio (Liquidity Ratio)",
+          "values": [
+            "1.45"
+          ],
+          "numericValues": [
+            1.45
+          ]
+        }
+      ]
+    },
+    {
+      "key": "keyratios",
+      "title": "KEY RATIOS",
+      "headers": [
+        "Particulars",
+        "1st Quarter 2083/2084"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Networth Per Share",
+          "values": [
+            "50.38"
+          ],
+          "numericValues": [
+            50.38
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Earnings Per Share (EPS Annualized -Rs.)",
+          "values": [
+            "2.59"
+          ],
+          "numericValues": [
+            2.59
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Price to Earning Ratio (PE ratio - times)",
+          "values": [
+            "159.72"
+          ],
+          "numericValues": [
+            159.72
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Price to Book Value Ratio (Pb ratio - times",
+          "values": [
+            "8.22"
+          ],
+          "numericValues": [
+            8.22
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Assets (ROA %)",
+          "values": [
+            "8.29"
+          ],
+          "numericValues": [
+            8.29
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Equity (ROE %)",
+          "values": [
+            "5.15"
+          ],
+          "numericValues": [
+            5.15
+          ]
+        }
+      ]
+    }
+  ]
+}

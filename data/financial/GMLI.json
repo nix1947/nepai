@@ -1,0 +1,64 @@
+{
+  "symbol": "GMLI",
+  "companyName": "Guardian Micro Life Insurance Limited",
+  "sector": "Life Insurance",
+  "companyId": "1323",
+  "scrapedAt": "2026-11-27T08:31:33.291Z",
+  "sourceUrl": "https://www.sharesansar.com/company/gmli",
+  "periods": [
+    "Duration"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "keymetrics",
+      "title": "KEY METRICS",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    }
+  ]
+}

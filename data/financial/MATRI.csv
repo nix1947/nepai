@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+MATRI,BALANCE SHEET,General,Cash and cash equivalent,235.55
+MATRI,BALANCE SHEET,General,Statutory Balances and Due from NRB,"142,079.58"
+MATRI,BALANCE SHEET,General,Placement with Bank and Financial Institutions,"605,155.02"
+MATRI,BALANCE SHEET,General,Derivative financial instruments,0.00
+MATRI,BALANCE SHEET,General,Other trading assets,0.00
+MATRI,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+MATRI,BALANCE SHEET,General,Loans and advances to customers,"10,860,875.64"
+MATRI,BALANCE SHEET,General,Investment securities,"1,000.00"
+MATRI,BALANCE SHEET,General,Current tax assets,"68,098.39"
+MATRI,BALANCE SHEET,General,Investment in subsidiaries,0.00
+MATRI,BALANCE SHEET,General,Investment in associates,0.00
+MATRI,BALANCE SHEET,General,Investment property,0.00
+MATRI,BALANCE SHEET,General,Property and equipment,"174,294.43"
+MATRI,BALANCE SHEET,General,Goodwill and Intangible assets,698.49
+MATRI,BALANCE SHEET,General,Deferred tax assets,0.00
+MATRI,BALANCE SHEET,General,Other assets,"210,706.94"
+MATRI,BALANCE SHEET,General,Total Assets,"12,063,144.03"
+MATRI,BALANCE SHEET,General,Due to Bank and Financial Institutions,0.00
+MATRI,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+MATRI,BALANCE SHEET,General,Derivative financial instruments,0.00
+MATRI,BALANCE SHEET,General,Deposits from customers,"4,761,910.60"
+MATRI,BALANCE SHEET,General,Borrowing,"5,470,178.02"
+MATRI,BALANCE SHEET,General,Current Tax Liabilities,0.00
+MATRI,BALANCE SHEET,General,Provisions,0.00
+MATRI,BALANCE SHEET,General,Deferred tax liabilities,"7,917.10"
+MATRI,BALANCE SHEET,General,Other liabilities,"863,654.35"
+MATRI,BALANCE SHEET,General,Debt securities issued,0.00
+MATRI,BALANCE SHEET,General,Subordinated Liabilities,0.00
+MATRI,BALANCE SHEET,General,Total liabilities,"11,103,660.08"
+MATRI,BALANCE SHEET,General,Share capital,"628,357.34"
+MATRI,BALANCE SHEET,General,Share premium,0.00
+MATRI,BALANCE SHEET,General,Retained earnings,"-364,661.52"
+MATRI,BALANCE SHEET,General,Reserves,"695,788.13"
+MATRI,BALANCE SHEET,General,Total equity,"959,483.95"
+MATRI,BALANCE SHEET,General,Total liabilities and equity,"12,063,144.03"
+MATRI,PROFIT & LOSS ACCOUNT,General,Interest income,"338,766.71"
+MATRI,PROFIT & LOSS ACCOUNT,General,Interest expense,"178,711.33"
+MATRI,PROFIT & LOSS ACCOUNT,General,Net interest income,"160,055.38"
+MATRI,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"21,528.75"
+MATRI,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,10.71
+MATRI,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"21,518.04"
+MATRI,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","181,573.41"
+MATRI,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Other operating income,"25,275.34"
+MATRI,PROFIT & LOSS ACCOUNT,General,Total operating income,"206,848.75"
+MATRI,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"-1,035.72"
+MATRI,PROFIT & LOSS ACCOUNT,General,Net operating income,"207,884.47"
+MATRI,PROFIT & LOSS ACCOUNT,General,Personnel expense,"111,148.20"
+MATRI,PROFIT & LOSS ACCOUNT,General,Other operating expense,"26,214.49"
+MATRI,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"6,587.88"
+MATRI,PROFIT & LOSS ACCOUNT,General,Operating Profit,"63,933.90"
+MATRI,PROFIT & LOSS ACCOUNT,General,Non operating income,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"63,933.90"
+MATRI,PROFIT & LOSS ACCOUNT,General,Current Tax,"18,226.49"
+MATRI,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Profit for the period,"45,707.40"
+MATRI,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+MATRI,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"45,707.40"
+MATRI,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),29.10
+MATRI,KEY METRICS,General,Diluted Earnings Per Share,29.10
+MATRI,KEY METRICS,General,Capital fund to RWA,6.31
+MATRI,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,27.02
+MATRI,KEY METRICS,General,Total Loan loss provision to Total NPL,33.80
+MATRI,KEY METRICS,General,Cost of Funds,6.70
+MATRI,KEY METRICS,General,Credit to Deposit Ratio,106.15
+MATRI,KEY METRICS,General,Base Rate,12.13
+MATRI,KEY METRICS,General,Interest Spread Rate,7.86
+MATRI,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"959,483.95"
+MATRI,KEY METRICS,General,No. of Outstanding Shares,"6,283,573.37"
+MATRI,KEY METRICS,General,Net Worth Per Share,152.70
+MATRI,KEY METRICS,General,P/E Ratio,24.33
+MATRI,KEY METRICS,General,Price to Book (P/B) Ratio,4.64
+MATRI,KEY METRICS,General,Return on Equity,19.05
+MATRI,KEY METRICS,General,Return on Assets,1.52

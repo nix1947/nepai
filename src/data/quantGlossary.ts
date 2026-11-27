@@ -125,7 +125,7 @@ export const QUANT_GLOSSARY: GlossaryEntry[] = [
     whyItMatters:
       'Every candlestick chart, moving average, volatility estimate, and volume confirmation check is built directly from clean OHLCV data.',
     howCalculated:
-      'Recorded directly from ShareSansar / NEPSE End-of-Day exchange trade logs (validated so Low <= Open/Close <= High).',
+      'Recorded directly from NEPSE End-of-Day exchange trade logs (validated so Low <= Open/Close <= High).',
     interpretation:
       'Close near High on rising Volume suggests buyers controlled the close; Close near Low on high Volume warns of distribution.',
     hypotheticalExample:
@@ -275,7 +275,7 @@ export const QUANT_GLOSSARY: GlossaryEntry[] = [
     commonMistakes:
       'Ignoring the "M" (Market Regime) and buying aggressive breakouts during a Bearish downtrend.',
     limitations:
-      'Quarterly EPS/revenue series are not natively stored inside daily ShareSansar price CSVs; fundamental coverage is limited to cached audit records.',
+      'Quarterly EPS/revenue series are not natively stored inside daily price CSVs; fundamental coverage is limited to cached audit records.',
     advancedExplanation:
       'Pairs cross-sectional momentum leadership with regime-conditional exposure scaling.',
     relatedTerms: ['sepa', 'relative-strength', 'market-breadth'],
@@ -568,7 +568,7 @@ export const QUANT_GLOSSARY: GlossaryEntry[] = [
     whyItMatters:
       'Shows whether today’s buyers actually ended the day in profit relative to the average rupee traded.',
     howCalculated:
-      'Uses ShareSansar EOD VWAP column directly when present; if missing or zero, falls back to an explicitly labeled OHLCV-Derived Approximation `(H+L+C)/3` or `Turnover/Volume`.',
+      'Uses EOD VWAP column directly when present; if missing or zero, falls back to an explicitly labeled OHLCV-Derived Approximation `(H+L+C)/3` or `Turnover/Volume`.',
     formula: 'VWAP = Total Traded Turnover (NPR) / Total Traded Volume (Shares)',
     interpretation:
       'Closing above a rising VWAP indicates buyers accepted higher prices throughout the session; closing far below VWAP signals intraday rejection.',
@@ -579,7 +579,7 @@ export const QUANT_GLOSSARY: GlossaryEntry[] = [
     commonMistakes:
       'Treating VWAP from a single day as multi-month support like a 50-day SMA.',
     limitations:
-      'Where ShareSansar CSV omits VWAP, OHLCV typical-price approximation cannot capture exact intraday tick weighting.',
+      'Where daily CSV omits VWAP, OHLCV typical-price approximation cannot capture exact intraday tick weighting.',
     advancedExplanation:
       'Acts as a daily execution benchmark and supply-demand equilibrium proxy.',
     relatedTerms: ['ohlcv', 'turnover', 'accumulation'],
@@ -819,7 +819,7 @@ export const QUANT_GLOSSARY: GlossaryEntry[] = [
     whyItMatters:
       'Healthy bull markets lift a broad majority (>55%) of stocks; narrow rallies often fail silently.',
     howCalculated:
-      'Percentage of valid liquid NEPSE stocks trading above SMA20, SMA50, and ShareSansar 120-day / 180-day MAs.',
+      'Percentage of valid liquid NEPSE stocks trading above SMA20, SMA50, and 120-day / 180-day MAs.',
     formula: 'Breadth % = (Count of Stocks with Close > SMA) / Total Valid Stocks × 100',
     interpretation:
       'Breadth > 55% supports Bullish exposure; breadth < 40% signals Bearish contraction and defensive cash protection.',

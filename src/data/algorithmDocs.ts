@@ -445,7 +445,7 @@ export const ALGORITHM_DOCS: AlgorithmDoc[] = [
       verdict: 'Structural breakdown warning; prioritize reviewing stop-loss or book-closure dates.',
     },
     whenToUse: 'Daily portfolio defense scan to spot holdings losing multi-week support on institutional selling.',
-    avoidWhen: 'Ex-bonus or right-share adjustment mornings where ShareSansar raw prices drop mechanically without true selling.',
+    avoidWhen: 'Ex-bonus or right-share adjustment mornings where raw prices drop mechanically without true selling.',
     cautions: 'Verify if the drop coincides with ex-dividend/book-closure price adjustments on NEPSE before treating it as pure technical weakness.',
   },
   {
@@ -525,7 +525,7 @@ export const ALGORITHM_DOCS: AlgorithmDoc[] = [
         step: '01',
         title: 'Read Latest 52-Week High Field',
         detail:
-          'Pulls ShareSansar w52_high from the latest session row and skips symbols missing annual high data.',
+          'Pulls w52_high from the latest session row and skips symbols missing annual high data.',
       },
       {
         step: '02',
@@ -568,7 +568,7 @@ export const ALGORITHM_DOCS: AlgorithmDoc[] = [
     },
     whenToUse: 'Bull market leadership hunting — leaders making new annual highs often outperform lagging laggards.',
     avoidWhen: 'Bear markets where 52w-high retests routinely double-top; confirm with close > VWAP.',
-    cautions: 'Requires ShareSansar 52-week high field (`w52_high > 0`).',
+    cautions: 'Requires 52-week high field (`w52_high > 0`).',
   },
   {
     id: 'rs',

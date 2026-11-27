@@ -1,0 +1,105 @@
+name: Quarterly ShareSansar Fundamental Reports
+
+on:
+  schedule:
+    # Runs daily at 17:00 NPT (11:15 UTC) during every Nepal BS upcoming quarter reporting window
+    # starting at Quarter-End + 15 days and skipping any company whose quarter data already exists:
+    # Upcoming Q2 (Poush end ~Jan 14 -> +15d Jan 29 through Mar 5)
+    - cron: '15 11 29-31 1 *'
+    - cron: '15 11 1-28 2 *'
+    - cron: '15 11 1-5 3 *'
+    # Upcoming Q3 (Chaitra end ~Apr 13 -> +15d Apr 28 through Jun 5)
+    - cron: '15 11 28-30 4 *'
+    - cron: '15 11 1-31 5 *'
+    - cron: '15 11 1-5 6 *'
+    # Upcoming Q4 / Annual (Ashad end ~Jul 16 -> +15d Jul 31 through Sep 15)
+    - cron: '15 11 31 7 *'
+    - cron: '15 11 1-31 8 *'
+    - cron: '15 11 1-15 9 *'
+    # Upcoming Q1 (Ashwin end ~Oct 17 -> +15d Nov 1 through Dec 5)
+    - cron: '15 11 1-30 11 *'
+    - cron: '15 11 1-5 12 *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Collection mode (due = pending/uncollected for active quarter, top = top turnover missing current quarter, all = full missing equity list)'
+        required: false
+        default: 'due'
+        type: choice
+        options:
+          - due
+          - top
+          - all
+      limit:
+        description: 'Max missing companies to scrape per run (already-populated quarter companies are skipped automatically)'
+        required: false
+        default: '150'
+        type: string
+      delay_days:
+        description: 'Days after quarter-end before automated collection begins (default 15)'
+        required: false
+        default: '15'
+        type: string
+      symbol:
+        description: 'Optional single ticker symbol (e.g., NABIL) to refresh'
+        required: false
+        default: ''
+        type: string
+      force:
+        description: 'Force re-scrape even if quarter data already exists or window is not open yet'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  pull-quarterly-fundamentals:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Scrape ShareSansar quarterly & annual financial reports (skipping existing quarter data)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'due' }}"
+          LIMIT="${{ github.event.inputs.limit || '150' }}"
+          DELAY_DAYS="${{ github.event.inputs.delay_days || '15' }}"
+          SYMBOL="${{ github.event.inputs.symbol || '' }}"
+          FORCE="${{ github.event.inputs.force || 'false' }}"
+
+          CMD="npx tsx scripts/pull-fundamentals.ts --mode=${MODE} --limit=${LIMIT} --delay-days=${DELAY_DAYS} --concurrency=3"
+          if [ -n "$SYMBOL" ]; then
+            CMD="${CMD} --symbol=${SYMBOL}"
+          fi
+          if [ "$FORCE" = "true" ]; then
+            CMD="${CMD} --force"
+          fi
+
+          echo "Running: $CMD"
+          $CMD
+
+      - name: Commit and push updated financial statements & vault ledgers
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git status --porcelain -- 'data/financial/*.json' 'data/financial/*.csv' 'data/financial/vault/ledgers/*.json' 'data/financial/vault/quarterly_metrics.csv' | grep -q .; then
+            git add data/financial
+            git commit -m "chore(fundamentals): quarterly ShareSansar financial reports"
+            git push
+          else
+            git checkout -- data/financial/vault/monitor-state.json 2>/dev/null || true
+            echo "No new quarterly financial statement updates to commit."
+          fi

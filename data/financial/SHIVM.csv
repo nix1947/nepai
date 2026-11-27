@@ -1,0 +1,57 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+SHIVM,BALANCE SHEET,Non Current Asset,"Property, Plant and Equipment","3,967,424.75"
+SHIVM,BALANCE SHEET,Non Current Asset,Investment in subsidiary,"5,145,208.80"
+SHIVM,BALANCE SHEET,Non Current Asset,Other Non-Current Assets,"186,991.85"
+SHIVM,BALANCE SHEET,Non Current Asset,Total Non Current Asset,"9,299,625.40"
+SHIVM,BALANCE SHEET,Current Asset,Cash & Cash Equivalents,"286,139.60"
+SHIVM,BALANCE SHEET,Current Asset,Inventories,"2,415,262.77"
+SHIVM,BALANCE SHEET,Current Asset,Trade Recievables,"817,284.97"
+SHIVM,BALANCE SHEET,Current Asset,Other Current Assets,"545,219.20"
+SHIVM,BALANCE SHEET,Current Asset,Total Current Assets,"4,063,906.54"
+SHIVM,BALANCE SHEET,Current Asset,Total Assets,"13,363,531.94"
+SHIVM,BALANCE SHEET,Equity Fund,Equity Share Capital,"5,593,228.71"
+SHIVM,BALANCE SHEET,Equity Fund,Share Premium,0.00
+SHIVM,BALANCE SHEET,Equity Fund,Retained Earnings,"5,035,717.79"
+SHIVM,BALANCE SHEET,Equity Fund,Total Equity Attributable to Equity Shareholders,"10,628,946.51"
+SHIVM,BALANCE SHEET,Equity Fund,Non-Controlling Interest,0.00
+SHIVM,BALANCE SHEET,Equity Fund,Total Equity Fund,"10,628,946.51"
+SHIVM,BALANCE SHEET,Non Current Liabilities,Non Interest Bearing Borrowings,0.00
+SHIVM,BALANCE SHEET,Non Current Liabilities,Non Provisions & Payables,"205,356.54"
+SHIVM,BALANCE SHEET,Non Current Liabilities,Total Non Current Liabilities,"205,356.54"
+SHIVM,BALANCE SHEET,Current Liabilities,Interest Bearing Borrowings,"63,242.47"
+SHIVM,BALANCE SHEET,Current Liabilities,Trade Payables,"1,713,557.75"
+SHIVM,BALANCE SHEET,Current Liabilities,Provisions & Payables,"752,428.68"
+SHIVM,BALANCE SHEET,Current Liabilities,Total Current Liabilities,"2,529,228.89"
+SHIVM,BALANCE SHEET,Current Liabilities,Total Equity & Liabilities,"13,363,531.94"
+SHIVM,PROFIT & LOSS ACCOUNT,General,Revenue From Operation,"1,789,262.76"
+SHIVM,PROFIT & LOSS ACCOUNT,General,Cost of Sales,"1,594,147.54"
+SHIVM,PROFIT & LOSS ACCOUNT,General,Gross Profit,"195,115.22"
+SHIVM,PROFIT & LOSS ACCOUNT,General,Other Income,"105,545.94"
+SHIVM,PROFIT & LOSS ACCOUNT,General,Exchange Gain/(Loss),0.00
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Administrative Expenses,"45,597.25"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Other Operating Expenses,"178,422.77"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Depreciation & Amortization,0.00
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Financial Charges,289.68
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Other Expenses,0.00
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Total Expenses,"224,309.69"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Net Profit/(Loss) Before Bonus & Tax,"76,351.47"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Statutory Bonus,0.00
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Net Profit/(Loss) After Bonus & Before Tax,"76,351.47"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Provision For Corporate Social Responsibility,0.00
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Net Profit/(Loss) Before Tax,"76,351.47"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Less: Income Tax,"5,721.39"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Net Profit/(Loss) For the Period,"70,630.08"
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Share of Non-Controlling Interest on Loss of Subsidiary,0.00
+SHIVM,PROFIT & LOSS ACCOUNT,Expenses:-,Total Comprehensive Income after share of NCI,0.00
+SHIVM,RATIO ANALYSIS,General,Debt-Equity (times),0.01
+SHIVM,RATIO ANALYSIS,General,Gross Profit Margin (%),10.90
+SHIVM,RATIO ANALYSIS,General,Net Profit Margin (%),3.95
+SHIVM,RATIO ANALYSIS,General,Inventory Turnover (times),0.74
+SHIVM,RATIO ANALYSIS,General,Total Debt ('000),"63,242.47"
+SHIVM,RATIO ANALYSIS,General,Current Ratio,1.61
+SHIVM,KEY RATIOS,General,Net Worth Per share (Rs.),190.03
+SHIVM,KEY RATIOS,General,Annualized Basic Earnings Per Share (Rs.),5.05
+SHIVM,KEY RATIOS,General,P/E Ratio (-times),135.20
+SHIVM,KEY RATIOS,General,Price to Book (PB) Ratio (-times),3.59
+SHIVM,KEY RATIOS,General,Return on Asset (%),2.11
+SHIVM,KEY RATIOS,General,Return on Equity (%),2.66

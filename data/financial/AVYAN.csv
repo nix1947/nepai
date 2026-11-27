@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+AVYAN,BALANCE SHEET,General,Cash and cash equivalent,"30,818.59"
+AVYAN,BALANCE SHEET,General,Statutory Balances and Due from NRB,"23,105.00"
+AVYAN,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+AVYAN,BALANCE SHEET,General,Derivative financial instruments,0.00
+AVYAN,BALANCE SHEET,General,Other trading assets,0.00
+AVYAN,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+AVYAN,BALANCE SHEET,General,Loans and advances to customers,"3,661,579.28"
+AVYAN,BALANCE SHEET,General,Investment securities,0.00
+AVYAN,BALANCE SHEET,General,Current tax assets,0.00
+AVYAN,BALANCE SHEET,General,Investment in subsidiaries,0.00
+AVYAN,BALANCE SHEET,General,Investment in associates,0.00
+AVYAN,BALANCE SHEET,General,Investment property,0.00
+AVYAN,BALANCE SHEET,General,Property and equipment,"29,092.87"
+AVYAN,BALANCE SHEET,General,Goodwill and Intangible assets,"1,288.39"
+AVYAN,BALANCE SHEET,General,Deferred tax assets,"4,792.25"
+AVYAN,BALANCE SHEET,General,Other assets,"5,954.13"
+AVYAN,BALANCE SHEET,General,Total Assets,"3,756,630.51"
+AVYAN,BALANCE SHEET,General,Due to Bank and Financial Institutions,0.00
+AVYAN,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+AVYAN,BALANCE SHEET,General,Derivative financial instruments,0.00
+AVYAN,BALANCE SHEET,General,Deposits from customers,"363,970.74"
+AVYAN,BALANCE SHEET,General,Borrowing,"2,916,762.35"
+AVYAN,BALANCE SHEET,General,Current Tax Liabilities,"8,262.95"
+AVYAN,BALANCE SHEET,General,Provisions,0.00
+AVYAN,BALANCE SHEET,General,Deferred tax liabilities,0.00
+AVYAN,BALANCE SHEET,General,Other liabilities,"75,986.98"
+AVYAN,BALANCE SHEET,General,Debt securities issued,0.00
+AVYAN,BALANCE SHEET,General,Subordinated Liabilities,0.00
+AVYAN,BALANCE SHEET,General,Total liabilities,"3,364,983.02"
+AVYAN,BALANCE SHEET,General,Share capital,"250,000.00"
+AVYAN,BALANCE SHEET,General,Share premium,0.00
+AVYAN,BALANCE SHEET,General,Retained earnings,"42,573.67"
+AVYAN,BALANCE SHEET,General,Reserves,"99,073.81"
+AVYAN,BALANCE SHEET,General,Total equity,"391,647.48"
+AVYAN,BALANCE SHEET,General,Total liabilities and equity,"3,756,630.51"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Interest income,"119,649.13"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Interest expense,"45,012.72"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Net interest income,"74,636.40"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"6,742.86"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"6,742.86"
+AVYAN,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","81,379.26"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Other operating income,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Total operating income,"81,379.26"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"17,974.19"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Net operating income,"63,405.07"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Personnel expense,"31,610.81"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Other operating expense,"6,799.10"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,590.40
+AVYAN,PROFIT & LOSS ACCOUNT,General,Operating Profit,"24,404.76"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Non operating income,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"24,404.76"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Current Tax,"7,321.43"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Profit for the period,"17,083.33"
+AVYAN,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+AVYAN,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"17,083.33"
+AVYAN,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),27.33
+AVYAN,KEY METRICS,General,Diluted Earnings Per Share,27.33
+AVYAN,KEY METRICS,General,Capital fund to RWA,8.67
+AVYAN,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,12.76
+AVYAN,KEY METRICS,General,Total Loan loss provision to Total NPL,19.25
+AVYAN,KEY METRICS,General,Cost of Funds,5.48
+AVYAN,KEY METRICS,General,Credit to Deposit Ratio,111.60
+AVYAN,KEY METRICS,General,Base Rate,9.46
+AVYAN,KEY METRICS,General,Interest Spread Rate,8.74
+AVYAN,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"391,647.48"
+AVYAN,KEY METRICS,General,No. of Outstanding Shares,"2,500,000.00"
+AVYAN,KEY METRICS,General,Net Worth Per Share,156.66
+AVYAN,KEY METRICS,General,P/E Ratio,38.60
+AVYAN,KEY METRICS,General,Price to Book (P/B) Ratio,6.73
+AVYAN,KEY METRICS,General,Return on Equity,17.45
+AVYAN,KEY METRICS,General,Return on Assets,1.82

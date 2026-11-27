@@ -1,0 +1,43 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+ENL,BALANCE SHEET,Assets,Non Current Assets,"606,821.76"
+ENL,BALANCE SHEET,Assets,"Property, Plant and Equipments","1,508.11"
+ENL,BALANCE SHEET,Assets,Investment,"605,313.65"
+ENL,BALANCE SHEET,Assets,Other Non Current Assets,0.00
+ENL,BALANCE SHEET,Assets,Deferred Tax Assets,0.00
+ENL,BALANCE SHEET,Assets,Current Assets,"29,932.67"
+ENL,BALANCE SHEET,Assets,Cash and Bank Balances,"22,570.16"
+ENL,BALANCE SHEET,Assets,Other Current Assets,"7,362.50"
+ENL,BALANCE SHEET,Assets,Total Assets,"636,754.43"
+ENL,BALANCE SHEET,Equity & Liabilities,Equity,"623,764.24"
+ENL,BALANCE SHEET,Equity & Liabilities,Paid Up Share Capital,"555,600.00"
+ENL,BALANCE SHEET,Equity & Liabilities,Reserves & Surplus,"68,164.24"
+ENL,BALANCE SHEET,Liabilities,Non Current Liabilities,"9,570.83"
+ENL,BALANCE SHEET,Liabilities,Borrowings,0.00
+ENL,BALANCE SHEET,Liabilities,Deferred Tax Liability,"9,570.83"
+ENL,BALANCE SHEET,Liabilities,Other Non Current Liabilities,0.00
+ENL,BALANCE SHEET,Liabilities,Current Liabilities,"3,419.35"
+ENL,BALANCE SHEET,Liabilities,Short Term Loan,0.00
+ENL,BALANCE SHEET,Liabilities,Current Tax Liability,0.00
+ENL,BALANCE SHEET,Liabilities,Other Current Liabilities,"3,419.35"
+ENL,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"636,754.43"
+ENL,PROFIT & LOSS ACCOUNT,General,Revenue from Operations,"13,500.11"
+ENL,PROFIT & LOSS ACCOUNT,General,Finance Income,0.00
+ENL,PROFIT & LOSS ACCOUNT,General,Dividend Income,0.00
+ENL,PROFIT & LOSS ACCOUNT,General,Income from Other Source,200.64
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"1,306.56"
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Finance Costs,0.00
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Administrative Expenses,630.87
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Depreciation,81.31
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Impairments,0.00
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Bonus & Tax,"11,682.02"
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Staff Bonus,0.00
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"11,682.02"
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Income Taxes,454.52
+ENL,PROFIT & LOSS ACCOUNT,Expenses,Net Profit,"12,136.54"
+ENL,RATIO ANALYSIS,General,Current Ratio,8.75
+ENL,KEY RATIOS,General,Annualized Earnings Per Share (Rs.),8.74
+ENL,KEY RATIOS,General,Net Worth Per Share (Rs.),112.27
+ENL,KEY RATIOS,General,P/E Ratio (Annualized -times),55.50
+ENL,KEY RATIOS,General,Price to Book (PB) Ratio (-times),4.32
+ENL,KEY RATIOS,General,Return on Equity (%),7.78
+ENL,KEY RATIOS,General,Return on Assets (%),7.62

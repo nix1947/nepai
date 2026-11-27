@@ -294,7 +294,7 @@ export const QuantRegimeTab: React.FC<RegimeTabProps> = ({
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-3.5 space-y-1">
           <div className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
             Long-Term MAs
-            <QuantHelpTip termId="sma" learningMode={learningMode} customContext="Uses ShareSansar's reported 120-day and 180-day moving average fields when 200-day raw CSV history is not yet loaded." onOpenGlossaryTerm={onOpenGlossaryTerm} />
+            <QuantHelpTip termId="sma" learningMode={learningMode} customContext="Uses reported 120-day and 180-day moving average fields when 200-day raw CSV history is not yet loaded." onOpenGlossaryTerm={onOpenGlossaryTerm} />
           </div>
           <div className="text-lg font-mono font-semibold text-slate-900 dark:text-slate-100">
             {regime.breadthAboveMa120Pct.toFixed(1)}%
@@ -450,7 +450,7 @@ export const QuantDataQualitySection: React.FC<DataQualitySectionProps> = ({
               <QuantHelpTip
                 termId="ohlcv"
                 learningMode={learningMode}
-                customContext="Every daily CSV record from ShareSansar is validated before scoring or backtesting. Unadjusted corporate-action jumps, stale zero-volume runs, duplicates, and broken OHLC bars are flagged without retroactive look-ahead bias."
+                customContext="Every daily CSV record is validated before scoring or backtesting. Unadjusted corporate-action jumps, stale zero-volume runs, duplicates, and broken OHLC bars are flagged without retroactive look-ahead bias."
                 onOpenGlossaryTerm={onOpenGlossaryTerm}
               />
             </div>

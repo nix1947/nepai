@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+GILB,BALANCE SHEET,General,Cash and cash equivalent,"213,369.59"
+GILB,BALANCE SHEET,General,Statutory Balances and Due from NRB,"50,000.00"
+GILB,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+GILB,BALANCE SHEET,General,Derivative financial instruments,0.00
+GILB,BALANCE SHEET,General,Other trading assets,0.00
+GILB,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+GILB,BALANCE SHEET,General,Loans and advances to customers,"10,991,053.03"
+GILB,BALANCE SHEET,General,Investment securities,"2,200.00"
+GILB,BALANCE SHEET,General,Current tax assets,"1,815.51"
+GILB,BALANCE SHEET,General,Investment in subsidiaries,0.00
+GILB,BALANCE SHEET,General,Investment in associates,0.00
+GILB,BALANCE SHEET,General,Investment property,"11,445.64"
+GILB,BALANCE SHEET,General,Property and equipment,"74,017.31"
+GILB,BALANCE SHEET,General,Goodwill and Intangible assets,978.06
+GILB,BALANCE SHEET,General,Deferred tax assets,"9,382.50"
+GILB,BALANCE SHEET,General,Other assets,"32,222.04"
+GILB,BALANCE SHEET,General,Total Assets,"11,386,483.69"
+GILB,BALANCE SHEET,General,Due to Bank and Financial Institutions,"5,058,064.85"
+GILB,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+GILB,BALANCE SHEET,General,Derivative financial instruments,0.00
+GILB,BALANCE SHEET,General,Deposits from customers,"4,168,410.74"
+GILB,BALANCE SHEET,General,Borrowing,0.00
+GILB,BALANCE SHEET,General,Current Tax Liabilities,0.00
+GILB,BALANCE SHEET,General,Provisions,0.00
+GILB,BALANCE SHEET,General,Deferred tax liabilities,0.00
+GILB,BALANCE SHEET,General,Other liabilities,"559,282.56"
+GILB,BALANCE SHEET,General,Debt securities issued,0.00
+GILB,BALANCE SHEET,General,Subordinated Liabilities,0.00
+GILB,BALANCE SHEET,General,Total liabilities,"9,785,758.14"
+GILB,BALANCE SHEET,General,Share capital,"648,297.80"
+GILB,BALANCE SHEET,General,Share premium,0.00
+GILB,BALANCE SHEET,General,Retained earnings,"952,427.75"
+GILB,BALANCE SHEET,General,Reserves,0.00
+GILB,BALANCE SHEET,General,Total equity,"1,600,725.55"
+GILB,BALANCE SHEET,General,Total liabilities and equity,"11,386,483.69"
+GILB,PROFIT & LOSS ACCOUNT,General,Interest income,"413,388.56"
+GILB,PROFIT & LOSS ACCOUNT,General,Interest expense,"138,022.16"
+GILB,PROFIT & LOSS ACCOUNT,General,Net interest income,"275,366.40"
+GILB,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"27,563.94"
+GILB,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,"9,492.07"
+GILB,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"18,071.87"
+GILB,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","293,438.26"
+GILB,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Other operating income,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Total operating income,"293,438.26"
+GILB,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"56,037.63"
+GILB,PROFIT & LOSS ACCOUNT,General,Net operating income,"237,400.63"
+GILB,PROFIT & LOSS ACCOUNT,General,Personnel expense,"109,399.04"
+GILB,PROFIT & LOSS ACCOUNT,General,Other operating expense,"17,193.83"
+GILB,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"3,228.81"
+GILB,PROFIT & LOSS ACCOUNT,General,Operating Profit,"107,578.96"
+GILB,PROFIT & LOSS ACCOUNT,General,Non operating income,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Non operating expense,"11,718.84"
+GILB,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"95,860.11"
+GILB,PROFIT & LOSS ACCOUNT,General,Current Tax,"28,758.03"
+GILB,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Profit for the period,"67,102.08"
+GILB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+GILB,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+GILB,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"67,102.08"
+GILB,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),41.40
+GILB,KEY METRICS,General,Diluted Earnings Per Share,41.40
+GILB,KEY METRICS,General,Capital fund to RWA,11.98
+GILB,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,9.36
+GILB,KEY METRICS,General,Total Loan loss provision to Total NPL,74.72
+GILB,KEY METRICS,General,Cost of Funds,5.24
+GILB,KEY METRICS,General,Credit to Deposit Ratio,275.21
+GILB,KEY METRICS,General,Base Rate,11.03
+GILB,KEY METRICS,General,Interest Spread Rate,9.14
+GILB,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"1,600,725.55"
+GILB,KEY METRICS,General,No. of Outstanding Shares,"6,482,977.97"
+GILB,KEY METRICS,General,Net Worth Per Share,246.91
+GILB,KEY METRICS,General,P/E Ratio,26.76
+GILB,KEY METRICS,General,Price to Book (P/B) Ratio,4.49
+GILB,KEY METRICS,General,Return on Equity,16.77
+GILB,KEY METRICS,General,Return on Assets,2.36

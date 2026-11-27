@@ -1,0 +1,53 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+SONA,BALANCE SHEET,Non Current Assets,Property Plant and Equipment,"10,727,317.51"
+SONA,BALANCE SHEET,Non Current Assets,Other Non-Current Assets,"12,590.24"
+SONA,BALANCE SHEET,Non Current Assets,Total Non-Current Assets,"10,739,907.75"
+SONA,BALANCE SHEET,Current Assets,Inventories,"2,799,804.37"
+SONA,BALANCE SHEET,Current Assets,Prepayments,"18,690.39"
+SONA,BALANCE SHEET,Current Assets,Other Current Assets,"17,662.06"
+SONA,BALANCE SHEET,Financial Assets,Loans and Advances,"413,213.50"
+SONA,BALANCE SHEET,Financial Assets,Trade Recievables,"697,862.92"
+SONA,BALANCE SHEET,Financial Assets,Other Financial Assets,"21,020.61"
+SONA,BALANCE SHEET,Financial Assets,Cash & Cash Equivalents,"48,057.01"
+SONA,BALANCE SHEET,Financial Assets,Investments,"7,607.25"
+SONA,BALANCE SHEET,Financial Assets,Total Assets,"14,763,825.85"
+SONA,BALANCE SHEET,Non Current Liabilities,Deferred Tax Liability,"475,139.56"
+SONA,BALANCE SHEET,Financial Liabilities,Non Current Borrowings,"5,598,069.99"
+SONA,BALANCE SHEET,Financial Liabilities,Provision- Non Current,0.00
+SONA,BALANCE SHEET,Current Liabilities,Provision- Current,"57,261.16"
+SONA,BALANCE SHEET,Financial Liabilities,Current Borrowings,"834,508.22"
+SONA,BALANCE SHEET,Financial Liabilities,Trade Payables,"44,925.72"
+SONA,BALANCE SHEET,Financial Liabilities,Other Financial Liabilities,"1,525,205.18"
+SONA,BALANCE SHEET,Financial Liabilities,Other Current Liabilities,"34,507.43"
+SONA,BALANCE SHEET,Financial Liabilities,Total Financial Liabilities,"2,439,146.55"
+SONA,BALANCE SHEET,Financial Liabilities,Total Liabilities,"8,569,617.25"
+SONA,BALANCE SHEET,Equity,Share Capital,"3,075,050.00"
+SONA,BALANCE SHEET,Equity,Share Premium,"1,653,302.60"
+SONA,BALANCE SHEET,Equity,Reserves and Surplus,"1,465,856.00"
+SONA,BALANCE SHEET,Equity,Total Equity,"6,194,208.60"
+SONA,BALANCE SHEET,Equity,Total Equity & Liabilities,"14,763,825.85"
+SONA,PROFIT & LOSS ACCOUNT,General,Revenue From Operation,"705,382.15"
+SONA,PROFIT & LOSS ACCOUNT,General,Cost of Sales,"497,531.97"
+SONA,PROFIT & LOSS ACCOUNT,General,Gross Profit,"207,850.18"
+SONA,PROFIT & LOSS ACCOUNT,General,Other Income,"1,924.36"
+SONA,PROFIT & LOSS ACCOUNT,General,Selling and Distribution Expenses,"5,531.89"
+SONA,PROFIT & LOSS ACCOUNT,General,Administrative Expenses,"39,951.46"
+SONA,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortization,"39,163.90"
+SONA,PROFIT & LOSS ACCOUNT,General,Financial Costs,"89,489.74"
+SONA,PROFIT & LOSS ACCOUNT,General,Profit Before Tax,"35,637.56"
+SONA,PROFIT & LOSS ACCOUNT,General,Income Tax,"-1,440.32"
+SONA,PROFIT & LOSS ACCOUNT,General,Deferred Tax,"14,886.42"
+SONA,PROFIT & LOSS ACCOUNT,General,Profit for the Year,"19,310.83"
+SONA,RATIO ANALYSIS,General,Debt-Equity (times),1.04
+SONA,RATIO ANALYSIS,General,Gross Profit Margin (%),29.47
+SONA,RATIO ANALYSIS,General,Net Profit Margin (%),2.74
+SONA,RATIO ANALYSIS,General,Inventory Turnover (times),0.25
+SONA,RATIO ANALYSIS,General,Total Debt ('000),"6,432,578.21"
+SONA,RATIO ANALYSIS,General,Current Ratio,1.16
+SONA,KEY RATIOS,General,Net Worth Per share (Rs.),201.43
+SONA,KEY RATIOS,General,Annualized Basic Earnings Per Share (Rs.),2.51
+SONA,KEY RATIOS,General,P/E Ratio (-times),172.78
+SONA,KEY RATIOS,General,Price to Book (PB) Ratio (-times),2.15
+SONA,KEY RATIOS,General,Return on Asset (%),0.52
+SONA,KEY RATIOS,General,Return on Equity (%),1.25
+SONA,KEY RATIOS,General,Total Assets Value Per Share (in Rs),480.12

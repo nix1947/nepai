@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import fs from 'fs';
 import path from 'path';
+import { computePeriodSortKey, parseNepalPeriodLabel } from './fundamental/nepalCalendar.ts';
 
 export interface FinancialTableRow {
   section: string;
@@ -97,7 +98,202 @@ function csvCell(v: string): string {
   return s;
 }
 
-function buildFinancialCsv(snapshot: CompanyFinancialSnapshot): string {
+function canonicalPeriodKey(label: string): { key: string; sortKey: number } {
+  const parsed = parseNepalPeriodLabel(label);
+  if (parsed) {
+    return {
+      key: `${parsed.fiscalYear}:${parsed.quarter}`,
+      sortKey: parsed.sortKey,
+    };
+  }
+  const clean = (label || '').replace(/\s+/g, ' ').trim();
+  return {
+    key: clean.toLowerCase(),
+    sortKey: computePeriodSortKey(clean, 'Annual'),
+  };
+}
+
+/**
+ * Merges a newly scraped ShareSansar quarterly snapshot with an existing saved snapshot
+ * without discarding older historical quarters when ShareSansar rotates columns.
+ * Newest quarter appears first; matching (fiscalYear, quarter) slots are refreshed with incoming values.
+ */
+export function mergeFinancialSnapshots(
+  existing: CompanyFinancialSnapshot | null,
+  incoming: CompanyFinancialSnapshot
+): CompanyFinancialSnapshot {
+  if (!existing || !Array.isArray(existing.tabs) || existing.tabs.length === 0) {
+    const ordered = [...incoming.periods].sort(
+      (a, b) => canonicalPeriodKey(b).sortKey - canonicalPeriodKey(a).sortKey
+    );
+    if (ordered.join('|') === incoming.periods.join('|')) return incoming;
+    // Align row values to canonical newest-first period order
+    return {
+      ...incoming,
+      periods: ordered,
+      tabs: incoming.tabs.map((t) => {
+        const tabPeriods = t.headers.slice(1);
+        const idxByKey = new Map<string, number>();
+        tabPeriods.forEach((p, idx) => idxByKey.set(canonicalPeriodKey(p).key, idx));
+        return {
+          ...t,
+          headers: [t.headers[0] || 'Particulars', ...ordered],
+          rows: t.rows.map((r) => {
+            if (r.isSectionHeader) return r;
+            const values = ordered.map((p) => {
+              const idx = idxByKey.get(canonicalPeriodKey(p).key);
+              return idx !== undefined ? (r.values[idx] ?? '') : '';
+            });
+            return {
+              ...r,
+              values,
+              numericValues: values.map(parseNumericCell),
+            };
+          }),
+        };
+      }),
+    };
+  }
+
+  // 1. Collect all canonical periods from incoming (preferred label) + existing
+  const periodMap = new Map<string, { label: string; sortKey: number }>();
+  for (const p of existing.periods ?? []) {
+    const meta = canonicalPeriodKey(p);
+    if (meta.key && !periodMap.has(meta.key)) {
+      periodMap.set(meta.key, { label: p, sortKey: meta.sortKey });
+    }
+  }
+  for (const p of incoming.periods ?? []) {
+    const meta = canonicalPeriodKey(p);
+    if (meta.key) {
+      periodMap.set(meta.key, { label: p, sortKey: meta.sortKey });
+    }
+  }
+
+  const mergedPeriods = Array.from(periodMap.values())
+    .sort((a, b) => b.sortKey - a.sortKey)
+    .map((p) => p.label);
+  const mergedKeys = mergedPeriods.map((p) => canonicalPeriodKey(p).key);
+
+  // 2. Index existing tabs by key/title
+  const existingTabByKey = new Map<string, FinancialReportTab>();
+  const existingTabByTitle = new Map<string, FinancialReportTab>();
+  for (const t of existing.tabs) {
+    existingTabByKey.set(t.key.toLowerCase(), t);
+    existingTabByTitle.set(t.title.trim().toLowerCase(), t);
+  }
+
+  const buildRowPeriodLookup = (tab: FinancialReportTab, fallbackPeriods: string[]) => {
+    const tabPeriods = tab.headers.length > 1 ? tab.headers.slice(1) : fallbackPeriods;
+    const periodKeys = tabPeriods.map((p) => canonicalPeriodKey(p).key);
+    const map = new Map<string, Map<string, string>>();
+    for (const r of tab.rows) {
+      const rKey = `${r.section.trim().toLowerCase()}|${r.isSectionHeader ? 'H' : 'R'}|${r.particulars
+        .trim()
+        .toLowerCase()}`;
+      const valMap = new Map<string, string>();
+      periodKeys.forEach((pk, idx) => {
+        const val = r.values[idx];
+        if (val !== undefined && val !== '') {
+          valMap.set(pk, val);
+        }
+      });
+      map.set(rKey, valMap);
+    }
+    return map;
+  };
+
+  const mergedTabs: FinancialReportTab[] = [];
+  const consumedExistingKeys = new Set<string>();
+
+  const mergeTabPair = (
+    incTab: FinancialReportTab | null,
+    extTab: FinancialReportTab | null
+  ): FinancialReportTab => {
+    const base = incTab ?? extTab!;
+    const incLookup = incTab ? buildRowPeriodLookup(incTab, incoming.periods) : new Map();
+    const extLookup = extTab ? buildRowPeriodLookup(extTab, existing.periods) : new Map();
+
+    const seenRowKeys = new Set<string>();
+    const orderedTemplateRows: FinancialTableRow[] = [];
+
+    for (const r of incTab?.rows ?? []) {
+      const rKey = `${r.section.trim().toLowerCase()}|${r.isSectionHeader ? 'H' : 'R'}|${r.particulars
+        .trim()
+        .toLowerCase()}`;
+      if (!seenRowKeys.has(rKey)) {
+        seenRowKeys.add(rKey);
+        orderedTemplateRows.push(r);
+      }
+    }
+    for (const r of extTab?.rows ?? []) {
+      const rKey = `${r.section.trim().toLowerCase()}|${r.isSectionHeader ? 'H' : 'R'}|${r.particulars
+        .trim()
+        .toLowerCase()}`;
+      if (!seenRowKeys.has(rKey)) {
+        seenRowKeys.add(rKey);
+        orderedTemplateRows.push(r);
+      }
+    }
+
+    const mergedRows: FinancialTableRow[] = orderedTemplateRows.map((r) => {
+      if (r.isSectionHeader) return r;
+      const rKey = `${r.section.trim().toLowerCase()}|R|${r.particulars.trim().toLowerCase()}`;
+      const incVals: Map<string, string> | undefined = incLookup.get(rKey);
+      const extVals: Map<string, string> | undefined = extLookup.get(rKey);
+      const values = mergedKeys.map((pk) => {
+        const iv = incVals?.get(pk);
+        if (iv !== undefined && iv !== '') return iv;
+        const ev = extVals?.get(pk);
+        if (ev !== undefined && ev !== '') return ev;
+        return '';
+      });
+      return {
+        ...r,
+        values,
+        numericValues: values.map(parseNumericCell),
+      };
+    });
+
+    const labelColHeader = base.headers[0] || 'Particulars';
+    return {
+      key: base.key,
+      title: base.title,
+      headers: [labelColHeader, ...mergedPeriods],
+      rows: mergedRows,
+    };
+  };
+
+  for (const incTab of incoming.tabs) {
+    const extMatch =
+      existingTabByKey.get(incTab.key.toLowerCase()) ??
+      existingTabByTitle.get(incTab.title.trim().toLowerCase()) ??
+      null;
+    if (extMatch) {
+      consumedExistingKeys.add(extMatch.key.toLowerCase());
+    }
+    mergedTabs.push(mergeTabPair(incTab, extMatch));
+  }
+
+  for (const extTab of existing.tabs) {
+    if (!consumedExistingKeys.has(extTab.key.toLowerCase())) {
+      mergedTabs.push(mergeTabPair(null, extTab));
+    }
+  }
+
+  return {
+    symbol: incoming.symbol,
+    companyName: incoming.companyName || existing.companyName,
+    sector: incoming.sector && incoming.sector !== 'Unknown' ? incoming.sector : existing.sector,
+    companyId: incoming.companyId || existing.companyId,
+    scrapedAt: incoming.scrapedAt,
+    sourceUrl: incoming.sourceUrl || existing.sourceUrl,
+    periods: mergedPeriods,
+    tabs: mergedTabs,
+  };
+}
+
+export function buildFinancialCsv(snapshot: CompanyFinancialSnapshot): string {
   const periodCols = snapshot.periods.length > 0 ? snapshot.periods : ['Latest Quarter'];
   const header = ['Symbol', 'Tab', 'Section', 'Particulars', ...periodCols];
   const lines = [header.map(csvCell).join(',')];
@@ -129,6 +325,7 @@ export async function scrapeCompanyFinancials(
     symbolUpper.toLowerCase()
   )}`;
   const res1 = await fetch(companyUrl, {
+    signal: AbortSignal.timeout(15_000),
     headers: {
       'User-Agent': USER_AGENT,
       Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -136,7 +333,7 @@ export async function scrapeCompanyFinancials(
   });
 
   if (!res1.ok) {
-    throw new Error(`ShareSansar returned HTTP ${res1.status} for ${symbolUpper}`);
+    throw new Error(`Financial portal returned HTTP ${res1.status} for ${symbolUpper}`);
   }
 
   const cookieHeader = extractCookies(res1);
@@ -156,7 +353,7 @@ export async function scrapeCompanyFinancials(
   const companyName = rawTitle.split('- ||')[0]?.trim() || pageSymbol;
 
   if (!token || !companyId) {
-    throw new Error(`Quarterly report metadata not available on ShareSansar for ${symbolUpper}`);
+    throw new Error(`Quarterly report metadata not available for ${symbolUpper}`);
   }
 
   const body = new URLSearchParams({
@@ -167,6 +364,7 @@ export async function scrapeCompanyFinancials(
 
   const res2 = await fetch('https://www.sharesansar.com/company-quarterly-report', {
     method: 'POST',
+    signal: AbortSignal.timeout(15_000),
     headers: {
       'User-Agent': USER_AGENT,
       'X-CSRF-Token': token,
@@ -270,10 +468,12 @@ export async function scrapeCompanyFinancials(
   });
 
   if (tabs.length === 0) {
-    throw new Error(`No quarterly financial tables found on ShareSansar for ${symbolUpper}`);
+    throw new Error(`No quarterly financial tables found for ${symbolUpper}`);
   }
 
-  const snapshot: CompanyFinancialSnapshot = {
+  const finDir = ensureFinancialDir(dataDir);
+  const existingSnapshot = getSavedFinancials(dataDir, pageSymbol);
+  const snapshot = mergeFinancialSnapshots(existingSnapshot, {
     symbol: pageSymbol,
     companyName,
     sector,
@@ -282,9 +482,8 @@ export async function scrapeCompanyFinancials(
     sourceUrl: companyUrl,
     periods: Array.from(allPeriodsSet),
     tabs,
-  };
+  });
 
-  const finDir = ensureFinancialDir(dataDir);
   const jsonPath = safeFinancialFilePath(finDir, pageSymbol, 'json');
   const csvPath = safeFinancialFilePath(finDir, pageSymbol, 'csv');
 
@@ -366,7 +565,7 @@ export async function scrapeBatchFinancials(
     } catch (err) {
       failed.push({
         symbol: sym,
-        error: err instanceof Error ? err.message : 'Scrape failed',
+        error: err instanceof Error ? err.message : 'Fetch failed',
       });
     }
     // Polite pacing between ShareSansar requests

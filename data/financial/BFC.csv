@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+BFC,BALANCE SHEET,General,Cash and cash equivalent,"250,802.86"
+BFC,BALANCE SHEET,General,Due from Nepal Rastra Bank,"500,687.00"
+BFC,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+BFC,BALANCE SHEET,General,Derivative financial instruments,0.00
+BFC,BALANCE SHEET,General,Other trading assets,0.00
+BFC,BALANCE SHEET,General,Loan and advances to B/FIs,0.00
+BFC,BALANCE SHEET,General,Loans and advances to customers,"4,368,297.15"
+BFC,BALANCE SHEET,General,Investment securities,"1,968,792.90"
+BFC,BALANCE SHEET,General,Current tax assets,"40,195.09"
+BFC,BALANCE SHEET,General,Investment in subsidiaries,0.00
+BFC,BALANCE SHEET,General,Investment in associates,0.00
+BFC,BALANCE SHEET,General,Investment property,"224,203.14"
+BFC,BALANCE SHEET,General,Property and equipment,"225,026.67"
+BFC,BALANCE SHEET,General,Goodwill and Intangible assets,"4,911.10"
+BFC,BALANCE SHEET,General,Deferred tax assets,"28,219.98"
+BFC,BALANCE SHEET,General,Other assets,"49,005.57"
+BFC,BALANCE SHEET,General,Total Assets,"7,660,141.47"
+BFC,BALANCE SHEET,General,Due to Bank and Financial Institutions,"21,207.86"
+BFC,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+BFC,BALANCE SHEET,General,Derivative financial instruments,0.00
+BFC,BALANCE SHEET,General,Deposits from customers,"6,431,906.85"
+BFC,BALANCE SHEET,General,Borrowing,0.00
+BFC,BALANCE SHEET,General,Current Tax Liabilities,0.00
+BFC,BALANCE SHEET,General,Provisions,0.00
+BFC,BALANCE SHEET,General,Deferred tax liabilities,0.00
+BFC,BALANCE SHEET,General,Other liabilities,"181,865.39"
+BFC,BALANCE SHEET,General,Debt securities issued,0.00
+BFC,BALANCE SHEET,General,Subordinated Liabilities,0.00
+BFC,BALANCE SHEET,General,Total liabilities,"6,634,980.10"
+BFC,BALANCE SHEET,General,Share capital,"890,424.24"
+BFC,BALANCE SHEET,General,Share premium,"14,947.99"
+BFC,BALANCE SHEET,General,Retained earnings,"-441,678.61"
+BFC,BALANCE SHEET,General,Reserves,"561,467.91"
+BFC,BALANCE SHEET,General,Total equity,"1,025,161.52"
+BFC,BALANCE SHEET,General,Total liabilities and equity,"7,660,141.62"
+BFC,PROFIT & LOSS ACCOUNT,General,Interest income,"122,340.10"
+BFC,PROFIT & LOSS ACCOUNT,General,Interest expense,"75,461.34"
+BFC,PROFIT & LOSS ACCOUNT,General,Net interest income,"46,878.75"
+BFC,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"4,256.83"
+BFC,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,9.49
+BFC,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"4,247.34"
+BFC,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","51,126.09"
+BFC,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Other operating income,"3,377.58"
+BFC,PROFIT & LOSS ACCOUNT,General,Total operating income,"54,503.67"
+BFC,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"-21,467.34"
+BFC,PROFIT & LOSS ACCOUNT,General,Net operating income,"75,971.01"
+BFC,PROFIT & LOSS ACCOUNT,General,Personnel expense,"27,420.43"
+BFC,PROFIT & LOSS ACCOUNT,General,Other operating expense,"11,229.12"
+BFC,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"6,802.72"
+BFC,PROFIT & LOSS ACCOUNT,General,Operating Profit,"30,518.74"
+BFC,PROFIT & LOSS ACCOUNT,General,Non operating income,335.99
+BFC,PROFIT & LOSS ACCOUNT,General,Non operating expense,237.57
+BFC,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"30,617.16"
+BFC,PROFIT & LOSS ACCOUNT,General,Current Tax,"9,185.15"
+BFC,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Profit for the period,"21,432.01"
+BFC,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+BFC,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",456.01
+BFC,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"21,888.02"
+BFC,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),9.63
+BFC,KEY METRICS,General,Diluted Earnings Per Share,9.63
+BFC,KEY METRICS,General,Capital fund to RWA,16.23
+BFC,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,9.73
+BFC,KEY METRICS,General,Total Loan loss provision to Total NPL,78.96
+BFC,KEY METRICS,General,Cost of Funds,4.42
+BFC,KEY METRICS,General,Credit to Deposit Ratio,71.55
+BFC,KEY METRICS,General,Base Rate,7.48
+BFC,KEY METRICS,General,Interest Spread Rate,4.34
+BFC,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"1,025,161.52"
+BFC,KEY METRICS,General,No. of Outstanding Shares,"8,904,242.36"
+BFC,KEY METRICS,General,Net Worth Per Share,115.13
+BFC,KEY METRICS,General,P/E Ratio,46.12
+BFC,KEY METRICS,General,Price to Book (P/B) Ratio,3.86
+BFC,KEY METRICS,General,Return on Equity,8.36
+BFC,KEY METRICS,General,Return on Assets,1.12

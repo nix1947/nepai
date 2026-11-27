@@ -1,0 +1,705 @@
+{
+  "symbol": "NRN",
+  "companyName": "NRN Infrastructure and Development Limited",
+  "sector": "Investment",
+  "sectorGroup": "Other",
+  "updatedAt": "2026-11-27T08:56:37.853Z",
+  "records": [
+    {
+      "id": "NRN:2083/84:Q1",
+      "symbol": "NRN",
+      "companyName": "NRN Infrastructure and Development Limited",
+      "sector": "Investment",
+      "sectorGroup": "Other",
+      "fiscalYear": "2083/84",
+      "quarter": "Q1",
+      "periodLabel": "Q1 FY 2083/84",
+      "sortKey": 20831,
+      "publicationDate": null,
+      "collectionDate": "2026-11-27T08:30:57.214Z",
+      "dataSource": "ShareSansar",
+      "sourceUrl": "https://www.sharesansar.com/company/nrn",
+      "validationStatus": "Incomplete",
+      "validationNotes": [
+        "Balance sheet identity (Assets ≈ Liabilities + Equity) verified.",
+        "Only 2/5 core financial indicators reported.",
+        "Operating Cash Flow not disclosed in summary statement."
+      ],
+      "dataQualityFlags": [
+        "incomplete"
+      ],
+      "metrics": {
+        "eps": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "netProfit": {
+          "value": -4455190,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "revenue": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "operatingProfit": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "ebit": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "netProfitMarginPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "roePct": {
+          "value": 0,
+          "unit": "%",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "roaPct": {
+          "value": -0.5,
+          "unit": "%",
+          "provenance": "Calculated",
+          "note": "Annualized Net Profit / Total Assets",
+          "period": "Q1 FY 2083/84"
+        },
+        "roicPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "bvps": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "netWorth": {
+          "value": 3230063020,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "totalAssets": {
+          "value": 3573294390,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "totalLiabilities": {
+          "value": 343231390,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "reserves": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "retainedEarnings": {
+          "value": 710346630,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "shareCapital": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "outstandingShares": {
+          "value": null,
+          "unit": "shares",
+          "provenance": "Unavailable"
+        },
+        "totalDebt": {
+          "value": 0,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "cashAndEquivalents": {
+          "value": 262561669.99999997,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "currentAssets": {
+          "value": 1225911520,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "currentLiabilities": {
+          "value": 7589920,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "debtToEquity": {
+          "value": 0,
+          "unit": "x",
+          "provenance": "Calculated",
+          "note": "Total Debt / Net Worth",
+          "period": "Q1 FY 2083/84"
+        },
+        "operatingCashFlow": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "capex": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "freeCashFlow": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "ownerEarnings": {
+          "value": -4455190,
+          "unit": "NPR",
+          "provenance": "Calculated",
+          "note": "Net Profit + Depreciation - Maintenance CapEx",
+          "period": "Q1 FY 2083/84"
+        },
+        "depreciation": {
+          "value": 902660,
+          "unit": "NPR",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "interestExpense": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "reportedPe": {
+          "value": null,
+          "unit": "x",
+          "provenance": "Unavailable"
+        },
+        "reportedPb": {
+          "value": 7.63,
+          "unit": "x",
+          "provenance": "Reported",
+          "period": "Q1 FY 2083/84",
+          "source": "ShareSansar"
+        },
+        "dividendYieldPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "payoutRatioPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "deposits": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "loans": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "nplPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "carPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "cdRatioPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "costOfFundsPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "netPremium": {
+          "value": null,
+          "unit": "NPR",
+          "provenance": "Unavailable"
+        },
+        "claimRatioPct": {
+          "value": null,
+          "unit": "%",
+          "provenance": "Unavailable"
+        },
+        "solvencyRatio": {
+          "value": null,
+          "unit": "x",
+          "provenance": "Unavailable"
+        },
+        "installedCapacityMw": {
+          "value": null,
+          "unit": "MW",
+          "provenance": "Unavailable"
+        }
+      },
+      "lineItemsCount": 60,
+      "rawLineItems": [
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Plant, Property and Equipment",
+          "rawValue": "10,758.30",
+          "numericValue": 10758300
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Deferred Tax",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Intangible Assets",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Other Non-Current Assets",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Non Current Assets",
+          "rawValue": "10,758.30",
+          "numericValue": 10758300
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Investment in Associates Measured at Cost",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Financial Assets at Fair Value Through PL",
+          "rawValue": "323,891.81",
+          "numericValue": 323891810
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Financial Assets at Fair Value Through OCI",
+          "rawValue": "2,012,732.76",
+          "numericValue": 2012732760
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Financial Assets",
+          "rawValue": "2,336,624.57",
+          "numericValue": 2336624570
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Cash and Cash Equivalents",
+          "rawValue": "262,561.67",
+          "numericValue": 262561669.99999997
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Financial Assets at Amortised Cost",
+          "rawValue": "950,000.00",
+          "numericValue": 950000000
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Other Financial Assets",
+          "rawValue": "7,690.44",
+          "numericValue": 7690440
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Investment in Fixed Deposit",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Other Current Assets",
+          "rawValue": "5,659.41",
+          "numericValue": 5659410
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Current Assets",
+          "rawValue": "1,225,911.52",
+          "numericValue": 1225911520
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Assets",
+          "particulars": "Total Assets",
+          "rawValue": "3,573,294.39",
+          "numericValue": 3573294390
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Non Current Liabilities",
+          "particulars": "Deferred Tax Liability",
+          "rawValue": "333,208.98",
+          "numericValue": 333208980
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Non Current Liabilities",
+          "particulars": "Provisions",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Non Current Liabilities",
+          "particulars": "Borrowings",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Non Current Liabilities",
+          "particulars": "Other Non Current Liabilities",
+          "rawValue": "2,432.49",
+          "numericValue": 2432490
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Non Current Liabilities",
+          "particulars": "Non Current Liabilities",
+          "rawValue": "335,641.47",
+          "numericValue": 335641470
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Current Liabilities",
+          "particulars": "Provisions",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Current Liabilities",
+          "particulars": "Borrowings",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Current Liabilities",
+          "particulars": "Financial Liabilities",
+          "rawValue": "6,430.92",
+          "numericValue": 6430920
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Current Liabilities",
+          "particulars": "Income Tax Liability",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Current Liabilities",
+          "particulars": "Other Current Liabilities",
+          "rawValue": "1,159.00",
+          "numericValue": 1159000
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Current Liabilities",
+          "particulars": "Current Liabilities",
+          "rawValue": "7,589.92",
+          "numericValue": 7589920
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Current Liabilities",
+          "particulars": "Total Liabilities",
+          "rawValue": "343,231.39",
+          "numericValue": 343231390
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Equity",
+          "particulars": "Equity Share Capital",
+          "rawValue": "1,798,121.20",
+          "numericValue": 1798121200
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Equity",
+          "particulars": "Less:Share Issue Cost Net Of Tax",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Equity",
+          "particulars": "Retained Earnings",
+          "rawValue": "710,346.63",
+          "numericValue": 710346630
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Equity",
+          "particulars": "Investment Revaluation Reserve",
+          "rawValue": "721,595.19",
+          "numericValue": 721595190
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Equity",
+          "particulars": "Total Equity",
+          "rawValue": "3,230,063.02",
+          "numericValue": 3230063020
+        },
+        {
+          "tab": "BALANCE SHEET",
+          "section": "Equity",
+          "particulars": "Total Equity and Liabilities",
+          "rawValue": "3,573,294.41",
+          "numericValue": 3573294410
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Revenue",
+          "particulars": "Investment Income",
+          "rawValue": "-8,145.48",
+          "numericValue": -8145480
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Revenue",
+          "particulars": "Finance Income",
+          "rawValue": "6,851.60",
+          "numericValue": 6851600
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Revenue",
+          "particulars": "Other Income",
+          "rawValue": "15.26",
+          "numericValue": 15260
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Revenue",
+          "particulars": "Total Revenue",
+          "rawValue": "-1,278.62",
+          "numericValue": -1278620
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Employee Benefit Expenses",
+          "rawValue": "3,736.52",
+          "numericValue": 3736520
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Administrative and Expenses",
+          "rawValue": "2,372.52",
+          "numericValue": 2372520
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Depreciation and Amortisation",
+          "rawValue": "902.66",
+          "numericValue": 902660
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Other Operating Expenses",
+          "rawValue": "82.53",
+          "numericValue": 82530
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Total Expenses",
+          "rawValue": "7,094.23",
+          "numericValue": 7094230
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Profit from Operations",
+          "rawValue": "-8,372.85",
+          "numericValue": -8372850
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Securities Listing Expenses",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Profit (Loss) on Derecognition of Financial Asset at Fair Value Through PL",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Profit (Loss) on Fair Value Changes of Financial Assets Recorded at Fair Value Through PL",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Profit Before Tax",
+          "rawValue": "-8,372.85",
+          "numericValue": -8372850
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Current Tax",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Deferred Tax",
+          "rawValue": "-3,917.66",
+          "numericValue": -3917660
+        },
+        {
+          "tab": "PROFIT & LOSS ACCOUNT",
+          "section": "Expenses",
+          "particulars": "Net Profit",
+          "rawValue": "-4,455.19",
+          "numericValue": -4455190
+        },
+        {
+          "tab": "RATIO ANALYSIS",
+          "section": "General",
+          "particulars": "Operating Profit Margin",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "RATIO ANALYSIS",
+          "section": "General",
+          "particulars": "Net Profit Margin",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "RATIO ANALYSIS",
+          "section": "General",
+          "particulars": "Current Ratio",
+          "rawValue": "161.52",
+          "numericValue": 161.52
+        },
+        {
+          "tab": "KEY RATIOS",
+          "section": "General",
+          "particulars": "Networth per Share (Rs.)",
+          "rawValue": "179.64",
+          "numericValue": 179.64
+        },
+        {
+          "tab": "KEY RATIOS",
+          "section": "General",
+          "particulars": "Earning Per Share annualized(Rs.)",
+          "rawValue": "-0.25",
+          "numericValue": -0.25
+        },
+        {
+          "tab": "KEY RATIOS",
+          "section": "General",
+          "particulars": "Price to Earning Ratio (times)",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "KEY RATIOS",
+          "section": "General",
+          "particulars": "Price to Book ratio(times)",
+          "rawValue": "7.63",
+          "numericValue": 7.63
+        },
+        {
+          "tab": "KEY RATIOS",
+          "section": "General",
+          "particulars": "Return on Equity (%)",
+          "rawValue": "0.00",
+          "numericValue": 0
+        },
+        {
+          "tab": "KEY RATIOS",
+          "section": "General",
+          "particulars": "Return on Asset (%)",
+          "rawValue": "0.00",
+          "numericValue": 0
+        }
+      ]
+    }
+  ],
+  "officialSources": [
+    {
+      "title": "NRN Financial Reports — ShareSansar",
+      "uri": "https://www.sharesansar.com/company/nrn",
+      "category": "NEPSE Portal"
+    }
+  ]
+}

@@ -97,12 +97,12 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
             return;
           }
         } catch {
-          // fall through to scrape option
+          // fall through to fetch option
         }
         setLoading(false);
       }
 
-      // Live scrape from ShareSansar and save to data/financial/<SYMBOL>.json + .csv
+      // Live fetch and save to data/financial/<SYMBOL>.json + .csv
       setScraping(true);
       try {
         const res = await fetch(`/api/financials/${encodeURIComponent(clean)}/scrape`, {
@@ -112,18 +112,20 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
         if (!res.ok) {
           throw new Error(data?.error || `HTTP ${res.status}`);
         }
-        const snap = data as CompanyFinancialSnapshot;
+        const snap = data as CompanyFinancialSnapshot & { skipped?: boolean };
         setSnapshot(snap);
         setActiveTabKey(snap.tabs[0]?.key ?? '');
         setStatusMsg({
           kind: 'ok',
-          text: `Scraped ${snap.symbol} (${snap.tabs.length} tabs) and saved to data/financial/${snap.symbol}.json & .csv`,
+          text: snap.skipped
+            ? `${snap.symbol} already has current quarter data — skipped fetching.`
+            : `Fetched ${snap.symbol} (${snap.tabs.length} tabs) and saved to data/financial/${snap.symbol}.json & .csv`,
         });
         await loadSavedIndex();
       } catch (err) {
         setStatusMsg({
           kind: 'err',
-          text: err instanceof Error ? err.message : `Failed to scrape ${clean}`,
+          text: err instanceof Error ? err.message : `Failed to fetch ${clean}`,
         });
       } finally {
         setScraping(false);
@@ -167,9 +169,10 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
       setSavedIndex(Array.isArray(json.items) ? json.items : []);
+      const skippedCount = Array.isArray(json.skipped) ? json.skipped.length : 0;
       setStatusMsg({
         kind: 'ok',
-        text: `Saved ShareSansar quarterly statements for ${json.succeeded?.length ?? 0}/${json.total ?? 0} top stocks into data/financial/ (.json + .csv).`,
+        text: `Saved quarterly statements for ${json.succeeded?.length ?? 0}/${json.total ?? 0} stocks (${skippedCount} skipped as already populated).`,
       });
       if (!snapshot && json.succeeded?.length > 0) {
         await loadOrScrapeSymbol(json.succeeded[0], false);
@@ -177,7 +180,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
     } catch (err) {
       setStatusMsg({
         kind: 'err',
-        text: err instanceof Error ? err.message : 'Batch scrape failed',
+        text: err instanceof Error ? err.message : 'Batch fetch failed',
       });
     } finally {
       setBatchScraping(false);
@@ -207,11 +210,11 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
           <div className="flex items-center gap-2">
             <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              ShareSansar Quarterly Financials Vault (<code className="font-mono text-xs">data/financial/</code>)
+              Quarterly Financials Vault (<code className="font-mono text-xs">data/financial/</code>)
             </h3>
             <InfoTip
-              title="Live Quarterly Fundamentals Scraper"
-              body="Pulls Balance Sheet, Profit & Loss Account, Ratio Analysis, Key Ratios, Key Metrics, and Others directly from ShareSansar company quarterly reports and saves both JSON and CSV files per symbol inside data/financial/."
+              title="Live Quarterly Fundamentals Fetcher"
+              body="Pulls Balance Sheet, Profit & Loss Account, Ratio Analysis, Key Ratios, Key Metrics, and Others from company quarterly reports and saves both JSON and CSV files per symbol inside data/financial/."
             />
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
@@ -247,7 +250,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${scraping ? 'animate-spin' : ''}`} />
-            <span>{scraping ? `Scraping ${activeSymbol}…` : 'Scrape Symbol'}</span>
+            <span>{scraping ? `Fetching ${activeSymbol}…` : 'Fetch Symbol'}</span>
           </button>
 
           <button
@@ -257,7 +260,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium disabled:opacity-50 cursor-pointer"
           >
             <FileSpreadsheet className={`w-3.5 h-3.5 ${batchScraping ? 'animate-spin' : ''}`} />
-            <span>{batchScraping ? 'Scraping Top 10…' : 'Scrape Top 10 Leaders'}</span>
+            <span>{batchScraping ? 'Fetching Top 10…' : 'Fetch Top 10 Leaders'}</span>
           </button>
         </div>
       </div>
@@ -305,7 +308,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
               </span>
               <span className="text-slate-600 dark:text-slate-300">{snapshot.companyName}</span>
               <span className="text-[11px] font-mono text-slate-500">
-                · {snapshot.sector} · Scraped {snapshot.scrapedAt.slice(0, 10)}
+                · {snapshot.sector} · Fetched {snapshot.scrapedAt.slice(0, 10)}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -404,7 +407,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
       ) : (
         <div className="py-6 text-center text-xs text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded">
           Enter any NEPSE symbol (e.g. <strong>NABIL</strong>, <strong>NLIC</strong>, <strong>SHIVM</strong>) and click{' '}
-          <strong>Scrape Symbol</strong> or click <strong>Scrape Top 10 Leaders</strong> to pull ShareSansar Quarterly Reports into{' '}
+          <strong>Fetch Symbol</strong> or click <strong>Fetch Top 10 Leaders</strong> to pull Quarterly Reports into{' '}
           <code className="font-mono">data/financial/</code>.
         </div>
       )}

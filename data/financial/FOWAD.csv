@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+FOWAD,BALANCE SHEET,General,Cash and cash equivalent,"1,768,945.20"
+FOWAD,BALANCE SHEET,General,Statutory Balances and Due from NRB,"113,000.00"
+FOWAD,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+FOWAD,BALANCE SHEET,General,Derivative financial instruments,0.00
+FOWAD,BALANCE SHEET,General,Other trading assets,0.00
+FOWAD,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+FOWAD,BALANCE SHEET,General,Loans and advances to customers,"20,549,232.16"
+FOWAD,BALANCE SHEET,General,Investment securities,933.84
+FOWAD,BALANCE SHEET,General,Current tax assets,0.00
+FOWAD,BALANCE SHEET,General,Investment in subsidiaries,0.00
+FOWAD,BALANCE SHEET,General,Investment in associates,0.00
+FOWAD,BALANCE SHEET,General,Investment property,0.00
+FOWAD,BALANCE SHEET,General,Property and equipment,"199,689.62"
+FOWAD,BALANCE SHEET,General,Goodwill and Intangible assets,"1,639.75"
+FOWAD,BALANCE SHEET,General,Deferred tax assets,"824,829.55"
+FOWAD,BALANCE SHEET,General,Other assets,"145,556.25"
+FOWAD,BALANCE SHEET,General,Total Assets,"23,603,826.37"
+FOWAD,BALANCE SHEET,General,Due to Bank and Financial Institutions,"8,404,570.02"
+FOWAD,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+FOWAD,BALANCE SHEET,General,Derivative financial instruments,0.00
+FOWAD,BALANCE SHEET,General,Deposits from customers,"11,542,741.32"
+FOWAD,BALANCE SHEET,General,Borrowing,0.00
+FOWAD,BALANCE SHEET,General,Current Tax Liabilities,"65,520.25"
+FOWAD,BALANCE SHEET,General,Provisions,0.00
+FOWAD,BALANCE SHEET,General,Deferred tax liabilities,0.00
+FOWAD,BALANCE SHEET,General,Other liabilities,"389,823.61"
+FOWAD,BALANCE SHEET,General,Debt securities issued,0.00
+FOWAD,BALANCE SHEET,General,Subordinated Liabilities,0.00
+FOWAD,BALANCE SHEET,General,Total liabilities,"20,402,655.20"
+FOWAD,BALANCE SHEET,General,Share capital,"1,195,953.71"
+FOWAD,BALANCE SHEET,General,Share premium,0.00
+FOWAD,BALANCE SHEET,General,Retained earnings,"-258,526.76"
+FOWAD,BALANCE SHEET,General,Reserves,"2,263,744.21"
+FOWAD,BALANCE SHEET,General,Total equity,"3,201,171.16"
+FOWAD,BALANCE SHEET,General,Total liabilities and equity,"23,603,826.37"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Interest income,"732,673.03"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Interest expense,"367,273.98"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Net interest income,"365,399.05"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"40,191.06"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,400.62
+FOWAD,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"39,790.44"
+FOWAD,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","405,189.49"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Other operating income,"8,600.36"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Total operating income,"413,789.85"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"153,665.92"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Net operating income,"260,123.93"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Personnel expense,"148,223.15"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Other operating expense,"42,676.87"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"4,002.25"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Operating Profit,"65,221.66"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Non operating income,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"65,221.66"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Current Tax,"69,940.86"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Deferred Tax,"-46,099.78"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Profit for the period,"41,380.58"
+FOWAD,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+FOWAD,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"41,380.58"
+FOWAD,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),13.84
+FOWAD,KEY METRICS,General,Diluted Earnings Per Share,13.84
+FOWAD,KEY METRICS,General,Capital fund to RWA,8.25
+FOWAD,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,18.13
+FOWAD,KEY METRICS,General,Total Loan loss provision to Total NPL,88.05
+FOWAD,KEY METRICS,General,Cost of Funds,7.16
+FOWAD,KEY METRICS,General,Credit to Deposit Ratio,117.44
+FOWAD,KEY METRICS,General,Base Rate,11.15
+FOWAD,KEY METRICS,General,Interest Spread Rate,7.20
+FOWAD,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"3,201,171.16"
+FOWAD,KEY METRICS,General,No. of Outstanding Shares,"11,959,537.10"
+FOWAD,KEY METRICS,General,Net Worth Per Share,267.67
+FOWAD,KEY METRICS,General,P/E Ratio,65.24
+FOWAD,KEY METRICS,General,Price to Book (P/B) Ratio,3.37
+FOWAD,KEY METRICS,General,Return on Equity,5.17
+FOWAD,KEY METRICS,General,Return on Assets,0.18

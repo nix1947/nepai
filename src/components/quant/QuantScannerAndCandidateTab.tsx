@@ -524,7 +524,7 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
                   />
                 </h4>
                 <span className="text-[11px] font-mono text-slate-500">
-                  VWAP: {activeCandidate.indicators.vwapSource}
+                  VWAP: {activeCandidate.indicators.vwapSource.replace(/ShareSansar\s+/gi, '')}
                 </span>
               </div>
 
@@ -683,7 +683,7 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
                   </div>
                   {activeCandidate.stage2.isProxyMa200 && (
                     <div className="text-[10px] text-slate-400">
-                      Uses ShareSansar exchange MA120/MA180 baseline (&lt;200 daily CSV sessions loaded).
+                      Uses exchange MA120/MA180 baseline (&lt;200 daily CSV sessions loaded).
                     </div>
                   )}
                 </div>

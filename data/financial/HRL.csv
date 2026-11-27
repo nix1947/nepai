@@ -1,0 +1,81 @@
+Symbol,Tab,Section,Particulars,3rd Quarter 2082/2083
+HRL,BALANCE SHEET,Assets,Goodwill & Intangible Assets,"33,751.48"
+HRL,BALANCE SHEET,Assets,Property and Equipment,"79,057.23"
+HRL,BALANCE SHEET,Assets,Investment Properties,0.00
+HRL,BALANCE SHEET,Assets,Deferred Tax Assets,"637,420.69"
+HRL,BALANCE SHEET,Assets,Investment in Subsidiaries,"1,050,000.00"
+HRL,BALANCE SHEET,Assets,Investment in Associates,"113,700.17"
+HRL,BALANCE SHEET,Assets,Investments,"16,118,756.82"
+HRL,BALANCE SHEET,Assets,Loans,"16,070.11"
+HRL,BALANCE SHEET,Assets,Reinsurance Assets,"563,716.77"
+HRL,BALANCE SHEET,Assets,Current Tax Assets,"220,710.30"
+HRL,BALANCE SHEET,Assets,Insurance Receivables,"1,632,037.43"
+HRL,BALANCE SHEET,Assets,Other Assets,"3,354,345.93"
+HRL,BALANCE SHEET,Assets,Other Financial Assets,"415,423.84"
+HRL,BALANCE SHEET,Assets,Cash and Cash Equivalent,"1,532,546.06"
+HRL,BALANCE SHEET,Assets,Total Assets,"25,767,536.84"
+HRL,BALANCE SHEET,Equity,Share Capital,"10,868,000.00"
+HRL,BALANCE SHEET,Equity,Share Application Money Pending Allotment,0.00
+HRL,BALANCE SHEET,Equity,Share Premium,"3,122,706.32"
+HRL,BALANCE SHEET,Equity,Special Reserve,"2,019,322.23"
+HRL,BALANCE SHEET,Equity,Catastrophe Reserve,"203,293.71"
+HRL,BALANCE SHEET,Equity,Retained Earnings,"691,613.99"
+HRL,BALANCE SHEET,Equity,Other Equity,"-583,414.35"
+HRL,BALANCE SHEET,Equity,Total Equity,"16,321,521.89"
+HRL,BALANCE SHEET,Liabilities,Provisions,"22,218.18"
+HRL,BALANCE SHEET,Liabilities,Gross Insurance Contract Liabilities,"8,993,963.67"
+HRL,BALANCE SHEET,Liabilities,Deferred Tax Liabilities,0.00
+HRL,BALANCE SHEET,Liabilities,Insurance Payable,"231,321.36"
+HRL,BALANCE SHEET,Liabilities,Current Tax Liabilities,0.00
+HRL,BALANCE SHEET,Liabilities,Borrowings,0.00
+HRL,BALANCE SHEET,Liabilities,Other Liabilities,"25,409.02"
+HRL,BALANCE SHEET,Liabilities,Other Financial Liabilities,"173,102.12"
+HRL,BALANCE SHEET,Liabilities,Total Liabilities,"9,446,014.35"
+HRL,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"25,767,536.24"
+HRL,PROFIT & LOSS ACCOUNT,Income,Gross Earned Premiums,"4,313,903.23"
+HRL,PROFIT & LOSS ACCOUNT,Income,Premium Ceded,"274,295.54"
+HRL,PROFIT & LOSS ACCOUNT,Income,Net Earned Premiums,"4,039,607.69"
+HRL,PROFIT & LOSS ACCOUNT,Income,Commission Income,0.00
+HRL,PROFIT & LOSS ACCOUNT,Income,Other Direct Income,"57,946.21"
+HRL,PROFIT & LOSS ACCOUNT,Income,Income from Investments and Loans,"621,272.78"
+HRL,PROFIT & LOSS ACCOUNT,Income,Net Gain/(Loss) of Fair Value Changes,0.00
+HRL,PROFIT & LOSS ACCOUNT,Income,Net Realized Gains/(Losses),0.00
+HRL,PROFIT & LOSS ACCOUNT,Income,Other Income,"9,328.52"
+HRL,PROFIT & LOSS ACCOUNT,Income,Total Income,"4,728,155.20"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Gross Claims Paid,"1,333,465.05"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Claims Ceded,0.00
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Gross Change in Contract Liabilities,"2,447,901.82"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Change in Contract Liabilities Ceded to Reinsurers,"-264,674.10"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Net Benefits and Claims Paid,"3,516,692.77"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Commission Expenses,"854,432.22"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Service Fees,"35,756.70"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Other Direct Expenses,"160,676.56"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"137,946.21"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Depreciation and Amortization Expenses,"34,132.48"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Impairment Losses,0.00
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,"166,200.05"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Finance Cost,"1,571.69"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"4,907,408.67"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/ (Loss) Before Share of Net Profits of Associates,"-179,253.47"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Share of Net Profit of Associates,0.00
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"-179,253.47"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Income Tax Expenses,"-134,900.63"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/(Loss) for The Year,"-44,352.83"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Other Comprehensive Income,"-534,544.94"
+HRL,PROFIT & LOSS ACCOUNT,Expenses,Total Comprehensive Income,"-578,897.77"
+HRL,RATIO ANALYSIS,General,Net Premium/Gross Premium (%),93.64
+HRL,RATIO ANALYSIS,General,Net Profit/Gross Premium (%),-1.03
+HRL,RATIO ANALYSIS,General,Return on Invested Capital (%),0.00
+HRL,KEY RATIOS,General,Annualized Earning Per Share (Rs.),-0.54
+HRL,KEY RATIOS,General,P/E Ratio (times),0.00
+HRL,KEY RATIOS,General,Networth per share (Rs.),150.18
+HRL,KEY RATIOS,General,Price to Book Ratio,4.94
+HRL,KEY RATIOS,General,Return on Equity (ROE %),0.00
+HRL,KEY RATIOS,General,Return on Assets (ROA %),0.00
+HRL,KEY RATIOS,General,Solvency Ratio,3.52
+HRL,OTHERS,General,Total Issued Policy Count,0.00
+HRL,OTHERS,General,Total Renewed Policy Count,0.00
+HRL,OTHERS,General,Total Claims Paid Count,0.00
+HRL,OTHERS,General,Outstanding Claims Count,0.00
+HRL,OTHERS,General,Long Term Investments ('000'),"12,371,401.68"
+HRL,OTHERS,General,Short Term Investments ('000'),"4,911,055.30"

@@ -1,0 +1,978 @@
+{
+  "symbol": "HRL",
+  "companyName": "Himalayan Reinsurance Limited",
+  "sector": "Others",
+  "companyId": "1119",
+  "scrapedAt": "2026-11-27T08:30:55.325Z",
+  "sourceUrl": "https://www.sharesansar.com/company/hrl",
+  "periods": [
+    "3rd Quarter 2082/2083"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "3rd Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "Assets",
+          "isSectionHeader": true,
+          "particulars": "Assets",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Goodwill & Intangible Assets",
+          "values": [
+            "33,751.48"
+          ],
+          "numericValues": [
+            33751.48
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Property and Equipment",
+          "values": [
+            "79,057.23"
+          ],
+          "numericValues": [
+            79057.23
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Investment Properties",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Deferred Tax Assets",
+          "values": [
+            "637,420.69"
+          ],
+          "numericValues": [
+            637420.69
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Investment in Subsidiaries",
+          "values": [
+            "1,050,000.00"
+          ],
+          "numericValues": [
+            1050000
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Investment in Associates",
+          "values": [
+            "113,700.17"
+          ],
+          "numericValues": [
+            113700.17
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Investments",
+          "values": [
+            "16,118,756.82"
+          ],
+          "numericValues": [
+            16118756.82
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Loans",
+          "values": [
+            "16,070.11"
+          ],
+          "numericValues": [
+            16070.11
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Reinsurance Assets",
+          "values": [
+            "563,716.77"
+          ],
+          "numericValues": [
+            563716.77
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Current Tax Assets",
+          "values": [
+            "220,710.30"
+          ],
+          "numericValues": [
+            220710.3
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Insurance Receivables",
+          "values": [
+            "1,632,037.43"
+          ],
+          "numericValues": [
+            1632037.43
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Other Assets",
+          "values": [
+            "3,354,345.93"
+          ],
+          "numericValues": [
+            3354345.93
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Other Financial Assets",
+          "values": [
+            "415,423.84"
+          ],
+          "numericValues": [
+            415423.84
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Cash and Cash Equivalent",
+          "values": [
+            "1,532,546.06"
+          ],
+          "numericValues": [
+            1532546.06
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Total Assets",
+          "values": [
+            "25,767,536.84"
+          ],
+          "numericValues": [
+            25767536.84
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": true,
+          "particulars": "Equity",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Share Capital",
+          "values": [
+            "10,868,000.00"
+          ],
+          "numericValues": [
+            10868000
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Share Application Money Pending Allotment",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Share Premium",
+          "values": [
+            "3,122,706.32"
+          ],
+          "numericValues": [
+            3122706.32
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Special Reserve",
+          "values": [
+            "2,019,322.23"
+          ],
+          "numericValues": [
+            2019322.23
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Catastrophe Reserve",
+          "values": [
+            "203,293.71"
+          ],
+          "numericValues": [
+            203293.71
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Retained Earnings",
+          "values": [
+            "691,613.99"
+          ],
+          "numericValues": [
+            691613.99
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Other Equity",
+          "values": [
+            "-583,414.35"
+          ],
+          "numericValues": [
+            -583414.35
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Total Equity",
+          "values": [
+            "16,321,521.89"
+          ],
+          "numericValues": [
+            16321521.89
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": true,
+          "particulars": "Liabilities",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Provisions",
+          "values": [
+            "22,218.18"
+          ],
+          "numericValues": [
+            22218.18
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Gross Insurance Contract Liabilities",
+          "values": [
+            "8,993,963.67"
+          ],
+          "numericValues": [
+            8993963.67
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Deferred Tax Liabilities",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Insurance Payable",
+          "values": [
+            "231,321.36"
+          ],
+          "numericValues": [
+            231321.36
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Current Tax Liabilities",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Borrowings",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Other Liabilities",
+          "values": [
+            "25,409.02"
+          ],
+          "numericValues": [
+            25409.02
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Other Financial Liabilities",
+          "values": [
+            "173,102.12"
+          ],
+          "numericValues": [
+            173102.12
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Total Liabilities",
+          "values": [
+            "9,446,014.35"
+          ],
+          "numericValues": [
+            9446014.35
+          ]
+        },
+        {
+          "section": "Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Total Equity and Liabilities",
+          "values": [
+            "25,767,536.24"
+          ],
+          "numericValues": [
+            25767536.24
+          ]
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "3rd Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "Income",
+          "isSectionHeader": true,
+          "particulars": "Income",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Gross Earned Premiums",
+          "values": [
+            "4,313,903.23"
+          ],
+          "numericValues": [
+            4313903.23
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Premium Ceded",
+          "values": [
+            "274,295.54"
+          ],
+          "numericValues": [
+            274295.54
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Net Earned Premiums",
+          "values": [
+            "4,039,607.69"
+          ],
+          "numericValues": [
+            4039607.69
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Commission Income",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Other Direct Income",
+          "values": [
+            "57,946.21"
+          ],
+          "numericValues": [
+            57946.21
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Income from Investments and Loans",
+          "values": [
+            "621,272.78"
+          ],
+          "numericValues": [
+            621272.78
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Net Gain/(Loss) of Fair Value Changes",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Net Realized Gains/(Losses)",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Other Income",
+          "values": [
+            "9,328.52"
+          ],
+          "numericValues": [
+            9328.52
+          ]
+        },
+        {
+          "section": "Income",
+          "isSectionHeader": false,
+          "particulars": "Total Income",
+          "values": [
+            "4,728,155.20"
+          ],
+          "numericValues": [
+            4728155.2
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": true,
+          "particulars": "Expenses",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Gross Claims Paid",
+          "values": [
+            "1,333,465.05"
+          ],
+          "numericValues": [
+            1333465.05
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Claims Ceded",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Gross Change in Contract Liabilities",
+          "values": [
+            "2,447,901.82"
+          ],
+          "numericValues": [
+            2447901.82
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Change in Contract Liabilities Ceded to Reinsurers",
+          "values": [
+            "-264,674.10"
+          ],
+          "numericValues": [
+            -264674.1
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Net Benefits and Claims Paid",
+          "values": [
+            "3,516,692.77"
+          ],
+          "numericValues": [
+            3516692.77
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Commission Expenses",
+          "values": [
+            "854,432.22"
+          ],
+          "numericValues": [
+            854432.22
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Service Fees",
+          "values": [
+            "35,756.70"
+          ],
+          "numericValues": [
+            35756.7
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Other Direct Expenses",
+          "values": [
+            "160,676.56"
+          ],
+          "numericValues": [
+            160676.56
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Employee Benefits Expenses",
+          "values": [
+            "137,946.21"
+          ],
+          "numericValues": [
+            137946.21
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Depreciation and Amortization Expenses",
+          "values": [
+            "34,132.48"
+          ],
+          "numericValues": [
+            34132.48
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Impairment Losses",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Other Operating Expenses",
+          "values": [
+            "166,200.05"
+          ],
+          "numericValues": [
+            166200.05
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Finance Cost",
+          "values": [
+            "1,571.69"
+          ],
+          "numericValues": [
+            1571.69
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Total Expenses",
+          "values": [
+            "4,907,408.67"
+          ],
+          "numericValues": [
+            4907408.67
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Net Profit/ (Loss) Before Share of Net Profits of Associates",
+          "values": [
+            "-179,253.47"
+          ],
+          "numericValues": [
+            -179253.47
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Share of Net Profit of Associates",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Profit Before Tax",
+          "values": [
+            "-179,253.47"
+          ],
+          "numericValues": [
+            -179253.47
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Income Tax Expenses",
+          "values": [
+            "-134,900.63"
+          ],
+          "numericValues": [
+            -134900.63
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Net Profit/(Loss) for The Year",
+          "values": [
+            "-44,352.83"
+          ],
+          "numericValues": [
+            -44352.83
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Other Comprehensive Income",
+          "values": [
+            "-534,544.94"
+          ],
+          "numericValues": [
+            -534544.94
+          ]
+        },
+        {
+          "section": "Expenses",
+          "isSectionHeader": false,
+          "particulars": "Total Comprehensive Income",
+          "values": [
+            "-578,897.77"
+          ],
+          "numericValues": [
+            -578897.77
+          ]
+        }
+      ]
+    },
+    {
+      "key": "ratioanalysis",
+      "title": "RATIO ANALYSIS",
+      "headers": [
+        "Particulars",
+        "3rd Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net Premium/Gross Premium (%)",
+          "values": [
+            "93.64"
+          ],
+          "numericValues": [
+            93.64
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net Profit/Gross Premium (%)",
+          "values": [
+            "-1.03"
+          ],
+          "numericValues": [
+            -1.03
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Invested Capital (%)",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "key": "keyratios",
+      "title": "KEY RATIOS",
+      "headers": [
+        "Particulars",
+        "3rd Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Annualized Earning Per Share (Rs.)",
+          "values": [
+            "-0.54"
+          ],
+          "numericValues": [
+            -0.54
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "P/E Ratio (times)",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Networth per share (Rs.)",
+          "values": [
+            "150.18"
+          ],
+          "numericValues": [
+            150.18
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Price to Book Ratio",
+          "values": [
+            "4.94"
+          ],
+          "numericValues": [
+            4.94
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Equity (ROE %)",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Assets (ROA %)",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Solvency Ratio",
+          "values": [
+            "3.52"
+          ],
+          "numericValues": [
+            3.52
+          ]
+        }
+      ]
+    },
+    {
+      "key": "others",
+      "title": "OTHERS",
+      "headers": [
+        "Particulars",
+        "3rd Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Issued Policy Count",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Renewed Policy Count",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Total Claims Paid Count",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Outstanding Claims Count",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Long Term Investments ('000')",
+          "values": [
+            "12,371,401.68"
+          ],
+          "numericValues": [
+            12371401.68
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Short Term Investments ('000')",
+          "values": [
+            "4,911,055.30"
+          ],
+          "numericValues": [
+            4911055.3
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+GBBL,BALANCE SHEET,General,Cash and cash equivalent,"3,023,360.28"
+GBBL,BALANCE SHEET,General,Due from Nepal Rastra Bank,"8,219,063.89"
+GBBL,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+GBBL,BALANCE SHEET,General,Derivative financial instruments,0.00
+GBBL,BALANCE SHEET,General,Other trading assets,0.00
+GBBL,BALANCE SHEET,General,Loan and advances to B/FIs,"3,127,332.77"
+GBBL,BALANCE SHEET,General,Loans and advances to customers,"80,229,200.13"
+GBBL,BALANCE SHEET,General,Investment securities,"17,065,825.09"
+GBBL,BALANCE SHEET,General,Current tax assets,0.00
+GBBL,BALANCE SHEET,General,Investment in subsidiaries,"123,900.00"
+GBBL,BALANCE SHEET,General,Investment in associates,0.00
+GBBL,BALANCE SHEET,General,Investment property,"634,718.98"
+GBBL,BALANCE SHEET,General,Property and equipment,"1,796,046.80"
+GBBL,BALANCE SHEET,General,Goodwill and Intangible assets,"100,346.22"
+GBBL,BALANCE SHEET,General,Deferred tax assets,"79,647.98"
+GBBL,BALANCE SHEET,General,Other assets,"853,556.82"
+GBBL,BALANCE SHEET,General,Total Assets,"115,252,998.93"
+GBBL,BALANCE SHEET,General,Due to Bank and Financial Institutions,"899,907.89"
+GBBL,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+GBBL,BALANCE SHEET,General,Derivative financial instruments,0.00
+GBBL,BALANCE SHEET,General,Deposits from customers,"101,535,693.31"
+GBBL,BALANCE SHEET,General,Borrowing,0.00
+GBBL,BALANCE SHEET,General,Current Tax Liabilities,"62,482.39"
+GBBL,BALANCE SHEET,General,Provisions,0.00
+GBBL,BALANCE SHEET,General,Deferred tax liabilities,0.00
+GBBL,BALANCE SHEET,General,Other liabilities,"1,447,094.19"
+GBBL,BALANCE SHEET,General,Debt securities issued,"996,682.33"
+GBBL,BALANCE SHEET,General,Subordinated Liabilities,0.00
+GBBL,BALANCE SHEET,General,Total liabilities,"104,941,860.10"
+GBBL,BALANCE SHEET,General,Share capital,"6,623,483.20"
+GBBL,BALANCE SHEET,General,Share premium,0.00
+GBBL,BALANCE SHEET,General,Retained earnings,"83,278.30"
+GBBL,BALANCE SHEET,General,Reserves,"3,604,377.32"
+GBBL,BALANCE SHEET,General,Total equity,"10,311,138.83"
+GBBL,BALANCE SHEET,General,Total liabilities and equity,"115,252,998.93"
+GBBL,PROFIT & LOSS ACCOUNT,General,Interest income,"1,821,733.49"
+GBBL,PROFIT & LOSS ACCOUNT,General,Interest expense,"900,919.22"
+GBBL,PROFIT & LOSS ACCOUNT,General,Net interest income,"920,814.27"
+GBBL,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"152,785.06"
+GBBL,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,290.99
+GBBL,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"152,494.08"
+GBBL,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","1,073,308.34"
+GBBL,PROFIT & LOSS ACCOUNT,General,Net trading income,"5,885.92"
+GBBL,PROFIT & LOSS ACCOUNT,General,Other operating income,-22.92
+GBBL,PROFIT & LOSS ACCOUNT,General,Total operating income,"1,079,171.34"
+GBBL,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"254,291.58"
+GBBL,PROFIT & LOSS ACCOUNT,General,Net operating income,"824,879.76"
+GBBL,PROFIT & LOSS ACCOUNT,General,Personnel expense,"293,188.79"
+GBBL,PROFIT & LOSS ACCOUNT,General,Other operating expense,"160,823.18"
+GBBL,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"28,765.56"
+GBBL,PROFIT & LOSS ACCOUNT,General,Operating Profit,"342,102.23"
+GBBL,PROFIT & LOSS ACCOUNT,General,Non operating income,932.31
+GBBL,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"343,034.54"
+GBBL,PROFIT & LOSS ACCOUNT,General,Current Tax,"102,910.39"
+GBBL,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Profit for the period,"240,124.15"
+GBBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+GBBL,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax","-11,452.48"
+GBBL,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"228,671.68"
+GBBL,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),14.50
+GBBL,KEY METRICS,General,Diluted Earnings Per Share,14.50
+GBBL,KEY METRICS,General,Capital fund to RWA,12.84
+GBBL,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,4.81
+GBBL,KEY METRICS,General,Total Loan loss provision to Total NPL,104.09
+GBBL,KEY METRICS,General,Cost of Funds,3.46
+GBBL,KEY METRICS,General,Credit to Deposit Ratio,84.18
+GBBL,KEY METRICS,General,Base Rate,5.18
+GBBL,KEY METRICS,General,Interest Spread Rate,4.05
+GBBL,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"10,311,138.83"
+GBBL,KEY METRICS,General,No. of Outstanding Shares,"66,234,832.04"
+GBBL,KEY METRICS,General,Net Worth Per Share,155.68
+GBBL,KEY METRICS,General,P/E Ratio,28.62
+GBBL,KEY METRICS,General,Price to Book (P/B) Ratio,2.67
+GBBL,KEY METRICS,General,Return on Equity,9.32
+GBBL,KEY METRICS,General,Return on Assets,0.83

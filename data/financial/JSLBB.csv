@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+JSLBB,BALANCE SHEET,General,Cash and cash equivalent,"165,680.28"
+JSLBB,BALANCE SHEET,General,Statutory Balances and Due from NRB,"11,266.83"
+JSLBB,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+JSLBB,BALANCE SHEET,General,Derivative financial instruments,0.00
+JSLBB,BALANCE SHEET,General,Other trading assets,0.00
+JSLBB,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+JSLBB,BALANCE SHEET,General,Loans and advances to customers,"2,032,429.23"
+JSLBB,BALANCE SHEET,General,Investment securities,0.00
+JSLBB,BALANCE SHEET,General,Current tax assets,"3,466.32"
+JSLBB,BALANCE SHEET,General,Investment in subsidiaries,0.00
+JSLBB,BALANCE SHEET,General,Investment in associates,0.00
+JSLBB,BALANCE SHEET,General,Investment property,0.00
+JSLBB,BALANCE SHEET,General,Property and equipment,"23,187.70"
+JSLBB,BALANCE SHEET,General,Goodwill and Intangible assets,146.90
+JSLBB,BALANCE SHEET,General,Deferred tax assets,"27,779.24"
+JSLBB,BALANCE SHEET,General,Other assets,"25,394.94"
+JSLBB,BALANCE SHEET,General,Total Assets,"2,289,351.43"
+JSLBB,BALANCE SHEET,General,Due to Bank and Financial Institutions,0.00
+JSLBB,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+JSLBB,BALANCE SHEET,General,Derivative financial instruments,0.00
+JSLBB,BALANCE SHEET,General,Deposits from customers,"1,055,434.33"
+JSLBB,BALANCE SHEET,General,Borrowing,"846,969.23"
+JSLBB,BALANCE SHEET,General,Current Tax Liabilities,0.00
+JSLBB,BALANCE SHEET,General,Provisions,"24,057.49"
+JSLBB,BALANCE SHEET,General,Deferred tax liabilities,0.00
+JSLBB,BALANCE SHEET,General,Other liabilities,"76,545.43"
+JSLBB,BALANCE SHEET,General,Debt securities issued,0.00
+JSLBB,BALANCE SHEET,General,Subordinated Liabilities,0.00
+JSLBB,BALANCE SHEET,General,Total liabilities,"2,003,006.48"
+JSLBB,BALANCE SHEET,General,Share capital,"170,091.90"
+JSLBB,BALANCE SHEET,General,Share premium,0.00
+JSLBB,BALANCE SHEET,General,Retained earnings,"-7,518.77"
+JSLBB,BALANCE SHEET,General,Reserves,"123,771.81"
+JSLBB,BALANCE SHEET,General,Total equity,"286,344.94"
+JSLBB,BALANCE SHEET,General,Total liabilities and equity,"2,289,351.43"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Interest income,"65,753.92"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Interest expense,"31,854.65"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Net interest income,"33,899.27"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"5,044.20"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,71.96
+JSLBB,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"4,972.24"
+JSLBB,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","38,871.50"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Other operating income,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Total operating income,"38,871.50"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"11,435.53"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Net operating income,"27,435.97"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Personnel expense,"21,926.42"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Other operating expense,"6,319.99"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"1,984.40"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Operating Profit,"-2,794.84"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Non operating income,"7,756.18"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Non operating expense,"15,664.65"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"-10,703.31"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Current Tax,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Profit for the period,"-10,703.31"
+JSLBB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+JSLBB,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"-10,703.31"
+JSLBB,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),-6.29
+JSLBB,KEY METRICS,General,Diluted Earnings Per Share,-6.29
+JSLBB,KEY METRICS,General,Capital fund to RWA,8.24
+JSLBB,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,19.15
+JSLBB,KEY METRICS,General,Total Loan loss provision to Total NPL,40.64
+JSLBB,KEY METRICS,General,Cost of Funds,6.39
+JSLBB,KEY METRICS,General,Credit to Deposit Ratio,113.65
+JSLBB,KEY METRICS,General,Base Rate,12.83
+JSLBB,KEY METRICS,General,Interest Spread Rate,6.66
+JSLBB,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"286,344.94"
+JSLBB,KEY METRICS,General,No. of Outstanding Shares,"1,700,919.00"
+JSLBB,KEY METRICS,General,Net Worth Per Share,168.35
+JSLBB,KEY METRICS,General,P/E Ratio,0.00
+JSLBB,KEY METRICS,General,Price to Book (P/B) Ratio,0.00
+JSLBB,KEY METRICS,General,Return on Equity,0.00
+JSLBB,KEY METRICS,General,Return on Assets,0.00

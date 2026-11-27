@@ -1,11 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Flame } from 'lucide-react';
 import { AlgorithmExplainPanel } from '../components/AlgorithmExplainPanel';
-import { TurnoverScatterChart } from '../components/Charts';
 import { createWatchlistColumn, DataTable, type ColumnDef } from '../components/DataTable';
+import {
+  buildDirectionUniverse,
+  DirectionAhaStrip,
+  FlowBattlegroundCharts,
+  SectorCapitalFlowChart,
+  TurnoverDirectionMatrix,
+  type DirectionEnrichedRow,
+} from '../components/direction/TurnoverDirectionVisuals';
 import { PeriodPicker, resolvePeriodRange, type PeriodMode } from '../components/PeriodPicker';
 import { ALGORITHM_DOCS } from '../data/algorithmDocs';
 import { useWatchlist } from '../hooks/useWatchlist';
+import type { AnalyzerScanResponse, AnalyzerScanRow } from '../types/analyzer';
+import type { ScreenedCompanyRow, ScreenerOverviewResponse } from '../types/fundamental';
 import type { RangeSummaryRow } from '../types/market';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
 
@@ -13,12 +22,18 @@ interface TurnoverDirectionViewProps {
   dates: string[];
   equityOnly: boolean;
   onInspectSymbol: (symbol: string) => void;
+  onInspectInQuant?: (symbol: string) => void;
+  onInspectInAnalyzer?: (symbol: string) => void;
 }
+
+type TableLens = 'all' | 'dual' | 'inst' | 'clean';
 
 export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
   dates,
   equityOnly,
   onInspectSymbol,
+  onInspectInQuant,
+  onInspectInAnalyzer,
 }) => {
   const [mode, setMode] = useState<PeriodMode>(dates.length >= 5 ? 'last5' : 'last1');
   const [customStart, setCustomStart] = useState(
@@ -28,6 +43,7 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
   const [topPct, setTopPct] = useState(10);
   const [consistent, setConsistent] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [tableLens, setTableLens] = useState<TableLens>('all');
   const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
 
   const [data, setData] = useState<{
@@ -38,6 +54,8 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
     upTurnover: number;
     downTurnover: number;
   }>({ all: [], up: [], down: [], cutoff: 0, upTurnover: 0, downTurnover: 0 });
+  const [fundamentalRows, setFundamentalRows] = useState<ScreenedCompanyRow[]>([]);
+  const [analyzerRows, setAnalyzerRows] = useState<AnalyzerScanRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   const resolved = resolvePeriodRange(dates, mode, customStart, customEnd);
@@ -84,7 +102,68 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
     };
   }, [resolved?.start, resolved?.end, topPct, consistent, equityOnly]);
 
+  // Fetch Fundamental Screener + Technical ICT/SMC/Wyckoff scan for confluence enrichment
+  useEffect(() => {
+    const asOf = resolved?.end;
+    if (!asOf) return;
+    let cancelled = false;
+    Promise.all([
+      fetch(`/api/screener/overview?equityOnly=${equityOnly}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      fetch(
+        `/api/analyzer/scan?asOf=${encodeURIComponent(
+          asOf
+        )}&tf=1D&minGrade=C&equityOnly=${equityOnly}`
+      )
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+    ]).then(([fundData, techData]: [ScreenerOverviewResponse | null, AnalyzerScanResponse | null]) => {
+      if (cancelled) return;
+      setFundamentalRows(fundData?.rows ?? []);
+      setAnalyzerRows(techData?.rows ?? []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [resolved?.end, equityOnly]);
+
+  const enrichedUniverse = useMemo(
+    () =>
+      buildDirectionUniverse(
+        data.all,
+        data.up,
+        data.down,
+        data.cutoff,
+        fundamentalRows,
+        analyzerRows
+      ),
+    [data.all, data.up, data.down, data.cutoff, fundamentalRows, analyzerRows]
+  );
+
+  const enrichedMap = useMemo(
+    () => new Map(enrichedUniverse.map((it) => [it.symbol, it])),
+    [enrichedUniverse]
+  );
+
+  const filterEnrichedList = (rows: RangeSummaryRow[]) => {
+    return rows.filter((r) => {
+      const en = enrichedMap.get(r.symbol.toUpperCase());
+      if (!en) return tableLens === 'all';
+      if (tableLens === 'dual') return en.isDualConfluence || en.isQualityPullback;
+      if (tableLens === 'inst') return en.isInstitutionalTicket;
+      if (tableLens === 'clean') return !en.isBlockWarning;
+      return true;
+    });
+  };
+
+  const filteredUp = useMemo(() => filterEnrichedList(data.up), [data.up, enrichedMap, tableLens]);
+  const filteredDown = useMemo(() => filterEnrichedList(data.down), [data.down, enrichedMap, tableLens]);
+
   const topLeader = data.up[0] ?? null;
+  const topLeaderEnriched: DirectionEnrichedRow | null = topLeader
+    ? enrichedMap.get(topLeader.symbol.toUpperCase()) ?? null
+    : null;
   const totalFlowTurn = data.upTurnover + data.downTurnover;
   const upSharePct = totalFlowTurn > 0 ? Math.round((data.upTurnover / totalFlowTurn) * 100) : 50;
 
@@ -98,9 +177,17 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
       key: 'symbol',
       label: 'Symbol',
       align: 'left',
-      render: (r) => (
-        <span className="font-semibold text-blue-600 dark:text-blue-400">{r.symbol}</span>
-      ),
+      render: (r) => {
+        const en = enrichedMap.get(r.symbol.toUpperCase());
+        return (
+          <div className="flex flex-col">
+            <span className="font-semibold text-blue-600 dark:text-blue-400">{r.symbol}</span>
+            {en?.sector && (
+              <span className="text-[10px] text-slate-400 truncate max-w-[95px]">{en.sector}</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'flow_tag',
@@ -132,13 +219,80 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
         const sc = r.momentum_score ?? 0;
         return (
           <div className="inline-flex items-center gap-1.5 justify-end">
-            <div className="w-10 h-1.5 bg-slate-200 dark:bg-slate-800 rounded overflow-hidden">
+            <div className="w-9 h-1.5 bg-slate-200 dark:bg-slate-800 rounded overflow-hidden">
               <div
                 className={`h-full ${dir === 'up' ? 'bg-emerald-600' : 'bg-red-600'}`}
                 style={{ width: `${Math.min(100, Math.max(0, sc))}%` }}
               />
             </div>
             <span className="font-semibold">{sc.toFixed(0)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'fund',
+      label: 'Fund / MoS',
+      align: 'right',
+      sortValue: (r) => enrichedMap.get(r.symbol.toUpperCase())?.fundScore ?? -1,
+      csvValue: (r) => enrichedMap.get(r.symbol.toUpperCase())?.fundScore?.toFixed(1) ?? '',
+      render: (r) => {
+        const en = enrichedMap.get(r.symbol.toUpperCase());
+        if (!en || en.fundScore === null) {
+          return <span className="text-slate-400">–</span>;
+        }
+        const mos = en.fundamental?.keyMetrics.marginOfSafetyPct;
+        return (
+          <div className="font-mono tabular-nums text-right">
+            <span
+              className={`font-semibold ${
+                en.fundScore >= 60
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : en.fundScore >= 45
+                    ? 'text-slate-700 dark:text-slate-300'
+                    : 'text-red-600 dark:text-red-400'
+              }`}
+            >
+              {en.fundScore.toFixed(0)}
+            </span>
+            {mos !== null && mos !== undefined && (
+              <span className="block text-[10px] text-slate-400">
+                {mos > 0 ? '+' : ''}
+                {mos.toFixed(0)}% MoS
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'tech',
+      label: 'ICT Setup',
+      align: 'right',
+      sortValue: (r) => enrichedMap.get(r.symbol.toUpperCase())?.techScore ?? -1,
+      csvValue: (r) => {
+        const t = enrichedMap.get(r.symbol.toUpperCase())?.technical;
+        return t ? `${t.grade} (${t.rrT2.toFixed(1)}R)` : '';
+      },
+      render: (r) => {
+        const t = enrichedMap.get(r.symbol.toUpperCase())?.technical;
+        if (!t) return <span className="text-slate-400">–</span>;
+        return (
+          <div className="font-mono tabular-nums text-right">
+            <span
+              className={`font-semibold ${
+                t.grade === 'A'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : t.grade === 'B'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              {t.grade} · {t.rrT2.toFixed(1)}R
+            </span>
+            <span className="block text-[10px] text-slate-400 truncate max-w-[76px]">
+              {t.strategy}
+            </span>
           </div>
         );
       },
@@ -197,10 +351,10 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Turnover × Direction — Momentum &amp; Distribution Finder
+            Turnover × Direction — Momentum, Flow Conviction &amp; Confluence Engine
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Isolates the top {topPct}% most liquid stocks and ranks true momentum leaders by turnover dominance, price gain, green-day consistency, VWAP control, and trend alignment
+            Isolates the top {topPct}% most liquid stocks and fuses tape conviction, institutional ticket size, quarterly fundamentals, and ICT/Wyckoff setups
           </p>
         </div>
 
@@ -324,14 +478,35 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
                   <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                     <Flame className="w-4 h-4" />
                     <span>#1 Momentum Pick: {topLeader.symbol}</span>
+                    {topLeaderEnriched?.fundScore !== null && topLeaderEnriched?.fundScore !== undefined && (
+                      <span className="font-mono text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                        · Fund {topLeaderEnriched.fundScore.toFixed(0)}/100
+                      </span>
+                    )}
+                    {topLeaderEnriched?.technical && (
+                      <span className="font-mono text-[11px] font-normal text-amber-600 dark:text-amber-400">
+                        · ICT {topLeaderEnriched.technical.grade} ({topLeaderEnriched.technical.rrT2.toFixed(1)}R)
+                      </span>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onInspectSymbol(topLeader.symbol)}
-                    className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Inspect chart →
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {onInspectInAnalyzer && (
+                      <button
+                        type="button"
+                        onClick={() => onInspectInAnalyzer(topLeader.symbol)}
+                        className="text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                      >
+                        Analyzer
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onInspectSymbol(topLeader.symbol)}
+                      className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Inspect chart →
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   <span className="font-semibold text-slate-900 dark:text-slate-100">
@@ -399,27 +574,84 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
       )}
 
       {loading ? (
-        <div className="h-80 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
+        <div className="space-y-4">
+          <div className="h-24 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
+          <div className="h-96 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
+        </div>
       ) : (
         <>
-          <TurnoverScatterChart
-            all={data.all}
-            up={data.up}
-            down={data.down}
+          {/* 4-Pillar Aha! Intelligence Strip */}
+          {enrichedUniverse.length > 0 && (
+            <DirectionAhaStrip
+              items={enrichedUniverse}
+              topPct={topPct}
+              onInspectSymbol={onInspectSymbol}
+            />
+          )}
+
+          {/* Hero Interactive Multi-Lens Matrix + 3-Pillar Dossier */}
+          <TurnoverDirectionMatrix
+            items={enrichedUniverse}
             cutoff={data.cutoff}
-            onSelectSymbol={onInspectSymbol}
+            topPct={topPct}
+            onInspectSymbol={onInspectSymbol}
+            onInspectInAnalyzer={onInspectInAnalyzer}
+            onInspectInQuant={onInspectInQuant}
           />
+
+          {/* Capital Flow Battleground & Institutional Footprint Pair */}
+          <FlowBattlegroundCharts
+            items={enrichedUniverse}
+            topPct={topPct}
+            onInspectSymbol={onInspectSymbol}
+          />
+
+          {/* Sector Net Flow & Fundamental Quality Map */}
+          <SectorCapitalFlowChart
+            items={enrichedUniverse}
+            onInspectSymbol={onInspectSymbol}
+          />
+
+          {/* Table Lens Filter Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-slate-500 dark:text-slate-400 font-medium mr-1">
+                Table Lens:
+              </span>
+              {(
+                [
+                  ['all', 'All Top Turnover'],
+                  ['dual', 'Dual Confluence / Pullbacks'],
+                  ['inst', 'Institutional Ticket (≥2.5L)'],
+                  ['clean', 'Clean Flow (No Block)'],
+                ] as const
+              ).map(([k, lbl]) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setTableLens(k)}
+                  className={`px-2.5 py-1 rounded border transition-colors ${
+                    tableLens === k
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium'
+                      : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+                  }`}
+                >
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="space-y-2">
               <div className="flex items-baseline justify-between">
                 <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                  Momentum &amp; Accumulation Leaders ({data.up.length})
+                  Momentum &amp; Accumulation Leaders ({filteredUp.length})
                 </h3>
                 <span className="text-[11px] text-slate-400">Sorted by Momentum Score</span>
               </div>
               <DataTable
-                rows={data.up}
+                rows={filteredUp}
                 columns={makeCols('up')}
                 rowKey={(r) => r.symbol}
                 onRowClick={(r) => onInspectSymbol(r.symbol)}
@@ -432,12 +664,12 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
             <div className="space-y-2">
               <div className="flex items-baseline justify-between">
                 <h3 className="text-sm font-semibold text-red-700 dark:text-red-400">
-                  Heavy Distribution &amp; Supply ({data.down.length})
+                  Heavy Distribution &amp; Supply ({filteredDown.length})
                 </h3>
                 <span className="text-[11px] text-slate-400">Sorted by Pressure Score</span>
               </div>
               <DataTable
-                rows={data.down}
+                rows={filteredDown}
                 columns={makeCols('down')}
                 rowKey={(r) => r.symbol}
                 onRowClick={(r) => onInspectSymbol(r.symbol)}

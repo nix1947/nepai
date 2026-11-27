@@ -1,0 +1,64 @@
+{
+  "symbol": "SYPNL",
+  "companyName": "SY Panel Nepal Limited",
+  "sector": "Manufacturing and Processing",
+  "companyId": "1355",
+  "scrapedAt": "2026-11-27T08:29:47.885Z",
+  "sourceUrl": "https://www.sharesansar.com/company/sypnl",
+  "periods": [
+    "Duration"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "keymetrics",
+      "title": "KEY METRICS",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    }
+  ]
+}

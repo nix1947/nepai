@@ -359,7 +359,7 @@ export const QuantPortfolioJournalTab: React.FC<QuantPortfolioJournalTabProps> =
       <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="text-slate-600 dark:text-slate-300">
           <strong className="text-slate-900 dark:text-slate-100">Paper Trading &amp; Risk Monitor Only:</strong>{' '}
-          Tracks hypothetical paper entries against real ShareSansar EOD closes with exact SEBON broker slabs &amp; {(config.costs.cgtRate * 100).toFixed(1)}% CGT. Strictly forbids widening stop-losses.
+          Tracks hypothetical paper entries against real EOD closes with exact SEBON broker slabs &amp; {(config.costs.cgtRate * 100).toFixed(1)}% CGT. Strictly forbids widening stop-losses.
         </div>
         <button
           type="button"

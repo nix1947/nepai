@@ -1534,7 +1534,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           <span>
             Scroll/pinch to zoom · Drag to pan · Use drawing tools &amp; collapsible TA sidebar · Toggle Full Screen for terminal view
           </span>
-          <span>TradingView Lightweight Charts (Open-Source · ShareSansar EOD NEPSE Data)</span>
+          <span>TradingView Lightweight Charts (Open-Source · EOD NEPSE Data)</span>
         </div>
       )}
     </div>

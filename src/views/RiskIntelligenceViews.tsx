@@ -468,7 +468,7 @@ export const TechnicallyRiskyView: React.FC<SharedRiskViewProps> = ({
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Deterministic ShareSansar screening across {settings.lookbackDays}-day rolling
+            Deterministic screening across {settings.lookbackDays}-day rolling
             breakdowns: MA120/MA180 structure, selling pressure, support breaks, negative
             volume-price divergence &amp; volatility
           </p>
@@ -771,7 +771,7 @@ export const CompositeDoNotBuyView: React.FC<SharedRiskViewProps> = ({
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Composite risk matrix combining verified Fundamental/Regulatory Red Flags (55%),
-            Technical Breakdown ({settings.lookbackDays}d ShareSansar, 30%), and Liquidity &amp;
+            Technical Breakdown ({settings.lookbackDays}d EOD, 30%), and Liquidity &amp;
             Governance Risk (15%)
           </p>
         </div>
@@ -1041,7 +1041,7 @@ export const MarketOpportunityVsRiskView: React.FC<SharedRiskViewProps> = ({
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Compares fundamental strength, ShareSansar technical confirmation, and macro tailwinds
+            Compares fundamental strength, technical confirmation, and macro tailwinds
             against safer Nepal Bank FD, Treasury Bill, and Government Bond yields
           </p>
         </div>

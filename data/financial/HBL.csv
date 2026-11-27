@@ -1,0 +1,87 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+HBL,BALANCE SHEET,General,Cash and cash equivalent,"14,665,866.80"
+HBL,BALANCE SHEET,General,Due from Nepal Rastra Bank,"50,940,895.14"
+HBL,BALANCE SHEET,General,Placement with Bank and Financial Institutions,"29,310,537.75"
+HBL,BALANCE SHEET,General,Derivative financial instruments,"258,263.28"
+HBL,BALANCE SHEET,General,Other trading assets,0.00
+HBL,BALANCE SHEET,General,Loan and advances to B/FIs,"11,741,448.32"
+HBL,BALANCE SHEET,General,Loans and advances to customers,"232,362,076.75"
+HBL,BALANCE SHEET,General,Investment securities,"54,390,894.26"
+HBL,BALANCE SHEET,General,Current tax assets,"211,331.18"
+HBL,BALANCE SHEET,General,Investment in subsidiaries,"1,060,063.20"
+HBL,BALANCE SHEET,General,Investment in associates,"35,508.95"
+HBL,BALANCE SHEET,General,Investment property,"6,369,126.62"
+HBL,BALANCE SHEET,General,Property and equipment,"7,889,085.65"
+HBL,BALANCE SHEET,General,Goodwill and Intangible assets,"1,032,122.02"
+HBL,BALANCE SHEET,General,Deferred tax assets,"4,224,888.85"
+HBL,BALANCE SHEET,General,Other assets,"6,661,663.78"
+HBL,BALANCE SHEET,General,Total Assets,"421,153,772.55"
+HBL,BALANCE SHEET,General,Due to Bank and Financial Institutions,"7,144,028.09"
+HBL,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+HBL,BALANCE SHEET,General,Derivative financial instruments,"2,112.44"
+HBL,BALANCE SHEET,General,Deposits from customers,"353,654,347.87"
+HBL,BALANCE SHEET,General,Borrowing,0.00
+HBL,BALANCE SHEET,General,Current Tax Liabilities,0.00
+HBL,BALANCE SHEET,General,Provisions,0.00
+HBL,BALANCE SHEET,General,Deferred tax liabilities,0.00
+HBL,BALANCE SHEET,General,Other liabilities,"13,983,326.50"
+HBL,BALANCE SHEET,General,Debt securities issued,"5,628,403.07"
+HBL,BALANCE SHEET,General,Subordinated Liabilities,0.00
+HBL,BALANCE SHEET,General,Total liabilities,"380,412,217.96"
+HBL,BALANCE SHEET,General,Share capital,"22,581,662.53"
+HBL,BALANCE SHEET,General,Share premium,"527,276.73"
+HBL,BALANCE SHEET,General,Retained earnings,"-9,798,508.51"
+HBL,BALANCE SHEET,General,Reserves,"27,431,123.83"
+HBL,BALANCE SHEET,General,Total equity,"40,741,554.59"
+HBL,BALANCE SHEET,General,Total liabilities and equity,"421,153,772.55"
+HBL,PROFIT & LOSS ACCOUNT,General,Interest income,"5,469,411.38"
+HBL,PROFIT & LOSS ACCOUNT,General,Interest expense,"3,270,778.40"
+HBL,PROFIT & LOSS ACCOUNT,General,Net interest income,"2,198,632.98"
+HBL,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"293,030.71"
+HBL,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,"44,592.73"
+HBL,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"248,437.99"
+HBL,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","2,447,070.97"
+HBL,PROFIT & LOSS ACCOUNT,General,Net trading income,"206,400.34"
+HBL,PROFIT & LOSS ACCOUNT,General,Other operating income,"108,962.01"
+HBL,PROFIT & LOSS ACCOUNT,General,Total operating income,"2,762,433.32"
+HBL,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"353,144.06"
+HBL,PROFIT & LOSS ACCOUNT,General,Net operating income,"2,409,289.26"
+HBL,PROFIT & LOSS ACCOUNT,General,Personnel expense,"889,075.65"
+HBL,PROFIT & LOSS ACCOUNT,General,Other operating expense,"414,388.35"
+HBL,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"100,394.64"
+HBL,PROFIT & LOSS ACCOUNT,General,Operating Profit,"1,005,430.61"
+HBL,PROFIT & LOSS ACCOUNT,General,Non operating income,"7,915.97"
+HBL,PROFIT & LOSS ACCOUNT,General,Non operating expense,"81,457.89"
+HBL,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"931,888.69"
+HBL,PROFIT & LOSS ACCOUNT,General,Current Tax,"304,914.79"
+HBL,PROFIT & LOSS ACCOUNT,General,Deferred Tax,"-27,857.97"
+HBL,PROFIT & LOSS ACCOUNT,General,Profit for the period,"654,831.87"
+HBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+HBL,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax","1,433.90"
+HBL,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"656,265.77"
+HBL,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),11.60
+HBL,KEY METRICS,General,Diluted Earnings Per Share,11.60
+HBL,KEY METRICS,General,Capital fund to RWA,11.19
+HBL,KEY METRICS,General,Tier I Capital to RWA,8.03
+HBL,KEY METRICS,General,CET I Capital to RWA,8.03
+HBL,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,6.48
+HBL,KEY METRICS,General,Total Loan loss provision to Total NPL,121.31
+HBL,KEY METRICS,General,Cost of Funds,3.48
+HBL,KEY METRICS,General,Credit to Deposit Ratio,71.46
+HBL,KEY METRICS,General,Base Rate,5.04
+HBL,KEY METRICS,General,Interest Spread Rate,2.78
+HBL,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"40,741,554.59"
+HBL,KEY METRICS,General,No. of Outstanding Shares,"225,816,625.32"
+HBL,KEY METRICS,General,Net Worth Per Share,180.42
+HBL,KEY METRICS,General,P/E Ratio,17.67
+HBL,KEY METRICS,General,Price to Book (P/B) Ratio,1.14
+HBL,KEY METRICS,General,Return on Equity,6.43
+HBL,KEY METRICS,General,Return on Assets,0.62

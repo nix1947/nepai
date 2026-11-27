@@ -1,0 +1,59 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+MKCL,BALANCE SHEET,Non-Current Assets,"Plant, Property and Equipment","197,540.72"
+MKCL,BALANCE SHEET,Non-Current Assets,Intangible Assets,"5,059.08"
+MKCL,BALANCE SHEET,Non-Current Assets,Trade and Other Receivables,0.00
+MKCL,BALANCE SHEET,Non-Current Assets,Investment,"424,412.41"
+MKCL,BALANCE SHEET,Non-Current Assets,Other Non-Currents Assets,0.00
+MKCL,BALANCE SHEET,Non-Current Assets,Total Non-Current Assets,"627,012.20"
+MKCL,BALANCE SHEET,Current Assets,Inventories,"320,660.68"
+MKCL,BALANCE SHEET,Current Assets,Trade and Other Receivables,"813,247.52"
+MKCL,BALANCE SHEET,Current Assets,Investment,0.00
+MKCL,BALANCE SHEET,Current Assets,Income Tax Assets,"12,794.07"
+MKCL,BALANCE SHEET,Current Assets,Prepayments/ Advances and Deposits,"2,042.56"
+MKCL,BALANCE SHEET,Current Assets,Cash & Cash Equivalents,"3,545.80"
+MKCL,BALANCE SHEET,Current Assets,Deferred Tax Assets,"25,483.12"
+MKCL,BALANCE SHEET,Current Assets,Other Current Assets,0.00
+MKCL,BALANCE SHEET,Current Assets,Total Current Assets,"1,177,773.75"
+MKCL,BALANCE SHEET,Current Assets,Total Assets,"1,804,785.95"
+MKCL,BALANCE SHEET,Equity,Equity Share Capital,"756,000.00"
+MKCL,BALANCE SHEET,Equity,Other Equity,"52,644.73"
+MKCL,BALANCE SHEET,Equity,Total Equity,"808,644.73"
+MKCL,BALANCE SHEET,Non Current Liabilities,Borrowings,0.00
+MKCL,BALANCE SHEET,Non Current Liabilities,Deferred Tax Liabilities,0.00
+MKCL,BALANCE SHEET,Non Current Liabilities,Total Non-Current Liabilities,0.00
+MKCL,BALANCE SHEET,Current Liabilities,Trade and Other Financial Liabilities,"461,675.04"
+MKCL,BALANCE SHEET,Current Liabilities,Provisions,"6,368.43"
+MKCL,BALANCE SHEET,Current Liabilities,Short Term Loan,"520,777.25"
+MKCL,BALANCE SHEET,Current Liabilities,Other Current Liabilities,"7,320.51"
+MKCL,BALANCE SHEET,Current Liabilities,Total Current Liabilities,"996,141.22"
+MKCL,BALANCE SHEET,Current Liabilities,Total Equity and Liabilities,"1,804,785.95"
+MKCL,PROFIT & LOSS ACCOUNT,General,Revenue from Operation,"276,874.22"
+MKCL,PROFIT & LOSS ACCOUNT,General,Cost of Goods Sold,"232,096.89"
+MKCL,PROFIT & LOSS ACCOUNT,General,Gross Profit,"44,777.33"
+MKCL,PROFIT & LOSS ACCOUNT,General,Other Income,"12,956.35"
+MKCL,PROFIT & LOSS ACCOUNT,General,Total Income,"57,733.68"
+MKCL,PROFIT & LOSS ACCOUNT,General,Personnel Expenses,"14,819.75"
+MKCL,PROFIT & LOSS ACCOUNT,General,Other Operating Expenses,"9,063.39"
+MKCL,PROFIT & LOSS ACCOUNT,General,Finance Expenses,"5,099.75"
+MKCL,PROFIT & LOSS ACCOUNT,General,Depreciation and Amortization Expenses,"4,333.22"
+MKCL,PROFIT & LOSS ACCOUNT,General,Total Operating Expenses,"33,316.12"
+MKCL,PROFIT & LOSS ACCOUNT,General,Non Operating (Income)/ Expenses,0.00
+MKCL,PROFIT & LOSS ACCOUNT,General,Total Expenses,"33,316.12"
+MKCL,PROFIT & LOSS ACCOUNT,General,Profit Before Income Tax,"24,417.57"
+MKCL,PROFIT & LOSS ACCOUNT,General,Current Tax,"6,104.39"
+MKCL,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+MKCL,PROFIT & LOSS ACCOUNT,General,Total Tax Expenses,"6,104.39"
+MKCL,PROFIT & LOSS ACCOUNT,General,Net Profit for the Year,"18,313.18"
+MKCL,RATIO ANALYSIS,General,Gross Profit Margin,16.17
+MKCL,RATIO ANALYSIS,General,Net Profit Margin,6.61
+MKCL,RATIO ANALYSIS,General,Inventory Turnover (times),0.86
+MKCL,RATIO ANALYSIS,General,Total Debt ('000),"520,777.25"
+MKCL,KEY RATIOS,General,Networth per Share (Rs.),106.96
+MKCL,KEY RATIOS,General,Earning Per Share annualized(Rs.),9.69
+MKCL,KEY RATIOS,General,Price to Earning Ratio (times),77.40
+MKCL,KEY RATIOS,General,Price to Book ratio(times),0.45
+MKCL,KEY RATIOS,General,Return on Equity (%),9.06
+MKCL,KEY RATIOS,General,Return on Asset (%),4.06
+MKCL,KEY RATIOS,General,Total Shareholder''s Equity ('000),"808,644.73"
+MKCL,KEY RATIOS,General,No. of Outstanding Share,"7,560,000.00"
+MKCL,KEY RATIOS,General,Total Assets Value Per Share (in Rs),238.73

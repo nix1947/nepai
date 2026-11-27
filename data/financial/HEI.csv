@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+HEI,BALANCE SHEET,Assets,Goodwill & Intangible Assets,"17,445.33"
+HEI,BALANCE SHEET,Assets,Property and Equipment,"1,229,799.53"
+HEI,BALANCE SHEET,Assets,Investment Properties,0.00
+HEI,BALANCE SHEET,Assets,Deferred Tax Assets,0.00
+HEI,BALANCE SHEET,Assets,Investment in Subsidiaries,0.00
+HEI,BALANCE SHEET,Assets,Investment in Associates,0.00
+HEI,BALANCE SHEET,Assets,Investments,"4,914,143.00"
+HEI,BALANCE SHEET,Assets,Loans,0.00
+HEI,BALANCE SHEET,Assets,Reinsurance Assets,"10,624,991.74"
+HEI,BALANCE SHEET,Assets,Current Tax Assets,"441,353.04"
+HEI,BALANCE SHEET,Assets,Insurance Receivables,"149,355.04"
+HEI,BALANCE SHEET,Assets,Other Assets,"571,322.63"
+HEI,BALANCE SHEET,Assets,Other Financial Assets,"103,746.31"
+HEI,BALANCE SHEET,Assets,Cash and Cash Equivalent,"539,053.18"
+HEI,BALANCE SHEET,Assets,Total Assets,"18,591,209.78"
+HEI,BALANCE SHEET,Equity,Share Capital,"2,500,157.40"
+HEI,BALANCE SHEET,Equity,Share Application Money Pending Allotment,0.00
+HEI,BALANCE SHEET,Equity,Share Premium,0.00
+HEI,BALANCE SHEET,Equity,Special Reserve,"2,029,161.18"
+HEI,BALANCE SHEET,Equity,Catastrophe Reserve,"93,792.62"
+HEI,BALANCE SHEET,Equity,Retained Earnings,"-92,672.15"
+HEI,BALANCE SHEET,Equity,Other Equity,"265,947.07"
+HEI,BALANCE SHEET,Equity,Total Equity,"4,796,386.11"
+HEI,BALANCE SHEET,Liabilities,Provisions,"21,871.44"
+HEI,BALANCE SHEET,Liabilities,Gross Insurance Contract Liabilities,"12,765,403.16"
+HEI,BALANCE SHEET,Liabilities,Deferred Tax Liabilities,"25,920.45"
+HEI,BALANCE SHEET,Liabilities,Insurance Payable,"541,543.38"
+HEI,BALANCE SHEET,Liabilities,Current Tax Liabilities,0.00
+HEI,BALANCE SHEET,Liabilities,Borrowings,0.00
+HEI,BALANCE SHEET,Liabilities,Other Liabilities,"333,306.02"
+HEI,BALANCE SHEET,Liabilities,Other Financial Liabilities,"106,779.21"
+HEI,BALANCE SHEET,Liabilities,Total Liabilities,"13,794,823.65"
+HEI,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"18,591,209.77"
+HEI,PROFIT & LOSS ACCOUNT,Income,Gross Earned Premiums,"776,319.07"
+HEI,PROFIT & LOSS ACCOUNT,Income,Premium Ceded,"-500,021.87"
+HEI,PROFIT & LOSS ACCOUNT,Income,Net Earned Premiums,"276,297.21"
+HEI,PROFIT & LOSS ACCOUNT,Income,Commission Income,"135,377.70"
+HEI,PROFIT & LOSS ACCOUNT,Income,Other Direct Income,0.00
+HEI,PROFIT & LOSS ACCOUNT,Income,Income from Investments and Loans,"36,212.78"
+HEI,PROFIT & LOSS ACCOUNT,Income,Net Gain/(Loss) of Fair Value Changes,"-6,755.19"
+HEI,PROFIT & LOSS ACCOUNT,Income,Net Realized Gains/(Losses),463.61
+HEI,PROFIT & LOSS ACCOUNT,Income,Other Income,"9,476.74"
+HEI,PROFIT & LOSS ACCOUNT,Income,Total Income,"451,072.84"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Gross Claims Paid,"518,297.78"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Claims Ceded,"-180,815.43"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Gross Change in Contract Liabilities,"6,878,851.43"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Change in Contract Liabilities Ceded to Reinsurers,"-6,441,089.06"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Net Benefits and Claims Paid,"775,244.72"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Commission Expenses,"17,395.52"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Service Fees,"5,038.74"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Other Direct Expenses,842.22
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"157,159.61"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Depreciation and Amortization Expenses,"13,033.05"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Impairment Losses,0.00
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,"55,450.69"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Finance Cost,0.00
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"1,024,164.54"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/ (Loss) Before Share of Net Profits of Associates,"-573,091.69"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Share of Net Profit of Associates,0.00
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"-573,091.69"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Income Tax Expenses,"-171,927.51"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/(Loss) for The Year,"-401,164.18"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Other Comprehensive Income,"-10,090.30"
+HEI,PROFIT & LOSS ACCOUNT,Expenses,Total Comprehensive Income,"-411,254.49"
+HEI,RATIO ANALYSIS,General,Net Premium To Gross Premium (in %),35.59
+HEI,RATIO ANALYSIS,General,Net Profit To Gross Premium (in %),-51.68
+HEI,RATIO ANALYSIS,General,Gross Premium To Total Assets (Annualized) (in %),16.70
+HEI,RATIO ANALYSIS,General,Agent Commission To Gross Premium (in %),2.24
+HEI,RATIO ANALYSIS,General,No. of Unpaid Claims To No. of Policies (in %),9.38
+HEI,KEY RATIOS,General,Earning Per Share (EPS),-16.05
+HEI,KEY RATIOS,General,Price Earning Ratio (PE ratio),0.00
+HEI,KEY RATIOS,General,Networth per share (Rs.),191.84
+HEI,KEY RATIOS,General,Price to Book Ratio,2.06
+HEI,KEY RATIOS,General,Return on Equity (ROE %),0.00
+HEI,KEY RATIOS,General,Return on Assets (ROA %),0.00
+HEI,KEY RATIOS,General,Solvency Ratio,3.94
+HEI,OTHERS,General,Total Issue Policy,"101,825.00"
+HEI,OTHERS,General,Total Renewed Policy,"21,795.00"
+HEI,OTHERS,General,Total Claims Paid Count,"4,969.00"
+HEI,OTHERS,General,Gross Written Premium ('000'),0.00
+HEI,OTHERS,General,Outstanding Claims Count,"9,550.00"
+HEI,OTHERS,General,Long Term Investments ('000'),"1,420,856.73"
+HEI,OTHERS,General,Short Term Investments ('000'),"3,493,286.27"
+HEI,OTHERS,General,Total Assets per Share,743.60

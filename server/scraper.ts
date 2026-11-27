@@ -191,7 +191,7 @@ export class ShareSansarClient {
         signal: controller.signal,
       });
       if (!res.ok) {
-        throw new Error(`ShareSansar returned HTTP ${res.status}`);
+        throw new Error(`Market feed returned HTTP ${res.status}`);
       }
       const html = await res.text();
       const $ = cheerio.load(html);
@@ -210,11 +210,11 @@ export class ShareSansarClient {
     const session = await this.initSession();
     const dateStr = extractDateFromHtml(session.latestHtml);
     if (!dateStr) {
-      throw new Error('Could not determine the trading date from ShareSansar page.');
+      throw new Error('Could not determine the trading date from market feed page.');
     }
     const rows = parsePriceTable(session.latestHtml, dateStr);
     if (rows.length === 0) {
-      throw new Error(`ShareSansar returned 0 rows for ${dateStr}.`);
+      throw new Error(`Market feed returned 0 rows for ${dateStr}.`);
     }
     return { date: dateStr, rows };
   }
@@ -228,7 +228,7 @@ export class ShareSansarClient {
     }
     const session = existingSession ?? (await this.initSession());
     if (!session.token) {
-      throw new Error('Could not extract ShareSansar CSRF token for historical query.');
+      throw new Error('Could not extract CSRF token for historical query.');
     }
 
     const body = new URLSearchParams({
@@ -255,7 +255,7 @@ export class ShareSansarClient {
       });
 
       if (!res.ok) {
-        throw new Error(`ShareSansar AJAX returned HTTP ${res.status} for ${dateStr}`);
+        throw new Error(`Market feed AJAX returned HTTP ${res.status} for ${dateStr}`);
       }
 
       const html = await res.text();

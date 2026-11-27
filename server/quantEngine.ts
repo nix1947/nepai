@@ -842,7 +842,7 @@ function validateMarketData(
     const vwapSource: SymbolDataQuality['vwapSource'] = !lastBar
       ? 'Unavailable'
       : lastBar.vwap !== null && lastBar.vwap > 0
-        ? 'ShareSansar EOD VWAP'
+        ? 'EOD VWAP'
         : lastBar.volume > 0 && lastBar.turnover > 0
           ? 'OHLCV-Derived Approximation'
           : 'Unavailable';
@@ -1163,7 +1163,7 @@ function buildCausalMarketRegimeSeries(
   rationale.push(
     lastPt?.sma200
       ? `Proxy is ${lastPt.equalWeightedIndex >= lastPt.sma200 ? 'above' : 'below'} its 200-day SMA (${lastPt.sma200.toFixed(1)}).`
-      : `SMA(200) requires 200 sessions (${datesUpTo.length} loaded); using ShareSansar MA120/MA180 breadth (${latestBreadth120}% > MA120, ${latestBreadth180}% > MA180) as long-term proxy.`
+      : `SMA(200) requires 200 sessions (${datesUpTo.length} loaded); using MA120/MA180 breadth (${latestBreadth120}% > MA120, ${latestBreadth180}% > MA180) as long-term proxy.`
   );
   rationale.push(
     `Breadth: ${latestBreadth20}% of equities above SMA20, A/D ratio ${lastPt?.adRatio ?? 1} (${latestAdv} advancers / ${latestDec} decliners).`
@@ -2230,8 +2230,8 @@ export function runQuantBacktest(
         'Out-of-Sample & Walk-Forward Validation: In-sample (60%) vs Out-of-sample (40%) split plus rolling walk-forward folds.',
       ],
       limitations: [
-        `Loaded dataset spans ${datesUpTo.length} NEPSE sessions (${datesUpTo[0] || 'N/A'} → ${asOfDate}). Multi-year statistical validation improves as more historical ShareSansar sessions are backfilled.`,
-        'ShareSansar EOD CSV provides daily OHLCV and official daily VWAP (or OHLCV-derived fallback); intraday order-book depth and bid-ask spreads are not available.',
+        `Loaded dataset spans ${datesUpTo.length} NEPSE sessions (${datesUpTo[0] || 'N/A'} → ${asOfDate}). Multi-year statistical validation improves as more historical sessions are backfilled.`,
+        'EOD CSV provides daily OHLCV and official daily VWAP (or OHLCV-derived fallback); intraday order-book depth and bid-ask spreads are not available.',
         'Historical win rate and expectancy reflect past behavior over this dataset and NEVER guarantee future probabilities.',
       ],
     },
@@ -2257,7 +2257,7 @@ export function runQuantAnalysis(
     opts?.asOf && allDates.includes(opts.asOf) ? opts.asOf : allDates[allDates.length - 1] || '';
 
   if (!asOfDate) {
-    throw new Error('No ShareSansar trading sessions loaded in data directory.');
+    throw new Error('No trading sessions loaded in data directory.');
   }
 
   const datesUpTo = allDates.filter((d) => d <= asOfDate);
@@ -2896,7 +2896,7 @@ export function runQuantAnalysis(
       name,
       sector,
       asOfDate,
-      dataTimestamp: `${asOfDate} ShareSansar EOD`,
+      dataTimestamp: `${asOfDate} EOD`,
       dataQuality: updatedDq,
       fundamentalStatus,
       horizonTag,
@@ -3008,7 +3008,7 @@ export function runQuantAnalysis(
   return {
     generatedAt: new Date().toISOString(),
     asOfDate,
-    dataTimestamp: `${asOfDate} ShareSansar EOD`,
+    dataTimestamp: `${asOfDate} EOD`,
     config,
     dataQuality,
     marketRegime: latestRegime,

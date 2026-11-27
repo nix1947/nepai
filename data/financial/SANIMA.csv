@@ -1,0 +1,87 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+SANIMA,BALANCE SHEET,General,Cash and cash equivalent,"17,846,568.29"
+SANIMA,BALANCE SHEET,General,Due from Nepal Rastra Bank,"13,206,299.61"
+SANIMA,BALANCE SHEET,General,Placement with Bank and Financial Institutions,"12,303,484.99"
+SANIMA,BALANCE SHEET,General,Derivative financial instruments,"245,638.04"
+SANIMA,BALANCE SHEET,General,Other trading assets,"619,620.02"
+SANIMA,BALANCE SHEET,General,Loan and advances to B/FIs,"8,062,951.99"
+SANIMA,BALANCE SHEET,General,Loans and advances to customers,"199,366,998.43"
+SANIMA,BALANCE SHEET,General,Investment securities,"40,022,856.52"
+SANIMA,BALANCE SHEET,General,Current tax assets,0.00
+SANIMA,BALANCE SHEET,General,Investment in subsidiaries,"450,000.00"
+SANIMA,BALANCE SHEET,General,Investment in associates,0.00
+SANIMA,BALANCE SHEET,General,Investment property,"1,316,865.41"
+SANIMA,BALANCE SHEET,General,Property and equipment,"1,303,374.61"
+SANIMA,BALANCE SHEET,General,Goodwill and Intangible assets,"186,827.16"
+SANIMA,BALANCE SHEET,General,Deferred tax assets,"218,982.49"
+SANIMA,BALANCE SHEET,General,Other assets,"2,808,901.78"
+SANIMA,BALANCE SHEET,General,Total Assets,"297,959,369.31"
+SANIMA,BALANCE SHEET,General,Due to Bank and Financial Institutions,"3,271,658.01"
+SANIMA,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+SANIMA,BALANCE SHEET,General,Derivative financial instruments,0.00
+SANIMA,BALANCE SHEET,General,Deposits from customers,"254,109,867.39"
+SANIMA,BALANCE SHEET,General,Borrowing,0.00
+SANIMA,BALANCE SHEET,General,Current Tax Liabilities,"380,789.15"
+SANIMA,BALANCE SHEET,General,Provisions,"68,491.18"
+SANIMA,BALANCE SHEET,General,Deferred tax liabilities,0.00
+SANIMA,BALANCE SHEET,General,Other liabilities,"3,542,638.36"
+SANIMA,BALANCE SHEET,General,Debt securities issued,"9,386,178.50"
+SANIMA,BALANCE SHEET,General,Subordinated Liabilities,0.00
+SANIMA,BALANCE SHEET,General,Total liabilities,"270,759,622.59"
+SANIMA,BALANCE SHEET,General,Share capital,"15,581,525.41"
+SANIMA,BALANCE SHEET,General,Share premium,0.00
+SANIMA,BALANCE SHEET,General,Retained earnings,"2,036,399.61"
+SANIMA,BALANCE SHEET,General,Reserves,"9,580,821.70"
+SANIMA,BALANCE SHEET,General,Total equity,"27,198,746.73"
+SANIMA,BALANCE SHEET,General,Total liabilities and equity,"297,958,369.32"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Interest income,"4,059,783.02"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Interest expense,"2,212,207.88"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Net interest income,"1,847,575.14"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"483,471.88"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,"35,638.84"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"447,833.04"
+SANIMA,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","2,295,408.19"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Net trading income,"360,930.07"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Other operating income,"393,827.16"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Total operating income,"3,050,165.41"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"330,976.20"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Net operating income,"2,719,189.21"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Personnel expense,"613,050.45"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Other operating expense,"300,568.01"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"60,010.56"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Operating Profit,"1,745,560.20"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Non operating income,655.73
+SANIMA,PROFIT & LOSS ACCOUNT,General,Non operating expense,"255,701.43"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"1,490,514.51"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Current Tax,"439,046.10"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Profit for the period,"1,051,468.41"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+SANIMA,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax","-35,483.71"
+SANIMA,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"1,015,984.69"
+SANIMA,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),26.11
+SANIMA,KEY METRICS,General,Diluted Earnings Per Share,26.11
+SANIMA,KEY METRICS,General,Capital fund to RWA,12.37
+SANIMA,KEY METRICS,General,Tier I Capital to RWA,9.70
+SANIMA,KEY METRICS,General,CET I Capital to RWA,8.88
+SANIMA,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,2.86
+SANIMA,KEY METRICS,General,Total Loan loss provision to Total NPL,136.71
+SANIMA,KEY METRICS,General,Cost of Funds,3.35
+SANIMA,KEY METRICS,General,Credit to Deposit Ratio,78.65
+SANIMA,KEY METRICS,General,Base Rate,4.60
+SANIMA,KEY METRICS,General,Interest Spread Rate,3.17
+SANIMA,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"27,198,746.73"
+SANIMA,KEY METRICS,General,No. of Outstanding Shares,"135,815,254.14"
+SANIMA,KEY METRICS,General,Net Worth Per Share,185.54
+SANIMA,KEY METRICS,General,P/E Ratio,15.05
+SANIMA,KEY METRICS,General,Price to Book (P/B) Ratio,2.12
+SANIMA,KEY METRICS,General,Return on Equity,14.07
+SANIMA,KEY METRICS,General,Return on Assets,1.41

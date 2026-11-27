@@ -92,7 +92,7 @@ export interface SymbolDataQuality {
   staleConsecutiveDays: number;
   anomalousBarCount: number;
   corporateActionSuspectCount: number;
-  vwapSource: 'ShareSansar EOD VWAP' | 'OHLCV-Derived Approximation' | 'Unavailable';
+  vwapSource: 'EOD VWAP' | 'OHLCV-Derived Approximation' | 'Unavailable';
   reasons: string[];
 }
 
@@ -218,7 +218,7 @@ export interface StockIndicatorsSnapshot {
   atrPct: number | null;
   adx14: number | null;
   vwap: number | null;
-  vwapSource: 'ShareSansar EOD VWAP' | 'OHLCV-Derived Approximation' | 'Unavailable';
+  vwapSource: 'EOD VWAP' | 'OHLCV-Derived Approximation' | 'Unavailable';
   vwapPct: number | null;
   vwapRising: boolean | null;
   return10dPct: number | null;

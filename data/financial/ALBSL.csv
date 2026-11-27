@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+ALBSL,BALANCE SHEET,General,Cash and cash equivalent,"437,942.66"
+ALBSL,BALANCE SHEET,General,Statutory Balances and Due from NRB,"54,480.52"
+ALBSL,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+ALBSL,BALANCE SHEET,General,Derivative financial instruments,0.00
+ALBSL,BALANCE SHEET,General,Other trading assets,0.00
+ALBSL,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+ALBSL,BALANCE SHEET,General,Loans and advances to customers,"11,689,430.94"
+ALBSL,BALANCE SHEET,General,Investment securities,710.00
+ALBSL,BALANCE SHEET,General,Current tax assets,0.00
+ALBSL,BALANCE SHEET,General,Investment in subsidiaries,0.00
+ALBSL,BALANCE SHEET,General,Investment in associates,0.00
+ALBSL,BALANCE SHEET,General,Investment property,"1,335.76"
+ALBSL,BALANCE SHEET,General,Property and equipment,"30,643.33"
+ALBSL,BALANCE SHEET,General,Goodwill and Intangible assets,"12,292.45"
+ALBSL,BALANCE SHEET,General,Deferred tax assets,"22,952.20"
+ALBSL,BALANCE SHEET,General,Other assets,"54,843.24"
+ALBSL,BALANCE SHEET,General,Total Assets,"12,304,631.09"
+ALBSL,BALANCE SHEET,General,Due to Bank and Financial Institutions,0.00
+ALBSL,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+ALBSL,BALANCE SHEET,General,Derivative financial instruments,0.00
+ALBSL,BALANCE SHEET,General,Deposits from customers,"3,911,529.81"
+ALBSL,BALANCE SHEET,General,Borrowing,"6,711,352.89"
+ALBSL,BALANCE SHEET,General,Current Tax Liabilities,"4,806.17"
+ALBSL,BALANCE SHEET,General,Provisions,0.00
+ALBSL,BALANCE SHEET,General,Deferred tax liabilities,0.00
+ALBSL,BALANCE SHEET,General,Other liabilities,"256,082.94"
+ALBSL,BALANCE SHEET,General,Debt securities issued,0.00
+ALBSL,BALANCE SHEET,General,Subordinated Liabilities,0.00
+ALBSL,BALANCE SHEET,General,Total liabilities,"10,883,771.81"
+ALBSL,BALANCE SHEET,General,Share capital,"802,685.68"
+ALBSL,BALANCE SHEET,General,Share premium,0.00
+ALBSL,BALANCE SHEET,General,Retained earnings,"222,803.61"
+ALBSL,BALANCE SHEET,General,Reserves,"395,370.00"
+ALBSL,BALANCE SHEET,General,Total equity,"1,420,859.28"
+ALBSL,BALANCE SHEET,General,Total liabilities and equity,"12,304,631.09"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Interest income,"364,013.11"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Interest expense,"160,287.51"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Net interest income,"203,725.60"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"24,577.20"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,115.16
+ALBSL,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"24,462.04"
+ALBSL,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","228,187.64"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Other operating income,"4,731.56"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Total operating income,"232,919.20"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"79,217.88"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Net operating income,"153,701.32"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Personnel expense,"87,298.52"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Other operating expense,"35,865.51"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"1,937.09"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Operating Profit,"28,600.21"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Non operating income,120.95
+ALBSL,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"28,721.16"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Current Tax,"8,616.63"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Profit for the period,"20,104.52"
+ALBSL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+ALBSL,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"20,104.52"
+ALBSL,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),10.02
+ALBSL,KEY METRICS,General,Diluted Earnings Per Share,10.02
+ALBSL,KEY METRICS,General,Capital fund to RWA,10.91
+ALBSL,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,42.39
+ALBSL,KEY METRICS,General,Total Loan loss provision to Total NPL,14.43
+ALBSL,KEY METRICS,General,Cost of Funds,5.97
+ALBSL,KEY METRICS,General,Credit to Deposit Ratio,116.00
+ALBSL,KEY METRICS,General,Base Rate,10.83
+ALBSL,KEY METRICS,General,Interest Spread Rate,8.53
+ALBSL,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"1,420,859.28"
+ALBSL,KEY METRICS,General,No. of Outstanding Shares,"8,026,856.77"
+ALBSL,KEY METRICS,General,Net Worth Per Share,177.01
+ALBSL,KEY METRICS,General,P/E Ratio,108.10
+ALBSL,KEY METRICS,General,Price to Book (P/B) Ratio,6.12
+ALBSL,KEY METRICS,General,Return on Equity,5.66
+ALBSL,KEY METRICS,General,Return on Assets,0.65

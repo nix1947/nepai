@@ -825,7 +825,7 @@ export const AlgorithmsView: React.FC<AlgorithmsViewProps> = ({
           <div className="space-y-4">
             {!latestDate ? (
               <div className="text-xs text-slate-500 py-6 text-center">
-                Pull at least 1 ShareSansar session to trace live NEPSE calculations.
+                Pull at least 1 session to trace live NEPSE calculations.
               </div>
             ) : loadingLive ? (
               <div className="h-44 animate-pulse bg-slate-100 dark:bg-slate-800 rounded-md" />

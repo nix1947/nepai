@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+ILBS,BALANCE SHEET,General,Cash and cash equivalent,"260,436.06"
+ILBS,BALANCE SHEET,General,Statutory Balances and Due from NRB,24.57
+ILBS,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+ILBS,BALANCE SHEET,General,Derivative financial instruments,0.00
+ILBS,BALANCE SHEET,General,Other trading assets,0.00
+ILBS,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+ILBS,BALANCE SHEET,General,Loans and advances to customers,"5,968,823.45"
+ILBS,BALANCE SHEET,General,Investment securities,"1,000.00"
+ILBS,BALANCE SHEET,General,Current tax assets,0.00
+ILBS,BALANCE SHEET,General,Investment in subsidiaries,0.00
+ILBS,BALANCE SHEET,General,Investment in associates,0.00
+ILBS,BALANCE SHEET,General,Investment property,"2,600.00"
+ILBS,BALANCE SHEET,General,Property and equipment,"63,181.14"
+ILBS,BALANCE SHEET,General,Goodwill and Intangible assets,"6,175.31"
+ILBS,BALANCE SHEET,General,Deferred tax assets,"11,686.08"
+ILBS,BALANCE SHEET,General,Other assets,"77,210.33"
+ILBS,BALANCE SHEET,General,Total Assets,"6,391,136.94"
+ILBS,BALANCE SHEET,General,Due to Bank and Financial Institutions,0.00
+ILBS,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+ILBS,BALANCE SHEET,General,Derivative financial instruments,0.00
+ILBS,BALANCE SHEET,General,Deposits from customers,"1,524,973.39"
+ILBS,BALANCE SHEET,General,Borrowing,"3,697,713.62"
+ILBS,BALANCE SHEET,General,Current Tax Liabilities,"22,812.53"
+ILBS,BALANCE SHEET,General,Provisions,"18,118.00"
+ILBS,BALANCE SHEET,General,Deferred tax liabilities,0.00
+ILBS,BALANCE SHEET,General,Other liabilities,"298,779.60"
+ILBS,BALANCE SHEET,General,Debt securities issued,0.00
+ILBS,BALANCE SHEET,General,Subordinated Liabilities,0.00
+ILBS,BALANCE SHEET,General,Total liabilities,"5,562,397.15"
+ILBS,BALANCE SHEET,General,Share capital,"497,415.94"
+ILBS,BALANCE SHEET,General,Share premium,0.00
+ILBS,BALANCE SHEET,General,Retained earnings,"80,420.77"
+ILBS,BALANCE SHEET,General,Reserves,"250,902.14"
+ILBS,BALANCE SHEET,General,Total equity,"828,738.85"
+ILBS,BALANCE SHEET,General,Total liabilities and equity,"6,391,136.00"
+ILBS,PROFIT & LOSS ACCOUNT,General,Interest income,"192,272.43"
+ILBS,PROFIT & LOSS ACCOUNT,General,Interest expense,"75,636.41"
+ILBS,PROFIT & LOSS ACCOUNT,General,Net interest income,"116,636.02"
+ILBS,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"18,550.23"
+ILBS,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,26.01
+ILBS,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"18,524.22"
+ILBS,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","135,160.24"
+ILBS,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Other operating income,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Total operating income,"135,160.24"
+ILBS,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"15,377.37"
+ILBS,PROFIT & LOSS ACCOUNT,General,Net operating income,"119,782.86"
+ILBS,PROFIT & LOSS ACCOUNT,General,Personnel expense,"64,185.15"
+ILBS,PROFIT & LOSS ACCOUNT,General,Other operating expense,"16,017.10"
+ILBS,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"4,343.40"
+ILBS,PROFIT & LOSS ACCOUNT,General,Operating Profit,"35,237.21"
+ILBS,PROFIT & LOSS ACCOUNT,General,Non operating income,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"35,237.21"
+ILBS,PROFIT & LOSS ACCOUNT,General,Current Tax,"10,571.16"
+ILBS,PROFIT & LOSS ACCOUNT,General,Deferred Tax,112.65
+ILBS,PROFIT & LOSS ACCOUNT,General,Profit for the period,"24,553.40"
+ILBS,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+ILBS,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"24,553.40"
+ILBS,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),19.74
+ILBS,KEY METRICS,General,Diluted Earnings Per Share,19.74
+ILBS,KEY METRICS,General,Capital fund to RWA,10.98
+ILBS,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,13.22
+ILBS,KEY METRICS,General,Total Loan loss provision to Total NPL,37.91
+ILBS,KEY METRICS,General,Cost of Funds,5.82
+ILBS,KEY METRICS,General,Credit to Deposit Ratio,117.32
+ILBS,KEY METRICS,General,Base Rate,12.40
+ILBS,KEY METRICS,General,Interest Spread Rate,8.76
+ILBS,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"828,738.85"
+ILBS,KEY METRICS,General,No. of Outstanding Shares,"4,974,159.42"
+ILBS,KEY METRICS,General,Net Worth Per Share,166.61
+ILBS,KEY METRICS,General,P/E Ratio,46.94
+ILBS,KEY METRICS,General,Price to Book (P/B) Ratio,5.56
+ILBS,KEY METRICS,General,Return on Equity,11.85
+ILBS,KEY METRICS,General,Return on Assets,1.54

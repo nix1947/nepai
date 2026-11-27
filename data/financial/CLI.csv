@@ -1,0 +1,89 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+CLI,BALANCE SHEET,Assets,Goodwill & Intangible Assets,"5,269.96"
+CLI,BALANCE SHEET,Assets,Property and Equipment,"209,111.05"
+CLI,BALANCE SHEET,Assets,Investment Properties,0.00
+CLI,BALANCE SHEET,Assets,Deferred Tax Assets,"291,635.96"
+CLI,BALANCE SHEET,Assets,Investment in Subsidiaries,0.00
+CLI,BALANCE SHEET,Assets,Investment in Associates,0.00
+CLI,BALANCE SHEET,Assets,Investments,"31,744,519.21"
+CLI,BALANCE SHEET,Assets,Loans,"1,367,490.31"
+CLI,BALANCE SHEET,Assets,Reinsurance Assets,251.50
+CLI,BALANCE SHEET,Assets,Current Tax Assets,"802,182.59"
+CLI,BALANCE SHEET,Assets,Insurance Receivables,"74,194.49"
+CLI,BALANCE SHEET,Assets,Other Assets,"5,815.41"
+CLI,BALANCE SHEET,Assets,Other Financial Assets,"327,908.56"
+CLI,BALANCE SHEET,Assets,Cash and Cash Equivalent,"1,667,483.80"
+CLI,BALANCE SHEET,Assets,Total Assets,"36,495,862.84"
+CLI,BALANCE SHEET,Equity,Share Capital,"5,000,000.00"
+CLI,BALANCE SHEET,Equity,Share Application Money Pending Allotment,0.00
+CLI,BALANCE SHEET,Equity,Share Premium,"449,688.27"
+CLI,BALANCE SHEET,Equity,Catastrophe Reserve,"279,459.71"
+CLI,BALANCE SHEET,Equity,Retained Earnings,"587,079.58"
+CLI,BALANCE SHEET,Equity,Other Equity,"358,690.64"
+CLI,BALANCE SHEET,Equity,Total Equity,"6,674,918.20"
+CLI,BALANCE SHEET,Liabilities,Provisions,"35,765.96"
+CLI,BALANCE SHEET,Liabilities,Gross Insurance Contract Liabilities,"29,207,978.57"
+CLI,BALANCE SHEET,Liabilities,Deferred Tax Liabilities,0.00
+CLI,BALANCE SHEET,Liabilities,Insurance Payable,"90,526.80"
+CLI,BALANCE SHEET,Liabilities,Current Tax Liabilities,0.00
+CLI,BALANCE SHEET,Liabilities,Borrowings,0.00
+CLI,BALANCE SHEET,Liabilities,Other Liabilities,"140,707.12"
+CLI,BALANCE SHEET,Liabilities,Other Financial Liabilities,"345,966.19"
+CLI,BALANCE SHEET,Liabilities,Total Liabilities,"29,820,944.65"
+CLI,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"36,495,862.84"
+CLI,PROFIT & LOSS ACCOUNT,Income,Gross Earned Premiums,"2,575,240.54"
+CLI,PROFIT & LOSS ACCOUNT,Income,Premium Ceded,"-91,178.73"
+CLI,PROFIT & LOSS ACCOUNT,Income,Net Earned Premiums,"2,484,061.81"
+CLI,PROFIT & LOSS ACCOUNT,Income,Commission Income,0.00
+CLI,PROFIT & LOSS ACCOUNT,Income,Other Direct Income,"6,372.23"
+CLI,PROFIT & LOSS ACCOUNT,Income,Interest Income on Loan to Policyholders,"34,765.23"
+CLI,PROFIT & LOSS ACCOUNT,Income,Income from Investments and Loans,"545,003.81"
+CLI,PROFIT & LOSS ACCOUNT,Income,Net Gain/(Loss) of Fair Value Changes,0.00
+CLI,PROFIT & LOSS ACCOUNT,Income,Net Realized Gains/(Losses),0.00
+CLI,PROFIT & LOSS ACCOUNT,Income,Other Income,86.90
+CLI,PROFIT & LOSS ACCOUNT,Income,Total Income,"3,070,289.98"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Gross Benefits and Claims Paid,"491,959.70"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Claims Ceded,"-66,592.69"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Gross Change in Contract Liabilities,"1,998,490.01"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Change in Contract Liabilities Ceded to Reinsurers,-142.45
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Net Benefits and Claims Paid,"2,423,714.57"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Commission Expenses,"232,778.05"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Service Fees,"18,630.46"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Other Direct Expenses,0.00
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"123,574.73"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Depreciation and Amortization Expenses,"17,063.37"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Impairment Losses,0.00
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,"152,870.39"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Finance Cost,"1,592.41"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"2,970,223.98"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/ (Loss) Before Share of Net Profits of Associates,"100,066.00"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Share of Net Profit of Associates,0.00
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"100,066.00"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Income Tax Expenses,0.00
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/(Loss) for The Year,"100,066.00"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Other Comprehensive Income,"67,062.41"
+CLI,PROFIT & LOSS ACCOUNT,Expenses,Total Comprehensive Income,"167,128.41"
+CLI,RATIO ANALYSIS,General,Net Premium To Gross Premium (in %),96.46
+CLI,RATIO ANALYSIS,General,Net Profit To Gross Premium (in %),3.89
+CLI,RATIO ANALYSIS,General,Gross Premium To Total Assets (Annualized) (in %),28.23
+CLI,RATIO ANALYSIS,General,Agent Commission To Gross Premium (in %),9.04
+CLI,RATIO ANALYSIS,General,No. of Unpaid Claims To No. of Policies (in %),0.00
+CLI,KEY RATIOS,General,Earning Per Share (EPS),8.01
+CLI,KEY RATIOS,General,Price Earning Ratio (PE ratio),55.69
+CLI,KEY RATIOS,General,Networth per share (Rs.),133.50
+CLI,KEY RATIOS,General,Price to Book Ratio,3.34
+CLI,KEY RATIOS,General,Return on Equity (ROE %),6.00
+CLI,KEY RATIOS,General,Return on Assets (ROA %),1.10
+CLI,KEY RATIOS,General,Solvency Ratio,1.73
+CLI,OTHERS,General,Total Inforce Policy Count,"783,669.00"
+CLI,OTHERS,General,Total no. of Policies Issued during the Period,"437,411.00"
+CLI,OTHERS,General,First Year Premium ('000'),"827,461.15"
+CLI,OTHERS,General,Single Premium ('000'),"346,461.15"
+CLI,OTHERS,General,Renewal Premium ('000'),"1,747,779.39"
+CLI,OTHERS,General,Total Benefits and Claims Paid in Count,"1,707.00"
+CLI,OTHERS,General,Outstanding Benefits and Claims in Count,31.00
+CLI,OTHERS,General,Declared Profit (Bonus) Rate,25-80
+CLI,OTHERS,General,Interim Profit (Bonus) Rate,25-80
+CLI,OTHERS,General,Long Term Investments ('000'),"28,106,954.12"
+CLI,OTHERS,General,Short Term Investments ('000'),"3,637,565.09"
+CLI,OTHERS,General,Total Assets per Share,729.92

@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+KSBBL,BALANCE SHEET,General,Cash and cash equivalent,"2,224,289.88"
+KSBBL,BALANCE SHEET,General,Due from Nepal Rastra Bank,"2,856,174.16"
+KSBBL,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+KSBBL,BALANCE SHEET,General,Derivative financial instruments,0.00
+KSBBL,BALANCE SHEET,General,Other trading assets,0.00
+KSBBL,BALANCE SHEET,General,Loan and advances to B/FIs,"1,242,667.84"
+KSBBL,BALANCE SHEET,General,Loans and advances to customers,"56,345,333.16"
+KSBBL,BALANCE SHEET,General,Investment securities,"12,453,460.32"
+KSBBL,BALANCE SHEET,General,Current tax assets,0.00
+KSBBL,BALANCE SHEET,General,Investment in subsidiaries,0.00
+KSBBL,BALANCE SHEET,General,Investment in associates,0.00
+KSBBL,BALANCE SHEET,General,Investment property,"334,397.24"
+KSBBL,BALANCE SHEET,General,Property and equipment,"827,065.27"
+KSBBL,BALANCE SHEET,General,Goodwill and Intangible assets,"14,568.93"
+KSBBL,BALANCE SHEET,General,Deferred tax assets,"66,181.48"
+KSBBL,BALANCE SHEET,General,Other assets,"567,069.57"
+KSBBL,BALANCE SHEET,General,Total Assets,"76,931,207.84"
+KSBBL,BALANCE SHEET,General,Due to Bank and Financial Institutions,"518,592.09"
+KSBBL,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+KSBBL,BALANCE SHEET,General,Derivative financial instruments,0.00
+KSBBL,BALANCE SHEET,General,Deposits from customers,"67,904,709.26"
+KSBBL,BALANCE SHEET,General,Borrowing,0.00
+KSBBL,BALANCE SHEET,General,Current Tax Liabilities,"95,627.63"
+KSBBL,BALANCE SHEET,General,Provisions,"25,963.11"
+KSBBL,BALANCE SHEET,General,Deferred tax liabilities,0.00
+KSBBL,BALANCE SHEET,General,Other liabilities,"790,149.55"
+KSBBL,BALANCE SHEET,General,Debt securities issued,"995,865.32"
+KSBBL,BALANCE SHEET,General,Subordinated Liabilities,0.00
+KSBBL,BALANCE SHEET,General,Total liabilities,"70,330,906.95"
+KSBBL,BALANCE SHEET,General,Share capital,"4,211,930.82"
+KSBBL,BALANCE SHEET,General,Share premium,0.00
+KSBBL,BALANCE SHEET,General,Retained earnings,"160,042.54"
+KSBBL,BALANCE SHEET,General,Reserves,"2,228,327.54"
+KSBBL,BALANCE SHEET,General,Total equity,"6,600,300.90"
+KSBBL,BALANCE SHEET,General,Total liabilities and equity,"76,931,207.85"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Interest income,"1,254,837.29"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Interest expense,"628,349.99"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Net interest income,"626,487.30"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"116,575.63"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,"6,339.35"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"110,236.28"
+KSBBL,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","736,723.58"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Net trading income,929.57
+KSBBL,PROFIT & LOSS ACCOUNT,General,Other operating income,"8,231.28"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Total operating income,"745,884.43"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"49,417.23"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Net operating income,"696,467.21"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Personnel expense,"242,221.55"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Other operating expense,"80,870.03"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"34,605.23"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Operating Profit,"338,770.40"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Non operating income,"2,595.91"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Non operating expense,"11,143.99"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"330,222.32"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Current Tax,"99,066.70"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Profit for the period,"231,155.62"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+KSBBL,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax","-18,720.19"
+KSBBL,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"212,435.43"
+KSBBL,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),20.68
+KSBBL,KEY METRICS,General,Diluted Earnings Per Share,20.68
+KSBBL,KEY METRICS,General,Capital fund to RWA,12.97
+KSBBL,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,3.93
+KSBBL,KEY METRICS,General,Total Loan loss provision to Total NPL,115.41
+KSBBL,KEY METRICS,General,Cost of Funds,3.50
+KSBBL,KEY METRICS,General,Credit to Deposit Ratio,86.89
+KSBBL,KEY METRICS,General,Base Rate,5.36
+KSBBL,KEY METRICS,General,Interest Spread Rate,3.95
+KSBBL,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"6,600,300.90"
+KSBBL,KEY METRICS,General,No. of Outstanding Shares,"38,619,308.15"
+KSBBL,KEY METRICS,General,Net Worth Per Share,161.84
+KSBBL,KEY METRICS,General,P/E Ratio,23.01
+KSBBL,KEY METRICS,General,Price to Book (P/B) Ratio,2.94
+KSBBL,KEY METRICS,General,Return on Equity,12.78
+KSBBL,KEY METRICS,General,Return on Assets,1.20

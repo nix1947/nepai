@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+MDB,BALANCE SHEET,General,Cash and cash equivalent,"905,024.41"
+MDB,BALANCE SHEET,General,Due from Nepal Rastra Bank,"1,146,471.76"
+MDB,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+MDB,BALANCE SHEET,General,Derivative financial instruments,0.00
+MDB,BALANCE SHEET,General,Other trading assets,0.00
+MDB,BALANCE SHEET,General,Loan and advances to B/FIs,"516,789.65"
+MDB,BALANCE SHEET,General,Loans and advances to customers,"7,063,413.49"
+MDB,BALANCE SHEET,General,Investment securities,"978,597.19"
+MDB,BALANCE SHEET,General,Current tax assets,0.00
+MDB,BALANCE SHEET,General,Investment in subsidiaries,0.00
+MDB,BALANCE SHEET,General,Investment in associates,0.00
+MDB,BALANCE SHEET,General,Investment property,"4,924.44"
+MDB,BALANCE SHEET,General,Property and equipment,"56,075.07"
+MDB,BALANCE SHEET,General,Goodwill and Intangible assets,218.15
+MDB,BALANCE SHEET,General,Deferred tax assets,"13,029.28"
+MDB,BALANCE SHEET,General,Other assets,"28,267.02"
+MDB,BALANCE SHEET,General,Total Assets,"10,712,810.45"
+MDB,BALANCE SHEET,General,Due to Bank and Financial Institutions,"32,215.83"
+MDB,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+MDB,BALANCE SHEET,General,Derivative financial instruments,0.00
+MDB,BALANCE SHEET,General,Deposits from customers,"8,854,981.28"
+MDB,BALANCE SHEET,General,Borrowing,0.00
+MDB,BALANCE SHEET,General,Current Tax Liabilities,"11,106.12"
+MDB,BALANCE SHEET,General,Provisions,0.00
+MDB,BALANCE SHEET,General,Deferred tax liabilities,0.00
+MDB,BALANCE SHEET,General,Other liabilities,"44,785.44"
+MDB,BALANCE SHEET,General,Debt securities issued,0.00
+MDB,BALANCE SHEET,General,Subordinated Liabilities,0.00
+MDB,BALANCE SHEET,General,Total liabilities,"8,943,088.66"
+MDB,BALANCE SHEET,General,Share capital,"1,217,100.00"
+MDB,BALANCE SHEET,General,Share premium,0.00
+MDB,BALANCE SHEET,General,Retained earnings,"169,817.97"
+MDB,BALANCE SHEET,General,Reserves,"382,803.82"
+MDB,BALANCE SHEET,General,Total equity,"1,769,721.79"
+MDB,BALANCE SHEET,General,Total liabilities and equity,"10,712,810.45"
+MDB,PROFIT & LOSS ACCOUNT,General,Interest income,"175,174.09"
+MDB,PROFIT & LOSS ACCOUNT,General,Interest expense,"82,685.28"
+MDB,PROFIT & LOSS ACCOUNT,General,Net interest income,"92,488.80"
+MDB,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"10,072.27"
+MDB,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,844.20
+MDB,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"9,228.07"
+MDB,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","101,716.87"
+MDB,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Other operating income,"4,336.86"
+MDB,PROFIT & LOSS ACCOUNT,General,Total operating income,"106,053.73"
+MDB,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"22,548.07"
+MDB,PROFIT & LOSS ACCOUNT,General,Net operating income,"83,505.66"
+MDB,PROFIT & LOSS ACCOUNT,General,Personnel expense,"25,327.26"
+MDB,PROFIT & LOSS ACCOUNT,General,Other operating expense,"7,494.35"
+MDB,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"1,728.81"
+MDB,PROFIT & LOSS ACCOUNT,General,Operating Profit,"48,955.24"
+MDB,PROFIT & LOSS ACCOUNT,General,Non operating income,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"48,955.24"
+MDB,PROFIT & LOSS ACCOUNT,General,Current Tax,"14,686.57"
+MDB,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Profit for the period,"34,268.67"
+MDB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+MDB,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax","-2,772.90"
+MDB,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"31,495.77"
+MDB,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),11.26
+MDB,KEY METRICS,General,Diluted Earnings Per Share,11.26
+MDB,KEY METRICS,General,Capital fund to RWA,22.51
+MDB,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,0.41
+MDB,KEY METRICS,General,Total Loan loss provision to Total NPL,305.00
+MDB,KEY METRICS,General,Cost of Funds,3.65
+MDB,KEY METRICS,General,Credit to Deposit Ratio,85.91
+MDB,KEY METRICS,General,Base Rate,5.49
+MDB,KEY METRICS,General,Interest Spread Rate,4.60
+MDB,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"1,769,721.79"
+MDB,KEY METRICS,General,No. of Outstanding Shares,"12,171,000.00"
+MDB,KEY METRICS,General,Net Worth Per Share,145.40
+MDB,KEY METRICS,General,P/E Ratio,49.99
+MDB,KEY METRICS,General,Price to Book (P/B) Ratio,3.87
+MDB,KEY METRICS,General,Return on Equity,7.75
+MDB,KEY METRICS,General,Return on Assets,1.28

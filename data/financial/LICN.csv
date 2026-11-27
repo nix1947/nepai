@@ -1,0 +1,89 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+LICN,BALANCE SHEET,Assets,Goodwill & Intangible Assets,0.00
+LICN,BALANCE SHEET,Assets,Property and Equipment,"341,690.73"
+LICN,BALANCE SHEET,Assets,Investment Properties,0.00
+LICN,BALANCE SHEET,Assets,Deferred Tax Assets,0.00
+LICN,BALANCE SHEET,Assets,Investment in Subsidiaries,0.00
+LICN,BALANCE SHEET,Assets,Investment in Associates,0.00
+LICN,BALANCE SHEET,Assets,Investments,"137,391,967.67"
+LICN,BALANCE SHEET,Assets,Loans,"19,775,614.14"
+LICN,BALANCE SHEET,Assets,Reinsurance Assets,0.00
+LICN,BALANCE SHEET,Assets,Current Tax Assets,0.00
+LICN,BALANCE SHEET,Assets,Insurance Receivables,0.00
+LICN,BALANCE SHEET,Assets,Other Assets,"102,543.32"
+LICN,BALANCE SHEET,Assets,Other Financial Assets,"3,653,488.57"
+LICN,BALANCE SHEET,Assets,Cash and Cash Equivalent,"2,577,734.06"
+LICN,BALANCE SHEET,Assets,Total Assets,"163,843,038.48"
+LICN,BALANCE SHEET,Equity,Share Capital,"5,500,000.00"
+LICN,BALANCE SHEET,Equity,Share Application Money Pending Allotment,0.00
+LICN,BALANCE SHEET,Equity,Share Premium,"498,012.56"
+LICN,BALANCE SHEET,Equity,Catastrophe Reserve,"783,251.38"
+LICN,BALANCE SHEET,Equity,Retained Earnings,"2,742,420.63"
+LICN,BALANCE SHEET,Equity,Other Equity,"383,015.25"
+LICN,BALANCE SHEET,Equity,Total Equity,"9,906,699.82"
+LICN,BALANCE SHEET,Liabilities,Provisions,"180,717.38"
+LICN,BALANCE SHEET,Liabilities,Gross Insurance Contract Liabilities,"152,325,926.24"
+LICN,BALANCE SHEET,Liabilities,Deferred Tax Liabilities,"78,000.81"
+LICN,BALANCE SHEET,Liabilities,Insurance Payable,"21,024.36"
+LICN,BALANCE SHEET,Liabilities,Current Tax Liabilities,"429,008.68"
+LICN,BALANCE SHEET,Liabilities,Borrowings,0.00
+LICN,BALANCE SHEET,Liabilities,Other Liabilities,"486,446.02"
+LICN,BALANCE SHEET,Liabilities,Other Financial Liabilities,"415,215.19"
+LICN,BALANCE SHEET,Liabilities,Total Liabilities,"153,936,338.66"
+LICN,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"163,843,038.48"
+LICN,PROFIT & LOSS ACCOUNT,Income,Gross Earned Premiums,"5,463,361.00"
+LICN,PROFIT & LOSS ACCOUNT,Income,Premium Ceded,"-26,004.63"
+LICN,PROFIT & LOSS ACCOUNT,Income,Net Earned Premiums,"5,437,356.37"
+LICN,PROFIT & LOSS ACCOUNT,Income,Commission Income,"1,544.19"
+LICN,PROFIT & LOSS ACCOUNT,Income,Other Direct Income,"56,214.87"
+LICN,PROFIT & LOSS ACCOUNT,Income,Interest Income on Loan to Policyholders,"563,759.67"
+LICN,PROFIT & LOSS ACCOUNT,Income,Income from Investments and Loans,"2,531,569.59"
+LICN,PROFIT & LOSS ACCOUNT,Income,Net Gain/(Loss) of Fair Value Changes,0.00
+LICN,PROFIT & LOSS ACCOUNT,Income,Net Realized Gains/(Losses),0.00
+LICN,PROFIT & LOSS ACCOUNT,Income,Other Income,9.00
+LICN,PROFIT & LOSS ACCOUNT,Income,Total Income,"8,590,453.69"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Gross Benefits and Claims Paid,"3,468,629.46"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Claims Ceded,"-6,408.79"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Gross Change in Contract Liabilities,"3,791,846.47"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Change in Contract Liabilities Ceded to Reinsurers,0.00
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Net Benefits and Claims Paid,"7,254,067.14"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Commission Expenses,"367,813.82"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Service Fees,"40,780.17"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Other Direct Expenses,0.00
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"137,734.82"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Depreciation and Amortization Expenses,"12,734.89"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Impairment Losses,"-2,984.60"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,"75,410.66"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Finance Cost,"3,545.72"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"7,889,102.63"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/ (Loss) Before Share of Net Profits of Associates,"701,351.07"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Share of Net Profit of Associates,0.00
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"701,351.07"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Income Tax Expenses,"604,382.55"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/(Loss) for The Year,"96,968.51"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Other Comprehensive Income,"-394,812.14"
+LICN,PROFIT & LOSS ACCOUNT,Expenses,Total Comprehensive Income,"491,780.65"
+LICN,RATIO ANALYSIS,General,Net Premium To Gross Premium (in %),99.52
+LICN,RATIO ANALYSIS,General,Net Profit To Gross Premium (in %),1.77
+LICN,RATIO ANALYSIS,General,Gross Premium To Total Assets (Annualized) (in %),13.34
+LICN,RATIO ANALYSIS,General,Agent Commission To Gross Premium (in %),6.73
+LICN,RATIO ANALYSIS,General,No. of Unpaid Claims To No. of Policies (in %),1.68
+LICN,KEY RATIOS,General,Earning Per Share (EPS),7.05
+LICN,KEY RATIOS,General,Price Earning Ratio (PE ratio),114.13
+LICN,KEY RATIOS,General,Networth per share (Rs.),180.12
+LICN,KEY RATIOS,General,Price to Book Ratio,4.47
+LICN,KEY RATIOS,General,Return on Equity (ROE %),3.92
+LICN,KEY RATIOS,General,Return on Assets (ROA %),0.24
+LICN,KEY RATIOS,General,Solvency Ratio,1.61
+LICN,OTHERS,General,Total Inforce Policy Count,"708,057.00"
+LICN,OTHERS,General,Total no. of Policies Issued during the Period,"15,223.00"
+LICN,OTHERS,General,First Year Premium ('000'),"813,979.11"
+LICN,OTHERS,General,Single Premium ('000'),"204,520.79"
+LICN,OTHERS,General,Renewal Premium ('000'),"4,649,381.89"
+LICN,OTHERS,General,Total Benefits and Claims Paid in Count,"7,652.00"
+LICN,OTHERS,General,Outstanding Benefits and Claims in Count,"11,883.00"
+LICN,OTHERS,General,Declared Profit (Bonus) Rate,41-65
+LICN,OTHERS,General,Interim Profit (Bonus) Rate,41-65
+LICN,OTHERS,General,Long Term Investments ('000'),"85,730,864.54"
+LICN,OTHERS,General,Short Term Investments ('000'),"51,661,103.14"
+LICN,OTHERS,General,Total Assets per Share,"2,978.96"

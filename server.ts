@@ -9,10 +9,11 @@ import {
   generateStockResearch,
 } from './server/researchAi.ts';
 import {
-  computeTechnicalRiskRows,
   getCompositeDoNotBuyStocks,
   getFundamentallyRiskyStocks,
   getMarketOpportunityVsRisk,
+  computeTechnicalRiskRows,
+  loadMacroSnapshot,
 } from './server/riskEngine.ts';
 import {
   getHighConvictionFeed,
@@ -31,6 +32,20 @@ import {
   scrapeCompanyFinancials,
 } from './server/financialScraper.ts';
 import { DailyScheduler } from './server/scheduler.ts';
+import {
+  buildSpreadsheetExport,
+  FundamentalVault,
+  normalizeShareSansarSnapshot,
+} from './server/fundamental/fundamentalVault.ts';
+import { FundamentalMonitorService } from './server/fundamental/fundamentalCollector.ts';
+import { evaluateScreenerUniverse } from './server/fundamental/investorScoringEngine.ts';
+import { getActiveNepalFiscalQuarter } from './server/fundamental/nepalCalendar.ts';
+import type {
+  ConsensusTag,
+  QuarterCode,
+  RankingCategory,
+  ScreenedCompanyRow,
+} from './src/types/fundamental.ts';
 import type { ScannerKind } from './src/types/market.ts';
 import type { QuantEngineConfig } from './src/types/quant.ts';
 import type {
@@ -99,6 +114,19 @@ async function startServer() {
 
   const store = new MarketStore(DATA_DIR);
   const scheduler = new DailyScheduler(store);
+  const fundamentalVault = new FundamentalVault(DATA_DIR);
+  const fundamentalMonitor = new FundamentalMonitorService(store, fundamentalVault);
+
+  function parseBenchmarkFdRate(): number {
+    const macro = loadMacroSnapshot(store);
+    const raw = macro?.fixedIncomeBenchmarks?.bankFdIndividualRate || '';
+    const m = raw.match(/(\d+(?:\.\d+)?)/);
+    if (m) {
+      const n = Number(m[1]);
+      if (Number.isFinite(n) && n > 1 && n < 20) return n;
+    }
+    return 6.5;
+  }
 
   // ---------------------------------------------------------------- Market Data Routes
   app.get('/api/meta', (_req, res) => {
@@ -531,6 +559,7 @@ async function startServer() {
 
   app.post('/api/financials/scrape-batch', async (req, res) => {
     try {
+      const force = Boolean(req.body?.force);
       let symbols: string[] = Array.isArray(req.body?.symbols)
         ? req.body.symbols.map((s: unknown) => String(s || '').trim().toUpperCase()).filter(isValidSymbol)
         : [];
@@ -548,18 +577,65 @@ async function startServer() {
       }
 
       if (symbols.length === 0) {
-        res.status(400).json({ error: 'No valid symbols available to scrape' });
+        res.status(400).json({ error: 'No valid symbols available to fetch' });
         return;
       }
 
-      const result = await scrapeBatchFinancials(DATA_DIR, symbols);
+      const activeQ = getActiveNepalFiscalQuarter(new Date(), 15);
+      const skipped: string[] = [];
+      const toScrape = force
+        ? symbols
+        : symbols.filter((sym) => {
+            if (fundamentalVault.hasQuarterData(sym, activeQ.fiscalYear, activeQ.quarter)) {
+              skipped.push(sym);
+              return false;
+            }
+            return true;
+          });
+
+      const result =
+        toScrape.length > 0
+          ? await scrapeBatchFinancials(DATA_DIR, toScrape)
+          : { total: 0, succeeded: [], failed: [] };
+
+      for (const sym of result.succeeded) {
+        const snap = getSavedFinancials(DATA_DIR, sym);
+        if (snap) {
+          for (const rec of normalizeShareSansarSnapshot(snap)) {
+            fundamentalVault.upsertStatementRecord(rec, [
+              {
+                title: `${sym} Financial Reports`,
+                uri: snap.sourceUrl,
+                category: 'NEPSE Portal',
+              },
+            ]);
+          }
+        }
+      }
+      if (result.succeeded.length > 0) {
+        fundamentalVault.writeConsolidatedQuarterlyCsv();
+      }
+      fundamentalMonitor.syncEntriesFromMarketAndVault(true);
+
       res.json({
         ...result,
+        skipped,
         items: listSavedFinancials(DATA_DIR),
       });
     } catch (err) {
       res.status(500).json({
-        error: err instanceof Error ? err.message : 'Batch financials scrape failed',
+        error: err instanceof Error ? err.message : 'Batch financials fetch failed',
+      });
+    }
+  });
+
+  app.get('/api/screener/vault-csv', (_req, res) => {
+    try {
+      const csvPath = fundamentalVault.writeConsolidatedQuarterlyCsv();
+      res.download(csvPath, 'nepse_quarterly_metrics.csv');
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to build consolidated vault CSV',
       });
     }
   });
@@ -594,11 +670,616 @@ async function startServer() {
       return;
     }
     try {
+      const force = Boolean(req.body?.force);
+      const activeQ = getActiveNepalFiscalQuarter(new Date(), 15);
+      if (!force && fundamentalVault.hasQuarterData(symbol, activeQ.fiscalYear, activeQ.quarter)) {
+        const existing = getSavedFinancials(DATA_DIR, symbol);
+        if (existing) {
+          res.json({ ...existing, skipped: true });
+          return;
+        }
+      }
+
       const snapshot = await scrapeCompanyFinancials(DATA_DIR, symbol);
+      for (const rec of normalizeShareSansarSnapshot(snapshot)) {
+        fundamentalVault.upsertStatementRecord(rec, [
+          {
+            title: `${symbol} Financial Reports`,
+            uri: snapshot.sourceUrl,
+            category: 'NEPSE Portal',
+          },
+        ]);
+      }
+      fundamentalVault.writeConsolidatedQuarterlyCsv();
+      fundamentalMonitor.syncEntriesFromMarketAndVault(true);
       res.json(snapshot);
     } catch (err) {
       res.status(502).json({
-        error: err instanceof Error ? err.message : `Failed to scrape ShareSansar financials for ${symbol}`,
+        error: err instanceof Error ? err.message : `Failed to fetch financials for ${symbol}`,
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- Fundamental Intelligence & Multi-Investor Screener Routes
+  app.get('/api/screener/overview', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      const fiscalYear =
+        typeof req.query.fiscalYear === 'string' && req.query.fiscalYear.trim()
+          ? req.query.fiscalYear.trim()
+          : undefined;
+      const quarter =
+        typeof req.query.quarter === 'string' &&
+        ['Q1', 'Q2', 'Q3', 'Q4', 'Annual'].includes(req.query.quarter.trim())
+          ? (req.query.quarter.trim() as QuarterCode)
+          : undefined;
+
+      fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
+      const statusMap = fundamentalMonitor.getStatusMap();
+      const evaluated = evaluateScreenerUniverse(store, fundamentalVault, {
+        equityOnly,
+        fiscalYear,
+        quarter,
+        monitorStatusMap: statusMap,
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+      });
+
+      const activeQ = getActiveNepalFiscalQuarter(
+        new Date(),
+        fundamentalMonitor.getStatus(equityOnly).config.delayDaysAfterQuarterEnd
+      );
+
+      const rankingCounts: Record<RankingCategory, number> = {
+        overall_top: 0,
+        fundamentally_strong: 0,
+        high_growth: 0,
+        undervalued: 0,
+        defensive_value: 0,
+        high_turnover_fundamental: 0,
+        positive_momentum_fundamental: 0,
+        quality_compounders: 0,
+      };
+      const consensusCounts: Record<ConsensusTag, number> = {
+        buffett_munger: 0,
+        graham_marks: 0,
+        lynch_fisher: 0,
+        greenblatt_graham: 0,
+        buffett_pabrai: 0,
+        marks_templeton: 0,
+      };
+
+      const sectorSet = new Set<string>();
+      for (const row of evaluated.rows) {
+        sectorSet.add(row.sector);
+        for (const rTag of row.rankingQualifiers) {
+          rankingCounts[rTag]++;
+        }
+        for (const cMatch of row.consensusMatches) {
+          if (cMatch.qualified) consensusCounts[cMatch.id]++;
+        }
+      }
+
+      const fySet = new Set<string>();
+      for (const ledger of fundamentalVault.getAllLedgers()) {
+        for (const rec of ledger.records) fySet.add(rec.fiscalYear);
+      }
+
+      // Apply optional filters
+      let rows = evaluated.rows;
+      const sectorFilter =
+        typeof req.query.sector === 'string' && req.query.sector !== 'All'
+          ? req.query.sector.trim()
+          : null;
+      const rankingFilter =
+        typeof req.query.ranking === 'string' && req.query.ranking !== 'all'
+          ? (req.query.ranking.trim() as RankingCategory)
+          : null;
+      const consensusFilter =
+        typeof req.query.consensus === 'string' && req.query.consensus !== 'all'
+          ? (req.query.consensus.trim() as ConsensusTag)
+          : null;
+      const statusFilter =
+        typeof req.query.status === 'string' && req.query.status !== 'all'
+          ? req.query.status.trim()
+          : null;
+      const onlyEvaluated = req.query.onlyEvaluated === 'true';
+      const searchQ =
+        typeof req.query.search === 'string' ? req.query.search.trim().toLowerCase() : '';
+      const minQuality = req.query.minQuality ? Number(req.query.minQuality) : null;
+      const minMos = req.query.minMos ? Number(req.query.minMos) : null;
+      const minPe = req.query.minPe ? Number(req.query.minPe) : null;
+      const maxPe = req.query.maxPe ? Number(req.query.maxPe) : null;
+      const maxPb = req.query.maxPb ? Number(req.query.maxPb) : null;
+      const maxPeg = req.query.maxPeg ? Number(req.query.maxPeg) : null;
+      const minEps = req.query.minEps ? Number(req.query.minEps) : null;
+      const minRoe = req.query.minRoe ? Number(req.query.minRoe) : null;
+      const maxDe = req.query.maxDe ? Number(req.query.maxDe) : null;
+      const maxNpl = req.query.maxNpl ? Number(req.query.maxNpl) : null;
+      const minEpsYoy = req.query.minEpsYoy ? Number(req.query.minEpsYoy) : null;
+      const minEpsQoq = req.query.minEpsQoq ? Number(req.query.minEpsQoq) : null;
+      const minProfitYoy = req.query.minProfitYoy ? Number(req.query.minProfitYoy) : null;
+      const improvingQoq = req.query.improvingQoq === 'true';
+
+      if (onlyEvaluated) rows = rows.filter((r) => r.hasFundamentalData);
+      if (sectorFilter) {
+        rows = rows.filter(
+          (r) => r.sector === sectorFilter || r.sectorGroup === sectorFilter
+        );
+      }
+      if (rankingFilter) {
+        rows = rows.filter((r) => r.rankingQualifiers.includes(rankingFilter));
+      }
+      if (consensusFilter) {
+        rows = rows.filter((r) =>
+          r.consensusMatches.some((c) => c.id === consensusFilter && c.qualified)
+        );
+      }
+      if (statusFilter) {
+        rows = rows.filter((r) => r.reportingStatus === statusFilter);
+      }
+      if (searchQ) {
+        rows = rows.filter(
+          (r) =>
+            r.symbol.toLowerCase().includes(searchQ) ||
+            r.companyName.toLowerCase().includes(searchQ) ||
+            r.sector.toLowerCase().includes(searchQ)
+        );
+      }
+      if (minQuality !== null && Number.isFinite(minQuality)) {
+        rows = rows.filter((r) => r.scores.fundamentalQualityScore >= minQuality);
+      }
+      if (minMos !== null && Number.isFinite(minMos)) {
+        rows = rows.filter((r) => (r.keyMetrics.marginOfSafetyPct ?? -999) >= minMos);
+      }
+      if (minPe !== null && Number.isFinite(minPe)) {
+        rows = rows.filter((r) => r.keyMetrics.pe !== null && r.keyMetrics.pe >= minPe);
+      }
+      if (maxPe !== null && Number.isFinite(maxPe)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.pe !== null && r.keyMetrics.pe > 0 && r.keyMetrics.pe <= maxPe
+        );
+      }
+      if (maxPb !== null && Number.isFinite(maxPb)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.pb !== null && r.keyMetrics.pb > 0 && r.keyMetrics.pb <= maxPb
+        );
+      }
+      if (maxPeg !== null && Number.isFinite(maxPeg)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.peg !== null && r.keyMetrics.peg > 0 && r.keyMetrics.peg <= maxPeg
+        );
+      }
+      if (minEps !== null && Number.isFinite(minEps)) {
+        rows = rows.filter((r) => r.keyMetrics.eps !== null && r.keyMetrics.eps >= minEps);
+      }
+      if (minRoe !== null && Number.isFinite(minRoe)) {
+        rows = rows.filter((r) => r.keyMetrics.roePct !== null && r.keyMetrics.roePct >= minRoe);
+      }
+      if (maxDe !== null && Number.isFinite(maxDe)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.debtToEquity === null || r.keyMetrics.debtToEquity <= maxDe
+        );
+      }
+      if (maxNpl !== null && Number.isFinite(maxNpl)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.nplPct === null || r.keyMetrics.nplPct <= maxNpl
+        );
+      }
+      if (minEpsYoy !== null && Number.isFinite(minEpsYoy)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.epsYoyPct !== null && r.keyMetrics.epsYoyPct >= minEpsYoy
+        );
+      }
+      if (minEpsQoq !== null && Number.isFinite(minEpsQoq)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.epsQoqPct !== null && r.keyMetrics.epsQoqPct >= minEpsQoq
+        );
+      }
+      if (minProfitYoy !== null && Number.isFinite(minProfitYoy)) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.netProfitYoyPct !== null && r.keyMetrics.netProfitYoyPct >= minProfitYoy
+        );
+      }
+      if (improvingQoq) {
+        rows = rows.filter(
+          (r) => r.keyMetrics.epsQoqPct !== null && r.keyMetrics.epsQoqPct > 0
+        );
+      }
+
+      const sortBy = typeof req.query.sortBy === 'string' ? req.query.sortBy : 'overallScore';
+      rows = [...rows].sort((a, b) => {
+        if (a.hasFundamentalData !== b.hasFundamentalData) {
+          return a.hasFundamentalData ? -1 : 1;
+        }
+        const getVal = (r: ScreenedCompanyRow): number => {
+          switch (sortBy) {
+            case 'quality':
+              return r.scores.fundamentalQualityScore;
+            case 'value':
+              return r.scores.valuationAttractivenessScore;
+            case 'growth':
+              return r.scores.growthScore;
+            case 'risk':
+              return r.scores.riskManagementScore;
+            case 'compounding':
+              return r.scores.longTermCompoundingScore;
+            case 'mos':
+              return r.keyMetrics.marginOfSafetyPct ?? -999;
+            case 'roe':
+              return r.keyMetrics.roePct ?? -999;
+            case 'pe':
+              return r.keyMetrics.pe !== null && r.keyMetrics.pe > 0 ? -r.keyMetrics.pe : -999;
+            case 'eps':
+              return r.keyMetrics.eps ?? -999;
+            case 'peg':
+              return r.keyMetrics.peg !== null && r.keyMetrics.peg > 0 ? -r.keyMetrics.peg : -999;
+            case 'epsYoy':
+              return r.keyMetrics.epsYoyPct ?? -999;
+            case 'epsQoq':
+              return r.keyMetrics.epsQoqPct ?? -999;
+            case 'profitYoy':
+              return r.keyMetrics.netProfitYoyPct ?? -999;
+            case 'cagr3y':
+              return r.keyMetrics.epsCagr3yPct ?? -999;
+            case 'turnover':
+              return r.market.turnover ?? -1;
+            case 'consensus':
+              return r.passedInvestorCount;
+            default:
+              return r.scores.overallScore;
+          }
+        };
+        return getVal(b) - getVal(a);
+      });
+
+      const withFun = evaluated.rows.filter((r) => r.hasFundamentalData);
+      res.json({
+        generatedAt: new Date().toISOString(),
+        marketDate: evaluated.marketDate,
+        activeFiscalQuarter: activeQ,
+        universeStats: {
+          totalSymbols: evaluated.rows.length,
+          withFundamentals: withFun.length,
+          publishedActiveQuarter: evaluated.rows.filter((r) => r.reportingStatus === 'Published').length,
+          pendingActiveQuarter: evaluated.rows.filter((r) => r.reportingStatus === 'Pending').length,
+          retryingCount: evaluated.rows.filter((r) => r.reportingStatus === 'Retrying').length,
+          failedCount: evaluated.rows.filter((r) => r.reportingStatus === 'Failed').length,
+          incompleteCount: withFun.filter((r) =>
+            r.latestPeriod.dataQualityFlags.includes('incomplete')
+          ).length,
+          outdatedCount: withFun.filter((r) =>
+            r.latestPeriod.dataQualityFlags.includes('outdated')
+          ).length,
+        },
+        sectors: Array.from(sectorSet).sort(),
+        fiscalYears: Array.from(fySet).sort().reverse(),
+        rankingCounts,
+        consensusCounts,
+        rows,
+      });
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Fundamental screener evaluation failed',
+      });
+    }
+  });
+
+  app.get('/api/screener/company/:symbol', (req, res) => {
+    try {
+      const symbol = String(req.params.symbol || '').trim().toUpperCase();
+      if (!isValidSymbol(symbol)) {
+        res.status(400).json({ error: 'Invalid ticker symbol' });
+        return;
+      }
+      const equityOnly = req.query.equityOnly !== 'false';
+      const fiscalYear =
+        typeof req.query.fiscalYear === 'string' && req.query.fiscalYear.trim()
+          ? req.query.fiscalYear.trim()
+          : undefined;
+      const quarter =
+        typeof req.query.quarter === 'string' &&
+        ['Q1', 'Q2', 'Q3', 'Q4', 'Annual'].includes(req.query.quarter.trim())
+          ? (req.query.quarter.trim() as QuarterCode)
+          : undefined;
+
+      const evaluated = evaluateScreenerUniverse(store, fundamentalVault, {
+        equityOnly,
+        fiscalYear,
+        quarter,
+        monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+      });
+
+      const detail = evaluated.bySymbol.get(symbol);
+      if (!detail) {
+        const pendingRow = evaluated.rows.find((r) => r.symbol === symbol);
+        if (pendingRow) {
+          res.status(404).json({
+            error: `No financial statements collected yet for ${symbol}. Click Refresh to collect.`,
+            pendingSummary: pendingRow,
+          });
+          return;
+        }
+        res.status(404).json({ error: `Company ${symbol} not found in universe` });
+        return;
+      }
+      res.json(detail);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to inspect company fundamentals',
+      });
+    }
+  });
+
+  app.get('/api/screener/export', (req, res) => {
+    try {
+      const format = req.query.format === 'excel' ? 'excel' : 'csv';
+      const equityOnly = req.query.equityOnly !== 'false';
+      const symbolParam =
+        typeof req.query.symbol === 'string' && req.query.symbol.trim()
+          ? req.query.symbol.trim().toUpperCase()
+          : null;
+
+      const evaluated = evaluateScreenerUniverse(store, fundamentalVault, {
+        equityOnly,
+        monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+      });
+
+      if (symbolParam) {
+        const detail = evaluated.bySymbol.get(symbolParam);
+        if (!detail) {
+          res.status(404).json({ error: `No fundamental ledger available to export for ${symbolParam}` });
+          return;
+        }
+        const exported = buildSpreadsheetExport(format, [
+          {
+            name: `${symbolParam} History`,
+            headers: [
+              'Symbol',
+              'Fiscal Year',
+              'Quarter',
+              'Publication Date',
+              'Collection Date',
+              'Source',
+              'Validation',
+              'EPS (NPR)',
+              'Net Profit (Cr)',
+              'Revenue (Cr)',
+              'Net Margin %',
+              'ROE %',
+              'ROA %',
+              'ROIC %',
+              'BVPS (NPR)',
+              'Net Worth (Cr)',
+              'Assets (Cr)',
+              'Liabilities (Cr)',
+              'Reserves (Cr)',
+              'Debt/Equity',
+              'NPL %',
+              'CAR %',
+              'OCF (Cr)',
+              'FCF (Cr)',
+            ],
+            rows: detail.statements.map((st) => [
+              st.symbol,
+              st.fiscalYear,
+              st.quarter,
+              st.publicationDate ?? 'Unavailable',
+              st.collectionDate.slice(0, 10),
+              st.dataSource,
+              st.validationStatus,
+              st.metrics.eps.value,
+              st.metrics.netProfit.value !== null ? Number((st.metrics.netProfit.value / 1e7).toFixed(2)) : null,
+              st.metrics.revenue.value !== null ? Number((st.metrics.revenue.value / 1e7).toFixed(2)) : null,
+              st.metrics.netProfitMarginPct.value,
+              st.metrics.roePct.value,
+              st.metrics.roaPct.value,
+              st.metrics.roicPct.value,
+              st.metrics.bvps.value,
+              st.metrics.netWorth.value !== null ? Number((st.metrics.netWorth.value / 1e7).toFixed(2)) : null,
+              st.metrics.totalAssets.value !== null ? Number((st.metrics.totalAssets.value / 1e7).toFixed(2)) : null,
+              st.metrics.totalLiabilities.value !== null ? Number((st.metrics.totalLiabilities.value / 1e7).toFixed(2)) : null,
+              st.metrics.reserves.value !== null ? Number((st.metrics.reserves.value / 1e7).toFixed(2)) : null,
+              st.metrics.debtToEquity.value,
+              st.metrics.nplPct.value,
+              st.metrics.carPct.value,
+              st.metrics.operatingCashFlow.value !== null ? Number((st.metrics.operatingCashFlow.value / 1e7).toFixed(2)) : null,
+              st.metrics.freeCashFlow.value !== null ? Number((st.metrics.freeCashFlow.value / 1e7).toFixed(2)) : null,
+            ]),
+          },
+          {
+            name: 'Investor Models',
+            headers: ['Investor', 'Score', 'Qualified', 'Coverage %', 'Philosophy', 'Summary'],
+            rows: Object.values(detail.investorDetails).map((inv) => [
+              inv.investorName,
+              inv.score,
+              inv.qualified ? 'YES' : 'NO',
+              inv.dataCoveragePct,
+              inv.philosophy,
+              inv.summary,
+            ]),
+          },
+        ]);
+
+        res.setHeader('Content-Type', exported.contentType);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${symbolParam}_fundamentals.${exported.extension}"`
+        );
+        res.send(exported.body);
+        return;
+      }
+
+      const targetRows = evaluated.rows.filter((r) => r.hasFundamentalData);
+      const exported = buildSpreadsheetExport(format, [
+        {
+          name: 'NEPSE Screener',
+          headers: [
+            'Symbol',
+            'Company',
+            'Sector',
+            'Period',
+            'Source',
+            'Validation',
+            'Verdict',
+            'Overall Score',
+            'Quality Score',
+            'Value Score',
+            'Growth Score',
+            'Risk Score',
+            'LTP',
+            'Intrinsic Value',
+            'Margin of Safety %',
+            'P/E',
+            'P/B',
+            'PEG',
+            'EPS',
+            'Prev Period',
+            'Prev EPS',
+            'EPS QoQ %',
+            'EPS YoY %',
+            '3Y EPS CAGR %',
+            'Net Profit YoY %',
+            'Revenue YoY %',
+            'ROE %',
+            'ROE Δ pp',
+            'ROA %',
+            'ROIC %',
+            'Net Margin %',
+            'NPL %',
+            'D/E',
+            'Buffett',
+            'Munger',
+            'Graham',
+            'Lynch',
+            'Marks',
+            'Fisher',
+            'Greenblatt',
+            'Templeton',
+            'Pabrai',
+            'Passed Investors',
+            'Consensus Matches',
+          ],
+          rows: targetRows.map((r) => [
+            r.symbol,
+            r.companyName,
+            r.sector,
+            r.latestPeriod.periodLabel,
+            r.latestPeriod.dataSource,
+            r.latestPeriod.validationStatus,
+            r.recommendation.verdict,
+            r.scores.overallScore,
+            r.scores.fundamentalQualityScore,
+            r.scores.valuationAttractivenessScore,
+            r.scores.growthScore,
+            r.scores.riskManagementScore,
+            r.market.ltp,
+            r.keyMetrics.intrinsicValue,
+            r.keyMetrics.marginOfSafetyPct,
+            r.keyMetrics.pe,
+            r.keyMetrics.pb,
+            r.keyMetrics.peg,
+            r.keyMetrics.eps,
+            r.keyMetrics.prevPeriodLabel,
+            r.keyMetrics.prevEps,
+            r.keyMetrics.epsQoqPct,
+            r.keyMetrics.epsYoyPct,
+            r.keyMetrics.epsCagr3yPct,
+            r.keyMetrics.netProfitYoyPct,
+            r.keyMetrics.revenueYoyPct,
+            r.keyMetrics.roePct,
+            r.keyMetrics.roeQoqDeltaPct,
+            r.keyMetrics.roaPct,
+            r.keyMetrics.roicPct,
+            r.keyMetrics.netMarginPct,
+            r.keyMetrics.nplPct,
+            r.keyMetrics.debtToEquity,
+            r.investorScores.buffett,
+            r.investorScores.munger,
+            r.investorScores.graham,
+            r.investorScores.lynch,
+            r.investorScores.marks,
+            r.investorScores.fisher,
+            r.investorScores.greenblatt,
+            r.investorScores.templeton,
+            r.investorScores.pabrai,
+            r.passedInvestorCount,
+            r.consensusMatches.filter((c) => c.qualified).map((c) => c.label).join('; '),
+          ]),
+        },
+      ]);
+
+      res.setHeader('Content-Type', exported.contentType);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="nepse_fundamental_screener.${exported.extension}"`
+      );
+      res.send(exported.body);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Export failed',
+      });
+    }
+  });
+
+  app.get('/api/screener/monitor', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      res.json(fundamentalMonitor.getStatus(equityOnly));
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to fetch fundamental monitor status',
+      });
+    }
+  });
+
+  app.put('/api/screener/monitor/config', (req, res) => {
+    try {
+      const config = fundamentalMonitor.updateConfig(req.body ?? {});
+      res.json({ config });
+    } catch (err) {
+      res.status(400).json({
+        error: err instanceof Error ? err.message : 'Invalid monitor configuration',
+      });
+    }
+  });
+
+  app.post('/api/screener/refresh/:symbol', async (req, res) => {
+    const symbol = String(req.params.symbol || '').trim().toUpperCase();
+    if (!isValidSymbol(symbol)) {
+      res.status(400).json({ error: 'Invalid ticker symbol' });
+      return;
+    }
+    try {
+      const crossValidate = req.body?.crossValidate !== undefined ? Boolean(req.body.crossValidate) : undefined;
+      const force = Boolean(req.body?.force);
+      const result = await fundamentalMonitor.refreshSymbol(symbol, 'manual-single', crossValidate, {
+        force,
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(502).json({
+        error: err instanceof Error ? err.message : `Failed to refresh fundamentals for ${symbol}`,
+      });
+    }
+  });
+
+  app.post('/api/screener/refresh-batch', (req, res) => {
+    try {
+      const modeRaw = String(req.body?.mode || 'pending');
+      const mode = (['pending', 'top25', 'top50', 'all', 'due'].includes(modeRaw)
+        ? modeRaw
+        : 'pending') as 'pending' | 'top25' | 'top50' | 'all' | 'due';
+      const force = Boolean(req.body?.force);
+      const customSymbols = Array.isArray(req.body?.symbols)
+        ? req.body.symbols.map((s: unknown) => String(s || ''))
+        : undefined;
+      const batch = fundamentalMonitor.startBatchRefresh(mode, force, customSymbols);
+      res.json(batch);
+    } catch (err) {
+      res.status(400).json({
+        error: err instanceof Error ? err.message : 'Failed to start batch fundamental refresh',
       });
     }
   });

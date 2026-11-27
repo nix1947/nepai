@@ -3,8 +3,6 @@ import {
   Activity,
   AlertTriangle,
   ArrowUpRight,
-  Compass,
-  Flame,
   GitCompare,
   Layers,
   Plus,
@@ -13,8 +11,17 @@ import {
   X,
 } from 'lucide-react';
 import { InfoTip } from '../components/InfoTip';
+import {
+  buildEnrichedRadarUniverse,
+  ComparisonPillarMatrix,
+  ConfluenceLeaderboardChart,
+  ConfluenceOpportunityMatrix,
+  SectorFundTechChart,
+} from '../components/radar/RadarVisualCharts';
 import { LOOKBACK_PRESETS, useTradingSettings } from '../hooks/useTradingSettings';
 import { useWatchlist } from '../hooks/useWatchlist';
+import type { AnalyzerScanResponse, AnalyzerScanRow } from '../types/analyzer';
+import type { ScreenedCompanyRow, ScreenerOverviewResponse } from '../types/fundamental';
 import type {
   OpportunityRadarResponse,
   RadarPoint,
@@ -28,6 +35,7 @@ interface OpportunityRadarViewProps {
   equityOnly: boolean;
   onInspectSymbol: (symbol: string) => void;
   onInspectInQuant?: (symbol: string) => void;
+  onInspectInAnalyzer?: (symbol: string) => void;
 }
 
 type RadarTab = 'acceleration' | 'accumulation' | 'divergences' | 'breakout' | 'sectors';
@@ -70,14 +78,17 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
   equityOnly,
   onInspectSymbol,
   onInspectInQuant,
+  onInspectInAnalyzer,
 }) => {
   const { settings, updateSettings } = useTradingSettings();
   const nDays = settings.lookbackDays;
   const [selectedDay, setSelectedDay] = useState<string>(dates[dates.length - 1] ?? '');
   const [radar, setRadar] = useState<OpportunityRadarResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fundamentalRows, setFundamentalRows] = useState<ScreenedCompanyRow[]>([]);
+  const [analyzerRows, setAnalyzerRows] = useState<AnalyzerScanRow[]>([]);
+  const [loadingExtra, setLoadingExtra] = useState(false);
   const [activeTab, setActiveTab] = useState<RadarTab>('acceleration');
-  const [hoveredPoint, setHoveredPoint] = useState<RadarPoint | null>(null);
 
   // Stock Comparison Engine state
   const [allSymbols, setAllSymbols] = useState<SymbolInfo[]>([]);
@@ -127,6 +138,36 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
     };
   }, [selectedDay, nDays, equityOnly]);
 
+  // Load Fundamental Screener & ICT/SMC/Wyckoff Technical Scan for confluence graphs
+  useEffect(() => {
+    if (!selectedDay) return;
+    let cancelled = false;
+    setLoadingExtra(true);
+    Promise.all([
+      fetch(`/api/screener/overview?equityOnly=${equityOnly}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      fetch(
+        `/api/analyzer/scan?asOf=${encodeURIComponent(
+          selectedDay
+        )}&tf=1D&minGrade=C&equityOnly=${equityOnly}`
+      )
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+    ])
+      .then(([fundData, techData]: [ScreenerOverviewResponse | null, AnalyzerScanResponse | null]) => {
+        if (cancelled) return;
+        setFundamentalRows(fundData?.rows ?? []);
+        setAnalyzerRows(techData?.rows ?? []);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingExtra(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDay, equityOnly]);
+
   useEffect(() => {
     const latest = dates[dates.length - 1];
     if (!latest) return;
@@ -166,6 +207,26 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
     };
   }, [compareSymbols, nDays, selectedDay]);
 
+  const enrichedUniverse = useMemo(
+    () => buildEnrichedRadarUniverse(radar, fundamentalRows, analyzerRows),
+    [radar, fundamentalRows, analyzerRows]
+  );
+
+  const enrichedMap = useMemo(
+    () => new Map(enrichedUniverse.map((it) => [it.symbol, it])),
+    [enrichedUniverse]
+  );
+
+  const toggleCompareSymbol = (sym: string) => {
+    const clean = sym.trim().toUpperCase();
+    if (!clean) return;
+    setCompareSymbols((prev) => {
+      if (prev.includes(clean)) return prev.filter((s) => s !== clean);
+      if (prev.length >= 4) return [...prev.slice(1), clean];
+      return [...prev, clean];
+    });
+  };
+
   const activeRows = useMemo((): RadarPoint[] => {
     if (!radar) return [];
     switch (activeTab) {
@@ -181,37 +242,6 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
         return [];
     }
   }, [radar, activeTab]);
-
-  // SVG Scatter geometry
-  const W = 720;
-  const H = 310;
-  const PAD = { t: 22, r: 24, b: 38, l: 54 };
-  const plotW = W - PAD.l - PAD.r;
-  const plotH = H - PAD.t - PAD.b;
-
-  const scatterItems = useMemo(() => {
-    const pts = radar?.points ?? [];
-    if (pts.length === 0) return [];
-    const maxTurnX = Math.max(3.5, ...pts.map((p) => Math.min(5, p.turnoverMult)));
-    const maxTurnVal = Math.max(...pts.map((p) => p.turnover), 1);
-
-    return pts.map((p) => {
-      const clampedX = Math.max(0.2, Math.min(maxTurnX, p.turnoverMult));
-      const clampedY = Math.max(-10, Math.min(10, p.changePct));
-      const x = PAD.l + ((clampedX - 0.2) / (maxTurnX - 0.2)) * plotW;
-      const y = PAD.t + ((10 - clampedY) / 20) * plotH;
-      const r = 4.5 + Math.sqrt(p.turnover / maxTurnVal) * 10;
-      return { point: p, x, y, r };
-    });
-  }, [radar, plotW, plotH]);
-
-  const maxTurnAxis = useMemo(() => {
-    const pts = radar?.points ?? [];
-    return Math.max(3.5, ...pts.map((p) => Math.min(5, p.turnoverMult)));
-  }, [radar]);
-
-  const zeroY = PAD.t + (10 / 20) * plotH;
-  const spikeX = PAD.l + ((Math.min(maxTurnAxis, 1.75) - 0.2) / (maxTurnAxis - 0.2)) * plotW;
 
   // Stock Comparison Multi-line chart geometry
   const CW = 700;
@@ -323,234 +353,36 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
         </div>
       </div>
 
-      {/* Visual Opportunity Radar Quadrant */}
+      {/* Upgraded Confluence Quadrant + Live 3-Pillar Dossier */}
+      <ConfluenceOpportunityMatrix
+        items={enrichedUniverse}
+        radar={radar}
+        nDays={nDays}
+        selectedDay={selectedDay}
+        loading={loading}
+        loadingExtra={loadingExtra}
+        compareSymbols={compareSymbols}
+        onToggleCompare={toggleCompareSymbol}
+        onInspectSymbol={onInspectSymbol}
+        onInspectInAnalyzer={onInspectInAnalyzer}
+        onInspectInQuant={onInspectInQuant}
+      />
+
+      {/* Multi-Chart Visual Analytics Strip: Fundamental × Technical Confluence + Sector Map */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
-        <div className="xl:col-span-8 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <Compass className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Visual Opportunity Quadrant (Turnover Multiple vs Daily Change)
-              </h3>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 text-[11px]">
-              {Object.entries(CATEGORY_META).map(([k, meta]) => (
-                <span key={k} className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: meta.color }} />
-                  <span>{meta.label}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="h-[310px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded" />
-          ) : scatterItems.length === 0 ? (
-            <div className="h-[310px] flex items-center justify-center text-xs text-slate-400">
-              No qualifying anomalies detected for {selectedDay}.
-            </div>
-          ) : (
-            <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto select-none">
-              {/* Quadrant Shading */}
-              <rect
-                x={spikeX}
-                y={PAD.t}
-                width={Math.max(0, W - PAD.r - spikeX)}
-                height={Math.max(0, zeroY - PAD.t)}
-                fill="rgba(16, 185, 129, 0.05)"
-              />
-              <line x1={PAD.l} y1={zeroY} x2={W - PAD.r} y2={zeroY} stroke="#94a3b8" strokeDasharray="3 3" strokeOpacity={0.5} />
-              <line x1={spikeX} y1={PAD.t} x2={spikeX} y2={H - PAD.b} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.6} />
-
-              {/* Quadrant Labels */}
-              <text x={W - PAD.r - 6} y={PAD.t + 14} textAnchor="end" fontSize="10" fill="#10b981" fontWeight="600">
-                High-Conviction Momentum Zone (≥1.75x Turn &amp; Up)
-              </text>
-              <text x={W - PAD.r - 6} y={H - PAD.b - 8} textAnchor="end" fontSize="10" fill="#0d9488">
-                Silent Absorption / Heavy Churn
-              </text>
-
-              {/* Axes Labels */}
-              <text x={W / 2} y={H - 8} textAnchor="middle" fontSize="11" fill="#64748b">
-                Turnover vs {nDays}-Day Average (×)
-              </text>
-              <text
-                x={14}
-                y={H / 2}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#64748b"
-                transform={`rotate(-90 14 ${H / 2})`}
-              >
-                Daily Price Change (%)
-              </text>
-
-              {/* Y ticks */}
-              {[-10, -5, 0, 5, 10].map((v) => {
-                const y = PAD.t + ((10 - v) / 20) * plotH;
-                return (
-                  <text key={v} x={PAD.l - 8} y={y + 3} textAnchor="end" fontSize="10" fill="#94a3b8" className="font-mono">
-                    {v > 0 ? `+${v}%` : `${v}%`}
-                  </text>
-                );
-              })}
-
-              {/* X ticks */}
-              {[0.5, 1, 1.75, 2.5, 3.5].map((v) => {
-                if (v > maxTurnAxis) return null;
-                const x = PAD.l + ((v - 0.2) / (maxTurnAxis - 0.2)) * plotW;
-                return (
-                  <text key={v} x={x} y={H - PAD.b + 14} textAnchor="middle" fontSize="10" fill="#94a3b8" className="font-mono">
-                    {v}x
-                  </text>
-                );
-              })}
-
-              {/* Bubbles */}
-              {scatterItems.map(({ point, x, y, r }) => {
-                const meta = CATEGORY_META[point.category];
-                const isHov = hoveredPoint?.symbol === point.symbol;
-                return (
-                  <g
-                    key={point.symbol}
-                    onMouseEnter={() => setHoveredPoint(point)}
-                    onMouseLeave={() => setHoveredPoint(null)}
-                    onClick={() => onInspectSymbol(point.symbol)}
-                    className="cursor-pointer"
-                  >
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={isHov ? r + 2.5 : r}
-                      fill={meta.color}
-                      fillOpacity={isHov ? 0.95 : 0.72}
-                      stroke={isHov ? '#0f172a' : '#ffffff'}
-                      strokeWidth={isHov ? 2 : 1}
-                    />
-                    {(r >= 8.5 || isHov) && (
-                      <text
-                        x={x}
-                        y={y - r - 3}
-                        textAnchor="middle"
-                        fontSize="9.5"
-                        fontWeight="600"
-                        fill="currentColor"
-                        className="text-slate-700 dark:text-slate-200 font-mono"
-                      >
-                        {point.symbol}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-            </svg>
-          )}
+        <div className="xl:col-span-6">
+          <ConfluenceLeaderboardChart
+            items={enrichedUniverse}
+            onInspectSymbol={onInspectSymbol}
+            onInspectInAnalyzer={onInspectInAnalyzer}
+          />
         </div>
-
-        {/* Live Radar Target Readout */}
-        <div className="xl:col-span-4 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 flex flex-col justify-between space-y-3">
-          {hoveredPoint ? (
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-blue-600 dark:text-blue-400">
-                      {hoveredPoint.symbol}
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 text-[10px] font-medium border rounded ${
-                        CATEGORY_META[hoveredPoint.category].badgeCls
-                      }`}
-                    >
-                      {CATEGORY_META[hoveredPoint.category].label}
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[260px]">
-                    {hoveredPoint.name} · {hoveredPoint.sector}
-                  </div>
-                </div>
-                <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                  Score {hoveredPoint.radarScore.toFixed(0)}
-                </span>
-              </div>
-
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950 p-2.5 rounded border border-slate-100 dark:border-slate-800">
-                {hoveredPoint.headline}
-              </p>
-
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono tabular-nums">
-                <div className="p-2 rounded bg-slate-50 dark:bg-slate-950">
-                  <span className="text-[10px] text-slate-400 block font-sans">LTP / Day Chg</span>
-                  <span className="font-semibold">
-                    {formatNum(hoveredPoint.ltp)} ({formatPct(hoveredPoint.changePct)})
-                  </span>
-                </div>
-                <div className="p-2 rounded bg-slate-50 dark:bg-slate-950">
-                  <span className="text-[10px] text-slate-400 block font-sans">Turn vs {nDays}d Avg</span>
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">
-                    {hoveredPoint.turnoverMult.toFixed(2)}x ({formatCrore(hoveredPoint.turnover)} cr)
-                  </span>
-                </div>
-                <div className="p-2 rounded bg-slate-50 dark:bg-slate-950">
-                  <span className="text-[10px] text-slate-400 block font-sans">Up/Down Vol ({nDays}d)</span>
-                  <span className="font-semibold">{hoveredPoint.upDownVolRatio.toFixed(2)}x</span>
-                </div>
-                <div className="p-2 rounded bg-slate-50 dark:bg-slate-950">
-                  <span className="text-[10px] text-slate-400 block font-sans">{nDays}d Return</span>
-                  <span className="font-semibold">{formatPct(hoveredPoint.periodReturnN)}</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3 text-xs text-slate-500 dark:text-slate-400">
-              <div className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-                Radar Signal Summary ({selectedDay})
-              </div>
-              <p className="leading-relaxed">
-                Hover over any bubble on the Opportunity Quadrant to inspect its turnover acceleration, accumulation ratio, and divergence diagnosis, or click to open its full-screen chart.
-              </p>
-              {radar && (
-                <div className="grid grid-cols-2 gap-2 pt-1 font-mono tabular-nums">
-                  <div className="p-2.5 rounded bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900">
-                    <div className="text-[10px] font-sans text-emerald-700 dark:text-emerald-300">
-                      Turnover Alerts
-                    </div>
-                    <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
-                      {radar.accelerationAlerts.length}
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900">
-                    <div className="text-[10px] font-sans text-blue-700 dark:text-blue-300">
-                      Stealth Accum
-                    </div>
-                    <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                      {radar.stealthAccumulation.length}
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900">
-                    <div className="text-[10px] font-sans text-rose-700 dark:text-rose-300">
-                      Divergences
-                    </div>
-                    <div className="text-lg font-bold text-rose-700 dark:text-rose-300">
-                      {radar.divergences.length}
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900">
-                    <div className="text-[10px] font-sans text-amber-700 dark:text-amber-300">
-                      Breakout Watch
-                    </div>
-                    <div className="text-lg font-bold text-amber-700 dark:text-amber-300">
-                      {radar.breakoutWatchlist.length}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="text-[11px] text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2">
-            Bubble size = session turnover · Vertical dashed line = 1.75x {nDays}d average
-          </div>
+        <div className="xl:col-span-6">
+          <SectorFundTechChart
+            sectorMatrix={radar?.sectorRotationMatrix ?? []}
+            fundamentals={fundamentalRows}
+            onInspectSymbol={onInspectSymbol}
+          />
         </div>
       </div>
 
@@ -559,7 +391,7 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="inline-flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-lg text-xs">
             {[
-              { id: 'acceleration' as RadarTab, label: 'Turnover Acceleration', icon: Flame, count: radar?.accelerationAlerts.length ?? 0 },
+              { id: 'acceleration' as RadarTab, label: 'Turnover Acceleration', icon: Activity, count: radar?.accelerationAlerts.length ?? 0 },
               { id: 'accumulation' as RadarTab, label: 'Stealth Accumulation', icon: Sparkles, count: radar?.stealthAccumulation.length ?? 0 },
               { id: 'divergences' as RadarTab, label: 'Volume-Price Divergence', icon: AlertTriangle, count: radar?.divergences.length ?? 0 },
               { id: 'breakout' as RadarTab, label: 'Breakout Watchlist', icon: Activity, count: radar?.breakoutWatchlist.length ?? 0 },
@@ -745,6 +577,7 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
             {activeRows.map((item) => {
               const meta = CATEGORY_META[item.category];
               const starred = hasSymbol(item.symbol);
+              const enr = enrichedMap.get(item.symbol);
               return (
                 <div
                   key={`${item.category}-${item.symbol}`}
@@ -758,7 +591,7 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -773,9 +606,14 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                         <span className="font-semibold text-sm text-blue-600 dark:text-blue-400">
                           {item.symbol}
                         </span>
-                        <span className={`px-1.5 py-0.5 text-[10px] font-medium border rounded ${meta.badgeCls}`}>
-                          {meta.label}
+                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                          · {meta.label}
                         </span>
+                        {enr?.isDualConfluence && (
+                          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                            · Dual Confluence
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {item.name} · {item.sector}
@@ -800,8 +638,19 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                   <p className="text-xs text-slate-700 dark:text-slate-300 leading-snug">{item.headline}</p>
 
                   <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/70 dark:border-slate-800">
-                    <span>Turn: {item.turnoverMult.toFixed(1)}x ({formatCrore(item.turnover)} cr)</span>
-                    <span>Up/Dn Vol: {item.upDownVolRatio.toFixed(1)}x</span>
+                    <span>
+                      Turn {item.turnoverMult.toFixed(1)}x ({formatCrore(item.turnover)} cr) · Up/Dn {item.upDownVolRatio.toFixed(1)}x
+                      {enr?.fundScore !== null && enr?.fundScore !== undefined
+                        ? ` · Fund ${enr.fundScore.toFixed(0)}`
+                        : ''}
+                      {enr?.fundamental?.keyMetrics.marginOfSafetyPct !== null &&
+                      enr?.fundamental?.keyMetrics.marginOfSafetyPct !== undefined
+                        ? ` (MoS ${formatPct(enr.fundamental.keyMetrics.marginOfSafetyPct)})`
+                        : ''}
+                      {enr?.technical
+                        ? ` · ${enr.technical.strategy} ${enr.technical.grade} (1:${enr.technical.rrT2.toFixed(1)}R)`
+                        : ''}
+                    </span>
                     <span className="text-blue-600 dark:text-blue-400 inline-flex items-center gap-0.5 font-sans">
                       Inspect <ArrowUpRight className="w-3 h-3" />
                     </span>
@@ -837,6 +686,8 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                   <th className="py-2 pr-3 text-left font-medium">Stock · Sector</th>
                   <th className="py-2 px-2 text-right font-medium">LTP · Chg %</th>
                   <th className="py-2 px-2 text-right font-medium">SM Score</th>
+                  <th className="py-2 px-2 text-right font-medium">Fund Score</th>
+                  <th className="py-2 px-2 text-left font-medium">Tech / ICT Setup</th>
                   <th className="py-2 px-2 text-right font-medium">Avg Rs / Tx</th>
                   <th className="py-2 px-2 text-right font-medium">Up/Dn Vol</th>
                   <th className="py-2 px-2 text-center font-medium">Pocket Pivot</th>
@@ -846,7 +697,9 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono tabular-nums">
-                {radar.smartMoneyLeaders.map((sm) => (
+                {radar.smartMoneyLeaders.map((sm) => {
+                  const enr = enrichedMap.get(sm.symbol);
+                  return (
                   <tr key={sm.symbol} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td className="py-2 pr-3 font-sans">
                       <button
@@ -868,6 +721,25 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                       {sm.smartMoneyScore.toFixed(0)}/100
                     </td>
                     <td className="py-2 px-2 text-right">
+                      {enr?.fundScore !== null && enr?.fundScore !== undefined ? (
+                        <span className={enr.fundScore >= 55 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''}>
+                          {enr.fundScore.toFixed(0)}/100
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">–</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-left font-sans">
+                      {enr?.technical ? (
+                        <span className="text-[11px] text-slate-700 dark:text-slate-200">
+                          <strong className="font-mono text-blue-600 dark:text-blue-400">{enr.technical.grade}</strong>{' '}
+                          {enr.technical.setupName}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">–</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-right">
                       <div>Rs {formatInt(sm.avgTradeSizeNpr)}</div>
                       <div className="text-[11px] text-amber-600 dark:text-amber-400">{sm.avgTradeSizeMult.toFixed(2)}x</div>
                     </td>
@@ -885,6 +757,15 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                     <td className="py-2 px-2 text-right">{sm.vwapPct !== null ? formatPct(sm.vwapPct) : '–'}</td>
                     <td className="py-2 pl-2 text-right font-sans">
                       <div className="inline-flex items-center gap-2">
+                        {onInspectInAnalyzer && (
+                          <button
+                            type="button"
+                            onClick={() => onInspectInAnalyzer(sm.symbol)}
+                            className="text-slate-600 dark:text-slate-300 font-medium hover:underline"
+                          >
+                            Analyzer
+                          </button>
+                        )}
                         {onInspectInQuant && (
                           <button
                             type="button"
@@ -897,7 +778,8 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1032,6 +914,13 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
               ))}
             </svg>
 
+            <ComparisonPillarMatrix
+              stocks={comparison.stocks}
+              enrichedMap={enrichedMap}
+              colors={COMPARE_COLORS}
+              onInspectSymbol={onInspectSymbol}
+            />
+
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
                 <thead>
@@ -1040,16 +929,19 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                     <th className="py-2 px-3 text-right font-medium">LTP</th>
                     <th className="py-2 px-3 text-right font-medium">Day %</th>
                     <th className="py-2 px-3 text-right font-medium">{nDays}d Return</th>
-                    <th className="py-2 px-3 text-right font-medium">{nDays}d Avg Turn</th>
+                    <th className="py-2 px-3 text-right font-medium">Fund Score</th>
+                    <th className="py-2 px-3 text-right font-medium">P/E · MoS</th>
+                    <th className="py-2 px-3 text-right font-medium">Tech Setup</th>
                     <th className="py-2 px-3 text-right font-medium">Turn Multiple</th>
                     <th className="py-2 px-3 text-right font-medium">vs VWAP</th>
                     <th className="py-2 px-3 text-right font-medium">vs MA120</th>
-                    <th className="py-2 px-3 text-right font-medium">52w Pos</th>
                     <th className="py-2 pl-3 text-right font-medium">Rs / Tx</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono tabular-nums">
-                  {comparison.stocks.map((st, idx) => (
+                  {comparison.stocks.map((st, idx) => {
+                    const enr = enrichedMap.get(st.symbol);
+                    return (
                     <tr
                       key={st.symbol}
                       onClick={() => onInspectSymbol(st.symbol)}
@@ -1058,7 +950,7 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                       <td className="py-2 pr-3 font-sans">
                         <div className="flex items-center gap-2">
                           <span
-                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            className="w-2.5 h-2.5 rounded-xs shrink-0"
                             style={{ backgroundColor: COMPARE_COLORS[idx % COMPARE_COLORS.length] }}
                           />
                           <div>
@@ -1086,18 +978,30 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
                       >
                         {formatPct(st.returnNPct)}
                       </td>
-                      <td className="py-2 px-3 text-right">{formatCrore(st.avgTurnoverN)} cr</td>
+                      <td className="py-2 px-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                        {enr?.fundScore !== null && enr?.fundScore !== undefined
+                          ? `${enr.fundScore.toFixed(0)}/100`
+                          : '–'}
+                      </td>
+                      <td className="py-2 px-3 text-right text-[11px]">
+                        {enr?.fundamental?.hasFundamentalData
+                          ? `${enr.fundamental.keyMetrics.pe?.toFixed(1) ?? '–'}x · ${formatPct(enr.fundamental.keyMetrics.marginOfSafetyPct)}`
+                          : '–'}
+                      </td>
+                      <td className="py-2 px-3 text-right text-[11px]">
+                        {enr?.technical
+                          ? `${enr.technical.grade} (1:${enr.technical.rrT2.toFixed(1)}R)`
+                          : '–'}
+                      </td>
                       <td className="py-2 px-3 text-right text-amber-600 dark:text-amber-400 font-semibold">
                         {st.turnoverMultN.toFixed(2)}x
                       </td>
                       <td className="py-2 px-3 text-right">{formatPct(st.vwapPct)}</td>
                       <td className="py-2 px-3 text-right">{formatPct(st.vsD120Pct)}</td>
-                      <td className="py-2 px-3 text-right">
-                        {st.pos52wPct !== null ? `${st.pos52wPct.toFixed(0)}%` : '–'}
-                      </td>
                       <td className="py-2 pl-3 text-right">{formatInt(st.avgTradeSize)}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

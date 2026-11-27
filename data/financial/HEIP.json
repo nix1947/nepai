@@ -1,0 +1,64 @@
+{
+  "symbol": "HEIP",
+  "companyName": "Himalayan Everest Insurance Limited Promoter",
+  "sector": "Promoter Share",
+  "companyId": "1210",
+  "scrapedAt": "2026-11-27T08:31:41.766Z",
+  "sourceUrl": "https://www.sharesansar.com/company/heip",
+  "periods": [
+    "Duration"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    },
+    {
+      "key": "keymetrics",
+      "title": "KEY METRICS",
+      "headers": [
+        "Particulars",
+        "Duration"
+      ],
+      "rows": [
+        {
+          "section": "No data available",
+          "isSectionHeader": true,
+          "particulars": "No data available",
+          "values": [],
+          "numericValues": []
+        }
+      ]
+    }
+  ]
+}

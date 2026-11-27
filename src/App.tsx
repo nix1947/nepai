@@ -3,6 +3,7 @@ import {
   Activity,
   AlertOctagon,
   ArrowLeft,
+  Award,
   BarChart3,
   BookOpen,
   CalendarClock,
@@ -33,6 +34,7 @@ import type { DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market
 import { formatTimeUntil } from './utils/format';
 import { AlgorithmsView } from './views/AlgorithmsView';
 import { AnalyzerView } from './views/AnalyzerView';
+import { FundamentalScreenerView } from './views/FundamentalScreenerView';
 import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
 import { OpportunityRadarView } from './views/OpportunityRadarView';
@@ -52,6 +54,7 @@ import { TurnoverDirectionView } from './views/TurnoverDirectionView';
 
 type NavTab =
   | 'overview'
+  | 'screener'
   | 'pulse'
   | 'turnover'
   | 'radar'
@@ -74,6 +77,7 @@ const NAV_ITEMS: Array<{
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
+  { id: 'screener', label: 'Fundamental Screener', icon: Award },
   { id: 'pulse', label: 'Market Pulse', icon: Gauge },
   { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
   { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
@@ -207,7 +211,7 @@ export default function App() {
     } catch (err) {
       setToast({
         kind: 'error',
-        text: err instanceof Error ? err.message : 'Network error pulling ShareSansar',
+        text: err instanceof Error ? err.message : 'Network error pulling latest data',
       });
     } finally {
       setPulling(false);
@@ -273,6 +277,7 @@ export default function App() {
     activeTab !== 'algorithms' &&
     activeTab !== 'scheduler' &&
     activeTab !== 'macro' &&
+    activeTab !== 'screener' &&
     activeTab !== 'settings';
 
   const sidebarContent = (
@@ -339,10 +344,10 @@ export default function App() {
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span>Data feed</span>
             <span className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300">
-              <span>ShareSansar EOD</span>
+              <span>NEPSE EOD</span>
               <InfoTip
                 title="EOD / Historical Data Policy"
-                body="All prices, volumes, and rolling N-day signals are computed from loaded ShareSansar End-of-Day (EOD) CSV sessions rather than live streaming ticks."
+                body="All prices, volumes, and rolling N-day signals are computed from loaded End-of-Day (EOD) CSV sessions rather than live streaming ticks."
                 align="left"
               />
             </span>
@@ -571,7 +576,7 @@ export default function App() {
                 No NEPSE trading data loaded yet
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Pull today&apos;s market table directly from ShareSansar, backfill a multi-month
+                Pull today&apos;s market table directly, backfill a multi-month
                 range for technical scanners, or import local <code className="font-mono">YYYY-MM-DD.csv</code>{' '}
                 files. The daily scheduler is active and will keep your dataset updated automatically.
               </p>
@@ -583,7 +588,7 @@ export default function App() {
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${pulling ? 'animate-spin' : ''}`} />
-                  <span>{pulling ? 'Pulling ShareSansar…' : 'Pull Latest from ShareSansar'}</span>
+                  <span>{pulling ? 'Pulling Latest…' : 'Pull Latest'}</span>
                 </button>
                 <button
                   type="button"
@@ -614,6 +619,13 @@ export default function App() {
                   onOpenScheduler={() => navigateTo('scheduler')}
                 />
               )}
+              {activeTab === 'screener' && (
+                <FundamentalScreenerView
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                  onInspectInAnalyzer={inspectInAnalyzer}
+                />
+              )}
               {activeTab === 'pulse' && (
                 <MarketPulseView
                   dates={dates}
@@ -634,6 +646,7 @@ export default function App() {
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}
                   onInspectInQuant={inspectInQuant}
+                  onInspectInAnalyzer={inspectInAnalyzer}
                 />
               )}
               {activeTab === 'direction' && (
@@ -641,6 +654,8 @@ export default function App() {
                   dates={dates}
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}
+                  onInspectInQuant={inspectInQuant}
+                  onInspectInAnalyzer={inspectInAnalyzer}
                 />
               )}
               {activeTab === 'scanners' && (

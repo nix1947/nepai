@@ -232,7 +232,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
       if (!res.ok) throw new Error(data.error || 'Failed to push project to GitHub');
       setNotice({
         kind: 'success',
-        text: `${data.result.createdRepo ? 'Created' : 'Updated'} ${data.result.repoFullName} (${data.result.filesUploaded} files committed). GitHub Actions handles daily ShareSansar pulls and this app syncs from GitHub.`,
+        text: `${data.result.createdRepo ? 'Created' : 'Updated'} ${data.result.repoFullName} (${data.result.filesUploaded} files committed). GitHub Actions handles daily pulls and this app syncs from GitHub.`,
       });
       await loadStatus();
     } catch (err) {
@@ -361,7 +361,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
           Daily Scheduler, GitHub Sync &amp; Data Ingestion
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Pull daily NEPSE prices automatically from ShareSansar, sync CSV archives daily from a GitHub repository, or backfill historical dates
+          Pull daily NEPSE prices automatically, sync CSV archives daily from a GitHub repository, or backfill historical dates
         </p>
       </div>
 
@@ -397,8 +397,8 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
             {status?.config.sourceMode === 'github'
               ? 'GitHub Repository'
               : status?.config.sourceMode === 'both'
-                ? 'ShareSansar + GitHub'
-                : 'ShareSansar Direct'}
+                ? 'Direct Feed + GitHub'
+                : 'Direct Feed'}
           </div>
           <div className="mt-1 text-xs text-slate-500 dark:text-slate-400 truncate">
             {status?.config.githubRepo
@@ -452,7 +452,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
               {(
                 [
                   { id: 'github', label: 'GitHub Repo (Recommended)' },
-                  { id: 'sharesansar', label: 'ShareSansar Direct' },
+                  { id: 'sharesansar', label: 'Direct Feed' },
                   { id: 'both', label: 'Both' },
                 ] as const
               ).map((opt) => (
@@ -615,7 +615,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
                   onChange={(e) => setPushToGitHub(e.target.checked)}
                   className="rounded border-slate-300 text-blue-600"
                 />
-                <span>Commit scraped CSVs to GitHub (requires GITHUB_TOKEN)</span>
+                <span>Commit fetched CSVs to GitHub (requires GITHUB_TOKEN)</span>
               </label>
             </div>
           </div>
@@ -778,7 +778,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
               </h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Upload one or more <code className="font-mono">YYYY-MM-DD.csv</code> files matching the ShareSansar / analysis.py column layout.
+              Upload one or more <code className="font-mono">YYYY-MM-DD.csv</code> files matching the NEPSE / analysis.py column layout.
             </p>
             <label className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
               <Upload className="w-3.5 h-3.5" />
@@ -812,8 +812,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
             {status?.hasGitHubToken ? (
               <div className="space-y-3 text-xs">
                 <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Pushes the full app, loaded <code className="font-mono">data/*.csv</code> files, and{' '}
-                  <code className="font-mono">.github/workflows/daily-sharesansar.yml</code> directly to GitHub (creating the repo if it doesn&apos;t exist) and enables daily GitHub sync.
+                  Pushes the full app, loaded <code className="font-mono">data/*.csv</code> files, and the automated daily GitHub Actions workflow directly to GitHub (creating the repo if it doesn&apos;t exist) and enables daily GitHub sync.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <label className="sm:col-span-2 space-y-1">
@@ -867,7 +866,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
               </div>
             ) : (
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Add <code className="font-mono">GITHUB_TOKEN</code> in AI Studio Secrets or use the AI Studio GitHub export button to push this repository (including <code className="font-mono">.github/workflows/daily-sharesansar.yml</code>) to GitHub.
+                Add <code className="font-mono">GITHUB_TOKEN</code> in AI Studio Secrets or use the AI Studio GitHub export button to push this repository (including the daily GitHub Actions workflow) to GitHub.
               </p>
             )}
           </div>

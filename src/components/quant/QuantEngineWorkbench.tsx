@@ -727,7 +727,7 @@ export const QuantEngineWorkbench: React.FC<QuantEngineWorkbenchProps> = ({
         </div>
       ) : !data ? (
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-8 text-center text-xs text-slate-500">
-          Select a trading date with loaded ShareSansar CSV data to run the Statistical Advantage Engine.
+          Select a trading date with loaded CSV data to run the Statistical Advantage Engine.
         </div>
       ) : (
         <>

@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+GMFBS,BALANCE SHEET,General,Cash and cash equivalent,"134,281.65"
+GMFBS,BALANCE SHEET,General,Statutory Balances and Due from NRB,"12,300.00"
+GMFBS,BALANCE SHEET,General,Placement with Bank and Financial Institutions,0.00
+GMFBS,BALANCE SHEET,General,Derivative financial instruments,0.00
+GMFBS,BALANCE SHEET,General,Other trading assets,0.00
+GMFBS,BALANCE SHEET,General,Loan and advances to MFIs & Cooperatives,0.00
+GMFBS,BALANCE SHEET,General,Loans and advances to customers,"2,323,618.75"
+GMFBS,BALANCE SHEET,General,Investment securities,0.00
+GMFBS,BALANCE SHEET,General,Current tax assets,"17,748.69"
+GMFBS,BALANCE SHEET,General,Investment in subsidiaries,0.00
+GMFBS,BALANCE SHEET,General,Investment in associates,0.00
+GMFBS,BALANCE SHEET,General,Investment property,0.00
+GMFBS,BALANCE SHEET,General,Property and equipment,"7,026.06"
+GMFBS,BALANCE SHEET,General,Goodwill and Intangible assets,677.39
+GMFBS,BALANCE SHEET,General,Deferred tax assets,"3,599.46"
+GMFBS,BALANCE SHEET,General,Other assets,"33,818.69"
+GMFBS,BALANCE SHEET,General,Total Assets,"2,533,070.68"
+GMFBS,BALANCE SHEET,General,Due to Bank and Financial Institutions,0.00
+GMFBS,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+GMFBS,BALANCE SHEET,General,Derivative financial instruments,0.00
+GMFBS,BALANCE SHEET,General,Deposits from customers,"535,659.90"
+GMFBS,BALANCE SHEET,General,Borrowing,"1,655,569.34"
+GMFBS,BALANCE SHEET,General,Current Tax Liabilities,"20,900.49"
+GMFBS,BALANCE SHEET,General,Provisions,0.00
+GMFBS,BALANCE SHEET,General,Deferred tax liabilities,0.00
+GMFBS,BALANCE SHEET,General,Other liabilities,"76,389.44"
+GMFBS,BALANCE SHEET,General,Debt securities issued,0.00
+GMFBS,BALANCE SHEET,General,Subordinated Liabilities,0.00
+GMFBS,BALANCE SHEET,General,Total liabilities,"2,288,519.17"
+GMFBS,BALANCE SHEET,General,Share capital,"151,554.53"
+GMFBS,BALANCE SHEET,General,Share premium,0.00
+GMFBS,BALANCE SHEET,General,Retained earnings,"-9,686.76"
+GMFBS,BALANCE SHEET,General,Reserves,"102,683.75"
+GMFBS,BALANCE SHEET,General,Total equity,"244,551.52"
+GMFBS,BALANCE SHEET,General,Total liabilities and equity,"2,533,070.69"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Interest income,"76,478.43"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Interest expense,"32,088.97"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Net interest income,"44,389.46"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Fees and commission income,347.14
+GMFBS,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,111.82
+GMFBS,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,235.32
+GMFBS,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","44,624.77"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Net trading income,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Other operating income,"2,222.12"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Total operating income,"46,846.90"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"4,811.48"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Net operating income,"42,035.42"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Personnel expense,"28,504.66"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Other operating expense,"6,131.95"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,537.01
+GMFBS,PROFIT & LOSS ACCOUNT,General,Operating Profit,"6,861.80"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Non operating income,2.66
+GMFBS,PROFIT & LOSS ACCOUNT,General,Non operating expense,4.38
+GMFBS,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"6,860.08"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Current Tax,"2,058.02"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Profit for the period,"4,802.05"
+GMFBS,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax",0.00
+GMFBS,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"4,802.05"
+GMFBS,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),12.67
+GMFBS,KEY METRICS,General,Diluted Earnings Per Share,12.67
+GMFBS,KEY METRICS,General,Capital fund to RWA,8.52
+GMFBS,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,14.27
+GMFBS,KEY METRICS,General,Total Loan loss provision to Total NPL,42.17
+GMFBS,KEY METRICS,General,Cost of Funds,5.97
+GMFBS,KEY METRICS,General,Credit to Deposit Ratio,106.04
+GMFBS,KEY METRICS,General,Base Rate,11.87
+GMFBS,KEY METRICS,General,Interest Spread Rate,8.66
+GMFBS,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"244,551.52"
+GMFBS,KEY METRICS,General,No. of Outstanding Shares,"1,515,545.32"
+GMFBS,KEY METRICS,General,Net Worth Per Share,161.36
+GMFBS,KEY METRICS,General,P/E Ratio,84.57
+GMFBS,KEY METRICS,General,Price to Book (P/B) Ratio,6.64
+GMFBS,KEY METRICS,General,Return on Equity,7.85
+GMFBS,KEY METRICS,General,Return on Assets,0.76

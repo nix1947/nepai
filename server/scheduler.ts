@@ -485,14 +485,14 @@ export class DailyScheduler {
             tradingDate: latestDate || date,
             rowsSaved: totalRows,
             durationMs: Date.now() - started,
-            message: `${notes.length ? `${notes.join('. ')}. ` : ''}ShareSansar still shows ${date} (before ${todayInTz}). Retrying in ${this.config.retryDelayMinutes} min.`,
+            message: `${notes.length ? `${notes.join('. ')}. ` : ''}Market feed still shows ${date} (before ${todayInTz}). Retrying in ${this.config.retryDelayMinutes} min.`,
           });
         }
 
         const saved = this.store.saveDayRows(date, rows);
         totalRows += saved;
         latestDate = date;
-        notes.push(`ShareSansar: saved ${saved} rows for ${date}`);
+        notes.push(`Direct feed: saved ${saved} rows for ${date}`);
 
         // Optional GitHub push-back when token is configured
         if (this.config.pushToGitHub && this.config.githubRepo) {
@@ -589,7 +589,7 @@ export class DailyScheduler {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this.backfill.active = false;
-      this.backfill.message = `Could not connect to ShareSansar: ${msg}`;
+      this.backfill.message = `Could not connect to market feed: ${msg}`;
       this.appendLog({
         trigger: 'backfill',
         status: 'error',

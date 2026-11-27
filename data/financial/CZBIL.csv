@@ -1,0 +1,87 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+CZBIL,BALANCE SHEET,General,Cash and cash equivalent,"15,680,246.34"
+CZBIL,BALANCE SHEET,General,Due from Nepal Rastra Bank,"9,265,962.82"
+CZBIL,BALANCE SHEET,General,Placement with Bank and Financial Institutions,"8,087,461.50"
+CZBIL,BALANCE SHEET,General,Derivative financial instruments,"135,453.93"
+CZBIL,BALANCE SHEET,General,Other trading assets,"397,617.85"
+CZBIL,BALANCE SHEET,General,Loan and advances to B/FIs,"1,119,575.89"
+CZBIL,BALANCE SHEET,General,Loans and advances to customers,"175,611,408.26"
+CZBIL,BALANCE SHEET,General,Investment securities,"54,689,163.52"
+CZBIL,BALANCE SHEET,General,Current tax assets,0.00
+CZBIL,BALANCE SHEET,General,Investment in subsidiaries,"317,204.20"
+CZBIL,BALANCE SHEET,General,Investment in associates,"389,197.83"
+CZBIL,BALANCE SHEET,General,Investment property,"1,719,990.35"
+CZBIL,BALANCE SHEET,General,Property and equipment,"4,123,345.07"
+CZBIL,BALANCE SHEET,General,Goodwill and Intangible assets,"189,014.27"
+CZBIL,BALANCE SHEET,General,Deferred tax assets,"909,454.93"
+CZBIL,BALANCE SHEET,General,Other assets,"4,494,213.26"
+CZBIL,BALANCE SHEET,General,Total Assets,"277,129,310.00"
+CZBIL,BALANCE SHEET,General,Due to Bank and Financial Institutions,"1,713,166.40"
+CZBIL,BALANCE SHEET,General,Due to Nepal Rastra Bank,"596,710.91"
+CZBIL,BALANCE SHEET,General,Derivative financial instruments,0.00
+CZBIL,BALANCE SHEET,General,Deposits from customers,"241,019,536.75"
+CZBIL,BALANCE SHEET,General,Borrowing,0.00
+CZBIL,BALANCE SHEET,General,Current Tax Liabilities,"98,296.63"
+CZBIL,BALANCE SHEET,General,Provisions,"5,306.63"
+CZBIL,BALANCE SHEET,General,Deferred tax liabilities,0.00
+CZBIL,BALANCE SHEET,General,Other liabilities,"3,200,764.03"
+CZBIL,BALANCE SHEET,General,Debt securities issued,"5,476,057.54"
+CZBIL,BALANCE SHEET,General,Subordinated Liabilities,0.00
+CZBIL,BALANCE SHEET,General,Total liabilities,"252,109,838.88"
+CZBIL,BALANCE SHEET,General,Share capital,"16,096,747.23"
+CZBIL,BALANCE SHEET,General,Share premium,0.00
+CZBIL,BALANCE SHEET,General,Retained earnings,"-448,415.41"
+CZBIL,BALANCE SHEET,General,Reserves,"9,371,139.30"
+CZBIL,BALANCE SHEET,General,Total equity,"25,019,471.13"
+CZBIL,BALANCE SHEET,General,Total liabilities and equity,"277,129,310.00"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Interest income,"3,633,065.15"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Interest expense,"2,091,548.15"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Net interest income,"1,541,517.00"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"412,092.91"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,"43,253.72"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"368,839.19"
+CZBIL,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","1,910,356.19"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Net trading income,"99,019.27"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Other operating income,"61,330.44"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Total operating income,"2,070,705.90"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"1,078,520.59"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Net operating income,"992,185.30"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Personnel expense,"493,892.85"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Other operating expense,"281,600.67"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"105,083.55"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Operating Profit,"111,608.24"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Non operating income,"43,885.60"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Non operating expense,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"155,493.83"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Current Tax,"282,971.68"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Deferred Tax,"-235,181.12"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Profit for the period,"107,703.27"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+CZBIL,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax","-49,535.78"
+CZBIL,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"58,167.49"
+CZBIL,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),2.68
+CZBIL,KEY METRICS,General,Diluted Earnings Per Share,2.68
+CZBIL,KEY METRICS,General,Capital fund to RWA,12.08
+CZBIL,KEY METRICS,General,Tier I Capital to RWA,8.83
+CZBIL,KEY METRICS,General,CET I Capital to RWA,8.83
+CZBIL,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,6.80
+CZBIL,KEY METRICS,General,Total Loan loss provision to Total NPL,87.90
+CZBIL,KEY METRICS,General,Cost of Funds,3.15
+CZBIL,KEY METRICS,General,Credit to Deposit Ratio,75.45
+CZBIL,KEY METRICS,General,Base Rate,4.87
+CZBIL,KEY METRICS,General,Interest Spread Rate,3.39
+CZBIL,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"25,019,471.13"
+CZBIL,KEY METRICS,General,No. of Outstanding Shares,"160,967,472.32"
+CZBIL,KEY METRICS,General,Net Worth Per Share,155.43
+CZBIL,KEY METRICS,General,P/E Ratio,82.57
+CZBIL,KEY METRICS,General,Price to Book (P/B) Ratio,1.42
+CZBIL,KEY METRICS,General,Return on Equity,1.72
+CZBIL,KEY METRICS,General,Return on Assets,0.16

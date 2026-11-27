@@ -1,0 +1,57 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+JHAPA,BALANCE SHEET,Non-Current Assets,"Property, Plant and Equipment","789,931.03"
+JHAPA,BALANCE SHEET,Non-Current Assets,Intangible Assets,0.00
+JHAPA,BALANCE SHEET,Non-Current Assets,Right-of-Use Asset,0.00
+JHAPA,BALANCE SHEET,Non-Current Assets,Investment,"20,000.00"
+JHAPA,BALANCE SHEET,Non-Current Assets,Other Non-Current Assets,700.00
+JHAPA,BALANCE SHEET,Non-Current Assets,Total Non-Current Assets,"810,631.03"
+JHAPA,BALANCE SHEET,Current Assets,Inventories,"7,526.89"
+JHAPA,BALANCE SHEET,Current Assets,Cash & Cash Equivalents,59.72
+JHAPA,BALANCE SHEET,Current Assets,Trade Receivables,"19,982.33"
+JHAPA,BALANCE SHEET,Current Assets,Prepayments,0.00
+JHAPA,BALANCE SHEET,Current Assets,Other Current Assets,"5,090.34"
+JHAPA,BALANCE SHEET,Current Assets,Total Current Assets,"32,659.27"
+JHAPA,BALANCE SHEET,Current Assets,Total Assets,"843,290.30"
+JHAPA,BALANCE SHEET,Equity,Share Capital,"380,190.00"
+JHAPA,BALANCE SHEET,Equity,Other equity,"12,958.52"
+JHAPA,BALANCE SHEET,Equity,Total Equity,"393,148.52"
+JHAPA,BALANCE SHEET,Non-Current Liabilities,Long Term Borrowings,"393,693.28"
+JHAPA,BALANCE SHEET,Non-Current Liabilities,Trade Payables,0.00
+JHAPA,BALANCE SHEET,Non-Current Liabilities,Other Non-Current Liabilities,773.76
+JHAPA,BALANCE SHEET,Non-Current Liabilities,Total Non-Current Liabilities,"394,467.05"
+JHAPA,BALANCE SHEET,Current Liabilities,Trade Payables,0.00
+JHAPA,BALANCE SHEET,Current Liabilities,Short Term Borrowings,"49,900.18"
+JHAPA,BALANCE SHEET,Current Liabilities,Other Current Liabilities,"5,774.55"
+JHAPA,BALANCE SHEET,Current Liabilities,Provisions,0.00
+JHAPA,BALANCE SHEET,Current Liabilities,Other Current Tax Liabilities,0.00
+JHAPA,BALANCE SHEET,Current Liabilities,Total Current Liabilities,"55,674.73"
+JHAPA,BALANCE SHEET,Current Liabilities,Total Equity & Liabilities,"843,290.30"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Revenue from Operations,"26,450.75"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Miscellaneous Income,0.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Total Revenue,"26,450.75"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Other Income,560.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Less: Expenses,"21,441.25"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Cost of Good Sold,"3,560.28"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Emlpoyee Cost,0.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Administration Expenses,"2,177.14"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Borrowing Cost,"6,763.93"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Depreciation and Amortization,"8,939.90"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Operating Profit,"5,569.50"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Provision for Bonus,0.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Provision for CSR,0.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Profit Before Tax,"5,569.50"
+JHAPA,PROFIT & LOSS ACCOUNT,General,Current Tax,0.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Prior Year Taxes,0.00
+JHAPA,PROFIT & LOSS ACCOUNT,General,Net Profit for the period,"5,569.50"
+JHAPA,RATIO ANALYSIS,General,Gross Profit Margin (%),100.00
+JHAPA,RATIO ANALYSIS,General,Net Profit Margin (%),21.06
+JHAPA,RATIO ANALYSIS,General,Debt-Equity (times),1.14
+JHAPA,RATIO ANALYSIS,General,Inventory Turnover (times),0.47
+JHAPA,RATIO ANALYSIS,General,Current Ratio (times),0.59
+JHAPA,KEY RATIOS,General,Networth per Share (Rs.),103.41
+JHAPA,KEY RATIOS,General,Earning Per Share annualized(Rs.),5.86
+JHAPA,KEY RATIOS,General,Price to Earning Ratio (times),162.09
+JHAPA,KEY RATIOS,General,Price to Book ratio(times),9.18
+JHAPA,KEY RATIOS,General,Return on Equity (%),5.67
+JHAPA,KEY RATIOS,General,Return on Asset (%),2.64

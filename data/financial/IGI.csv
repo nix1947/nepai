@@ -1,0 +1,85 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+IGI,BALANCE SHEET,Assets,Goodwill & Intangible Assets,"3,331.15"
+IGI,BALANCE SHEET,Assets,Property and Equipment,"1,253,573.97"
+IGI,BALANCE SHEET,Assets,Investment Properties,"192,331.55"
+IGI,BALANCE SHEET,Assets,Deferred Tax Assets,"110,366.33"
+IGI,BALANCE SHEET,Assets,Investment in Subsidiaries,0.00
+IGI,BALANCE SHEET,Assets,Investment in Associates,0.00
+IGI,BALANCE SHEET,Assets,Investments,"4,354,259.67"
+IGI,BALANCE SHEET,Assets,Loans,0.00
+IGI,BALANCE SHEET,Assets,Reinsurance Assets,"7,368,447.65"
+IGI,BALANCE SHEET,Assets,Current Tax Assets,"199,934.75"
+IGI,BALANCE SHEET,Assets,Insurance Receivables,"805,807.28"
+IGI,BALANCE SHEET,Assets,Other Assets,"747,497.37"
+IGI,BALANCE SHEET,Assets,Other Financial Assets,"128,066.06"
+IGI,BALANCE SHEET,Assets,Cash and Cash Equivalent,"515,305.72"
+IGI,BALANCE SHEET,Assets,Total Assets,"15,678,921.49"
+IGI,BALANCE SHEET,Equity,Share Capital,"3,029,334.64"
+IGI,BALANCE SHEET,Equity,Share Application Money Pending Allotment,0.00
+IGI,BALANCE SHEET,Equity,Share Premium,0.00
+IGI,BALANCE SHEET,Equity,Special Reserve,"1,876,438.11"
+IGI,BALANCE SHEET,Equity,Catastrophe Reserve,"98,615.21"
+IGI,BALANCE SHEET,Equity,Retained Earnings,"-16,015.96"
+IGI,BALANCE SHEET,Equity,Other Equity,"446,758.25"
+IGI,BALANCE SHEET,Equity,Total Equity,"5,435,130.25"
+IGI,BALANCE SHEET,Liabilities,Provisions,"82,802.65"
+IGI,BALANCE SHEET,Liabilities,Gross Insurance Contract Liabilities,"9,213,538.60"
+IGI,BALANCE SHEET,Liabilities,Deferred Tax Liabilities,0.00
+IGI,BALANCE SHEET,Liabilities,Insurance Payable,"216,393.99"
+IGI,BALANCE SHEET,Liabilities,Current Tax Liabilities,0.00
+IGI,BALANCE SHEET,Liabilities,Borrowings,0.00
+IGI,BALANCE SHEET,Liabilities,Other Liabilities,"649,503.03"
+IGI,BALANCE SHEET,Liabilities,Other Financial Liabilities,"81,552.97"
+IGI,BALANCE SHEET,Liabilities,Total Liabilities,"10,243,791.24"
+IGI,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"15,678,921.49"
+IGI,PROFIT & LOSS ACCOUNT,Income,Gross Earned Premiums,"724,198.57"
+IGI,PROFIT & LOSS ACCOUNT,Income,Premium Ceded,"-378,089.02"
+IGI,PROFIT & LOSS ACCOUNT,Income,Net Earned Premiums,"346,109.55"
+IGI,PROFIT & LOSS ACCOUNT,Income,Commission Income,"154,721.60"
+IGI,PROFIT & LOSS ACCOUNT,Income,Other Direct Income,0.00
+IGI,PROFIT & LOSS ACCOUNT,Income,Income from Investments and Loans,"58,518.72"
+IGI,PROFIT & LOSS ACCOUNT,Income,Net Gain/(Loss) of Fair Value Changes,0.00
+IGI,PROFIT & LOSS ACCOUNT,Income,Net Realized Gains/(Losses),-845.27
+IGI,PROFIT & LOSS ACCOUNT,Income,Other Income,162.95
+IGI,PROFIT & LOSS ACCOUNT,Income,Total Income,"558,667.55"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Gross Claims Paid,"1,125,677.00"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Claims Ceded,"-844,005.49"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Gross Change in Contract Liabilities,"562,249.71"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Change in Contract Liabilities Ceded to Reinsurers,"-553,651.36"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Net Benefits and Claims Paid,"290,269.86"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Commission Expenses,"36,617.07"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Service Fees,"4,205.33"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Other Direct Expenses,182.01
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"133,332.41"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Depreciation and Amortization Expenses,"11,896.97"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Impairment Losses,0.00
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,"38,696.11"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Finance Cost,0.00
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"515,199.76"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/ (Loss) Before Share of Net Profits of Associates,"43,467.79"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Share of Net Profit of Associates,0.00
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"43,467.79"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Income Tax Expenses,"13,142.92"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/(Loss) for The Year,"30,324.87"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Other Comprehensive Income,"4,964.47"
+IGI,PROFIT & LOSS ACCOUNT,Expenses,Total Comprehensive Income,"35,289.34"
+IGI,RATIO ANALYSIS,General,Net Premium To Gross Premium (in %),47.79
+IGI,RATIO ANALYSIS,General,Net Profit To Gross Premium (in %),4.19
+IGI,RATIO ANALYSIS,General,Gross Premium To Total Assets (Annualized) (in %),18.48
+IGI,RATIO ANALYSIS,General,Agent Commission To Gross Premium (in %),5.06
+IGI,RATIO ANALYSIS,General,No. of Unpaid Claims To No. of Policies (in %),11.52
+IGI,KEY RATIOS,General,Earning Per Share (EPS),4.00
+IGI,KEY RATIOS,General,Price Earning Ratio (PE ratio),101.14
+IGI,KEY RATIOS,General,Networth per share (Rs.),179.42
+IGI,KEY RATIOS,General,Price to Book Ratio,2.26
+IGI,KEY RATIOS,General,Return on Equity (ROE %),2.23
+IGI,KEY RATIOS,General,Return on Assets (ROA %),0.77
+IGI,KEY RATIOS,General,Solvency Ratio,5.04
+IGI,OTHERS,General,Total Issue Policy,"77,897.00"
+IGI,OTHERS,General,Total Renewed Policy,"17,832.00"
+IGI,OTHERS,General,Total Claims Paid Count,"3,365.00"
+IGI,OTHERS,General,Gross Written Premium ('000'),0.00
+IGI,OTHERS,General,Outstanding Claims Count,"8,970.00"
+IGI,OTHERS,General,Long Term Investments ('000'),"1,430,259.67"
+IGI,OTHERS,General,Short Term Investments ('000'),"2,924,000.00"
+IGI,OTHERS,General,Total Assets per Share,517.57

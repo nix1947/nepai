@@ -1,0 +1,49 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+CHDC,BALANCE SHEET,Assets,"Plant, Property and Equipment","3,671.10"
+CHDC,BALANCE SHEET,Assets,Capital Work in Progress,"5,016.83"
+CHDC,BALANCE SHEET,Assets,Investment,"1,829,679.15"
+CHDC,BALANCE SHEET,Assets,Intangible Assets,"1,250.88"
+CHDC,BALANCE SHEET,Assets,Other Non-Current Assets,0.00
+CHDC,BALANCE SHEET,Assets,Non Current Assets,"1,839,617.96"
+CHDC,BALANCE SHEET,Assets,Cash and Cash Equivalents,"4,844.24"
+CHDC,BALANCE SHEET,Assets,Advances,0.00
+CHDC,BALANCE SHEET,Assets,Receivables,"42,303.92"
+CHDC,BALANCE SHEET,Assets,Investment in Fixed Deposit,"55,600.00"
+CHDC,BALANCE SHEET,Assets,Other Current Assets,"1,027,495.86"
+CHDC,BALANCE SHEET,Assets,Current Assets,"1,130,244.02"
+CHDC,BALANCE SHEET,Assets,Total Assets,"2,969,861.98"
+CHDC,BALANCE SHEET,Non Current Liabilities,Long Term Borrowings,0.00
+CHDC,BALANCE SHEET,Non Current Liabilities,Other Non Current Liabilities,"49,954.69"
+CHDC,BALANCE SHEET,Non Current Liabilities,Non Current Liabilities,"49,954.69"
+CHDC,BALANCE SHEET,Current Liabilities,Provisions,0.00
+CHDC,BALANCE SHEET,Current Liabilities,Borrowings,0.00
+CHDC,BALANCE SHEET,Current Liabilities,Income Tax Liability,0.00
+CHDC,BALANCE SHEET,Current Liabilities,Other Current Liabilities,"8,918.16"
+CHDC,BALANCE SHEET,Current Liabilities,Current Liabilities,"8,918.16"
+CHDC,BALANCE SHEET,Current Liabilities,Total Liabilities,"58,872.85"
+CHDC,BALANCE SHEET,Equity,Equity Share Capital,"1,034,237.06"
+CHDC,BALANCE SHEET,Equity,Reserve and Retained Earnings,"1,876,752.05"
+CHDC,BALANCE SHEET,Equity,Total Equity,"2,910,989.11"
+CHDC,BALANCE SHEET,Equity,Total Equity and Liabilities,"2,969,861.96"
+CHDC,PROFIT & LOSS ACCOUNT,Revenue,"Service Charge, Finance Income and Other Income","137,366.73"
+CHDC,PROFIT & LOSS ACCOUNT,Revenue,Other Income,0.00
+CHDC,PROFIT & LOSS ACCOUNT,Revenue,Total Revenue,"137,366.73"
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefit Expenses,604.69
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Administrative and Expenses,"2,291.37"
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Depreciation,339.09
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Finance Expenses,0.00
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,0.00
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"3,235.14"
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"134,131.59"
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Current Tax,"1,922.90"
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Deferred Tax,0.00
+CHDC,PROFIT & LOSS ACCOUNT,Expenses,Net Profit,"132,208.69"
+CHDC,RATIO ANALYSIS,General,Operating Profit Margin,97.64
+CHDC,RATIO ANALYSIS,General,Net Profit Margin,96.25
+CHDC,RATIO ANALYSIS,General,Current Ratio,126.74
+CHDC,KEY RATIOS,General,Networth per Share (Rs.),281.46
+CHDC,KEY RATIOS,General,Earning Per Share annualized(Rs.),51.13
+CHDC,KEY RATIOS,General,Price to Earning Ratio (times),45.55
+CHDC,KEY RATIOS,General,Price to Book ratio(times),8.27
+CHDC,KEY RATIOS,General,Return on Equity (%),18.17
+CHDC,KEY RATIOS,General,Return on Asset (%),17.81

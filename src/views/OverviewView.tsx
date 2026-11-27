@@ -529,7 +529,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   <button
                     type="button"
                     onClick={() => jumpToFinancials(w.symbol)}
-                    title="View ShareSansar Quarterly Financials"
+                    title="View Quarterly Financials"
                     className="p-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
                   >
                     <Database className="w-3 h-3" />
@@ -1007,7 +1007,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
       )}
 
-      {/* ShareSansar Quarterly Financials Vault (data/financial/) */}
+      {/* Quarterly Financials Vault (data/financial/) */}
       <div ref={financialVaultRef}>
         <FinancialsVaultPanel
           availableSymbols={sortedByTurnover.map((r) => r.symbol)}
@@ -1042,7 +1042,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         {daily.length < 2 ? (
           <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600 dark:text-slate-300">
             <span>
-              Only {daily.length} trading day is loaded. Backfill 30–180 days from ShareSansar to unlock Market History curves and all 8 technical scanners.
+              Only {daily.length} trading day is loaded. Backfill 30–180 days to unlock Market History curves and all 8 technical scanners.
             </span>
             <button
               type="button"

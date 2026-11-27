@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getGitHubAccount, pushProjectToGitHub } from './server/githubSync.ts';
+import { dispatchGitHubWorkflow, getGitHubAccount, pushProjectToGitHub } from './server/githubSync.ts';
 import { isValidDateStr, MarketStore } from './server/marketStore.ts';
 import {
   auditCohortStocks,
@@ -1463,6 +1463,20 @@ async function startServer() {
       entry,
       status: scheduler.getStatus(),
     });
+  });
+
+  app.post('/api/github/workflow-dispatch', async (req, res) => {
+    try {
+      const { repo, workflowFile, branch } = req.body ?? {};
+      const status = scheduler.getStatus();
+      const targetRepo = String(repo || status.config.githubRepo || '').trim();
+      const targetBranch = String(branch || status.config.githubBranch || 'main').trim();
+      const file = String(workflowFile || 'daily-sharesansar.yml').trim();
+      const result = await dispatchGitHubWorkflow(targetRepo, file, targetBranch);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : 'Workflow dispatch failed' });
+    }
   });
 
   app.post('/api/scraper/backfill', (req, res) => {

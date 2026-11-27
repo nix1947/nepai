@@ -2,23 +2,23 @@ name: Quarterly ShareSansar Fundamental Reports
 
 on:
   schedule:
-    # Runs daily at 17:00 NPT (11:15 UTC) during every Nepal BS upcoming quarter reporting window
+    # Runs daily at off-peak 17:12 NPT (11:27 UTC) during every Nepal BS upcoming quarter reporting window
     # starting at Quarter-End + 15 days and skipping any company whose quarter data already exists:
     # Upcoming Q2 (Poush end ~Jan 14 -> +15d Jan 29 through Mar 5)
-    - cron: '15 11 29-31 1 *'
-    - cron: '15 11 1-28 2 *'
-    - cron: '15 11 1-5 3 *'
+    - cron: '27 11 29-31 1 *'
+    - cron: '27 11 1-28 2 *'
+    - cron: '27 11 1-5 3 *'
     # Upcoming Q3 (Chaitra end ~Apr 13 -> +15d Apr 28 through Jun 5)
-    - cron: '15 11 28-30 4 *'
-    - cron: '15 11 1-31 5 *'
-    - cron: '15 11 1-5 6 *'
+    - cron: '27 11 28-30 4 *'
+    - cron: '27 11 1-31 5 *'
+    - cron: '27 11 1-5 6 *'
     # Upcoming Q4 / Annual (Ashad end ~Jul 16 -> +15d Jul 31 through Sep 15)
-    - cron: '15 11 31 7 *'
-    - cron: '15 11 1-31 8 *'
-    - cron: '15 11 1-15 9 *'
+    - cron: '27 11 31 7 *'
+    - cron: '27 11 1-31 8 *'
+    - cron: '27 11 1-15 9 *'
     # Upcoming Q1 (Ashwin end ~Oct 17 -> +15d Nov 1 through Dec 5)
-    - cron: '15 11 1-30 11 *'
-    - cron: '15 11 1-5 12 *'
+    - cron: '27 11 1-30 11 *'
+    - cron: '27 11 1-5 12 *'
   workflow_dispatch:
     inputs:
       mode:
@@ -54,12 +54,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: quarterly-fundamentals-pull
+  cancel-in-progress: false
+
 jobs:
   pull-quarterly-fundamentals:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -99,7 +106,8 @@ jobs:
           if git status --porcelain -- 'data/financial/*.json' 'data/financial/*.csv' 'data/financial/vault/ledgers/*.json' 'data/financial/vault/quarterly_metrics.csv' | grep -q .; then
             git add data/financial
             git commit -m "chore(fundamentals): quarterly ShareSansar financial reports"
-            git push
+            git pull --rebase origin ${{ github.event.repository.default_branch }} || true
+            git push origin HEAD:${{ github.event.repository.default_branch }}
           else
             git checkout -- data/financial/vault/monitor-state.json 2>/dev/null || true
             echo "No new quarterly financial statement updates to commit."

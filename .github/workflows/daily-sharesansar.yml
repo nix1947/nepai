@@ -2,8 +2,11 @@ name: Daily ShareSansar Data Pull (Sun-Fri)
 
 on:
   schedule:
-    # Sunday-Friday at 6:30 PM NPT (18:30 NPT = 12:45 UTC)
-    - cron: '45 12 * * 0-5'
+    # Off-peak minutes (avoiding :00, :15, :30, :45) Sunday-Friday
+    # Primary: 4:37 PM NPT (16:37 NPT = 10:52 UTC)
+    - cron: '52 10 * * 0-5'
+    # Fallback: 5:08 PM NPT (17:08 NPT = 11:23 UTC)
+    - cron: '23 11 * * 0-5'
   workflow_dispatch:
 
 permissions:
@@ -47,5 +50,6 @@ jobs:
             echo "No new trading day changes to commit."
           else
             git commit -m "chore(data): daily ShareSansar share prices"
+            git pull --rebase origin ${{ github.event.repository.default_branch }} || true
             git push origin HEAD:${{ github.event.repository.default_branch }}
           fi

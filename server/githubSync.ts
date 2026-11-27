@@ -639,3 +639,50 @@ export async function pushDayCsvToGitHub(
     message: `Committed ${cleanPath}/${dateStr}.csv to ${owner}/${repoName}@${branch}.`,
   };
 }
+
+const WORKFLOW_FILE_RE = /^[A-Za-z0-9_.-]+\.ya?ml$/;
+
+export async function dispatchGitHubWorkflow(
+  repo: string,
+  workflowFile: string,
+  branch = 'main'
+): Promise<{ dispatched: boolean; message: string }> {
+  const headers = authHeaders(true);
+  const cleanRepo = (repo || '').trim();
+  if (!REPO_RE.test(cleanRepo)) {
+    throw new Error('GitHub repository must be in "owner/repo" format.');
+  }
+  const cleanFile = (workflowFile || '').trim();
+  if (!WORKFLOW_FILE_RE.test(cleanFile)) {
+    throw new Error('Invalid workflow file name.');
+  }
+  const cleanBranch = (branch || 'main').trim();
+  if (!BRANCH_RE.test(cleanBranch) || cleanBranch.includes('..')) {
+    throw new Error('Invalid branch name.');
+  }
+
+  const [owner, repoName] = cleanRepo.split('/');
+  const res = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+      repoName
+    )}/actions/workflows/${encodeURIComponent(cleanFile)}/dispatches`,
+    {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ref: cleanBranch }),
+    }
+  );
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Workflow dispatch failed (${res.status}): ${errText.slice(0, 180)}`);
+  }
+
+  return {
+    dispatched: true,
+    message: `Dispatched ${cleanFile} on ${cleanRepo}@${cleanBranch}.`,
+  };
+}

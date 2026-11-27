@@ -3,20 +3,17 @@ name: Daily ShareSansar Data Pull (Mon-Fri)
 
 on:
   schedule:
-    # Primary execution: 3:46 PM Nepal Time (10:01 UTC)
-    - cron: '1 10 * * 1-5'
-
-    # Second execution: 4:00 PM Nepal Time (10:15 UTC)
+    # Primary: 3:46 PM Nepal Time
     - cron: '15 10 * * 1-5'
 
-  # Allow manual execution anytime
+    # Second execution: 4:00 PM Nepal Time
+    - cron: '15 10 * * 1-5'
+
   workflow_dispatch:
 
-# Allow GitHub Actions to commit and push changes
 permissions:
   contents: write
 
-# Prevent overlapping executions
 concurrency:
   group: sharesansar-daily-pull
   cancel-in-progress: false
@@ -28,29 +25,24 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      # 1. Checkout latest default branch
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
 
-      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
 
-      # 3. Install dependencies
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
-      # 4. Pull latest ShareSansar daily share prices
       - name: Pull latest ShareSansar daily share prices
         run: npx tsx scripts/pull-sharesansar.ts
 
-      # 5. Commit and push updated CSV files
       - name: Commit and push updated data CSV
         run: |
           git config user.name "github-actions[bot]"
@@ -62,8 +54,6 @@ jobs:
             echo "No new trading day changes to commit."
           else
             git commit -m "chore(data): daily ShareSansar share prices"
-
             git push origin HEAD:${{ github.event.repository.default_branch }}
-
-            echo "ShareSansar data successfully updated and pushed."
+            echo "ShareSansar data successfully updated."
           fi

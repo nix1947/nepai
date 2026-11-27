@@ -1,9 +1,9 @@
-name: Daily ShareSansar Data Pull (Mon-Fri)
+name: Daily ShareSansar Data Pull (Sun-Fri)
 
 on:
   schedule:
-    # Monday-Friday at 4:30 PM NPT (16:30 NPT = 10:45 UTC)
-    - cron: '45 10 * * 1-5'
+    # Sunday-Friday at 6:30 PM NPT (18:30 NPT = 12:45 UTC)
+    - cron: '45 12 * * 0-5'
   workflow_dispatch:
 
 permissions:

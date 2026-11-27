@@ -54,17 +54,63 @@ import {
 } from 'lucide-react';
 import type { PriceRow, SymbolInfo } from '../types/market';
 import {
+  calcAdLine,
   calcAdx,
+  calcAlligator,
+  calcAlma,
+  calcAroon,
   calcAtrSeries,
+  calcAwesomeOscillator,
+  calcBbPercentB,
+  calcBbWidth,
   calcBollinger,
+  calcCamarillaPivots,
+  calcCci,
+  calcChaikinOscillator,
   calcClassicPivots,
+  calcCmf,
+  calcCmo,
+  calcCoppock,
+  calcDema,
+  calcDonchian,
+  calcDpo,
+  calcEaseOfMovement,
+  calcElderRay,
   calcEma,
+  calcEnvelope,
+  calcFibPivots,
+  calcFisherTransform,
+  calcForceIndex,
+  calcHistoricalVolatility,
+  calcHma,
+  calcIchimoku,
+  calcKama,
+  calcKeltner,
+  calcLinearRegressionChannel,
   calcMacd,
+  calcMcGinley,
+  calcMfi,
+  calcMomentum,
   calcObv,
+  calcParabolicSar,
+  calcPpo,
+  calcRoc,
+  calcRollingVwap,
   calcRsi,
   calcSma,
+  calcStochRsi,
   calcStochastic,
   calcSupertrend,
+  calcTema,
+  calcTrix,
+  calcUltimateOscillator,
+  calcVolumeOscillator,
+  calcVortex,
+  calcVpt,
+  calcVwma,
+  calcWilliamsR,
+  calcWma,
+  calcZigZag,
   resampleBars,
   toHeikinAshiCandles,
   type BarPoint,
@@ -95,6 +141,91 @@ type DrawTool =
 
 type DrawingKind = Exclude<DrawTool, 'cursor'>;
 
+type IndicatorId =
+  | 'vol'
+  | 'smaN'
+  | 'sma20'
+  | 'sma50'
+  | 'sma200'
+  | 'ema9'
+  | 'ema20'
+  | 'ema50'
+  | 'ema200'
+  | 'wma20'
+  | 'hma20'
+  | 'dema20'
+  | 'tema20'
+  | 'kama'
+  | 'vwma20'
+  | 'alma9'
+  | 'mcginley'
+  | 'emaRibbon'
+  | 'bb'
+  | 'keltner'
+  | 'donchian'
+  | 'envelope'
+  | 'supertrend'
+  | 'psar'
+  | 'ichimoku'
+  | 'alligator'
+  | 'rvwap'
+  | 'vwap'
+  | 'ma120'
+  | 'pivots'
+  | 'fibPivots'
+  | 'camPivots'
+  | 'linreg'
+  | 'zigzag'
+  | 'rsi'
+  | 'stochRsi'
+  | 'macd'
+  | 'ppo'
+  | 'stoch'
+  | 'adx'
+  | 'atr'
+  | 'bbw'
+  | 'bbPctB'
+  | 'hvol'
+  | 'cci'
+  | 'willr'
+  | 'mfi'
+  | 'ao'
+  | 'roc'
+  | 'mom'
+  | 'trix'
+  | 'uo'
+  | 'cmo'
+  | 'dpo'
+  | 'aroon'
+  | 'coppock'
+  | 'vortex'
+  | 'elder'
+  | 'fisher'
+  | 'obv'
+  | 'cmf'
+  | 'adLine'
+  | 'chaikinOsc'
+  | 'force'
+  | 'eom'
+  | 'volOsc'
+  | 'vpt';
+
+type IndicatorCategory =
+  | 'Trend & MAs'
+  | 'Bands & Channels'
+  | 'Volatility & Pivots'
+  | 'Momentum & Oscillators'
+  | 'Volume & Flow';
+
+interface IndicatorMeta {
+  id: IndicatorId;
+  label: string;
+  shortLabel: string;
+  category: IndicatorCategory;
+  pane: 'Overlay' | 'Oscillator';
+  desc: string;
+}
+
 interface SavedDrawing {
   id: string;
   kind: DrawingKind;
@@ -117,17 +248,114 @@ interface TradingViewChartProps {
   onToggleStar?: () => void;
 }
 
-interface IndicatorOption {
-  id: string;
-  label: string;
-  category: 'Overlay' | 'Oscillator';
-  desc: string;
-  active: boolean;
-  toggle: () => void;
-}
-
 const DRAWINGS_STORAGE_KEY_V2 = 'nepse.chart.drawings.v2';
 const DRAWINGS_STORAGE_KEY_V1 = 'nepse.chart.drawings.v1';
+const INDICATORS_STORAGE_KEY = 'nepse.chart.indicators.v1';
+
+const DEFAULT_INDICATORS: Record<IndicatorId, boolean> = {
+  vol: true,
+  smaN: true,
+  sma20: false,
+  sma50: false,
+  sma200: false,
+  ema9: false,
+  ema20: false,
+  ema50: false,
+  ema200: false,
+  wma20: false,
+  hma20: false,
+  dema20: false,
+  tema20: false,
+  kama: false,
+  vwma20: false,
+  alma9: false,
+  mcginley: false,
+  emaRibbon: false,
+  bb: false,
+  keltner: false,
+  donchian: false,
+  envelope: false,
+  supertrend: false,
+  psar: false,
+  ichimoku: false,
+  alligator: false,
+  rvwap: false,
+  vwap: false,
+  ma120: true,
+  pivots: false,
+  fibPivots: false,
+  camPivots: false,
+  linreg: false,
+  zigzag: false,
+  rsi: true,
+  stochRsi: false,
+  macd: false,
+  ppo: false,
+  stoch: false,
+  adx: false,
+  atr: false,
+  bbw: false,
+  bbPctB: false,
+  hvol: false,
+  cci: false,
+  willr: false,
+  mfi: false,
+  ao: false,
+  roc: false,
+  mom: false,
+  trix: false,
+  uo: false,
+  cmo: false,
+  dpo: false,
+  aroon: false,
+  coppock: false,
+  vortex: false,
+  elder: false,
+  fisher: false,
+  obv: false,
+  cmf: false,
+  adLine: false,
+  chaikinOsc: false,
+  force: false,
+  eom: false,
+  volOsc: false,
+  vpt: false,
+};
+
+const INDICATOR_PRESETS: Array<{
+  id: string;
+  label: string;
+  ids: IndicatorId[];
+}> = [
+  { id: 'default', label: 'Default', ids: ['vol', 'smaN', 'ma120', 'rsi'] },
+  {
+    id: 'trend',
+    label: 'Trend Pro',
+    ids: ['vol', 'ema9', 'ema20', 'ema50', 'sma200', 'supertrend', 'macd', 'adx'],
+  },
+  {
+    id: 'swing',
+    label: 'Swing & RSI',
+    ids: ['vol', 'ema20', 'bb', 'rsi', 'stoch', 'cci', 'mfi'],
+  },
+  {
+    id: 'ichimoku',
+    label: 'Ichimoku Cloud',
+    ids: ['vol', 'ichimoku', 'psar', 'rsi', 'cmf'],
+  },
+  {
+    id: 'quant',
+    label: 'Quant Volatility',
+    ids: ['vol', 'kama', 'keltner', 'linreg', 'bbw', 'hvol', 'fisher'],
+  },
+  {
+    id: 'volume',
+    label: 'Volume Flow',
+    ids: ['vol', 'vwap', 'rvwap', 'vwma20', 'obv', 'cmf', 'chaikinOsc', 'volOsc'],
+  },
+  { id: 'clear', label: 'Clear All', ids: [] },
+];
+
 const FIB_RATIOS = [
   { ratio: 0, label: '0.0%', color: '#64748b' },
   { ratio: 0.236, label: '23.6%', color: '#0ea5e9' },
@@ -137,6 +365,17 @@ const FIB_RATIOS = [
   { ratio: 0.786, label: '78.6%', color: '#8b5cf6' },
   { ratio: 1, label: '100%', color: '#ef4444' },
 ];
+
+function loadSavedIndicators(): Record<IndicatorId, boolean> {
+  try {
+    const raw = localStorage.getItem(INDICATORS_STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_INDICATORS };
+    const parsed = JSON.parse(raw) as Partial<Record<IndicatorId, boolean>>;
+    return { ...DEFAULT_INDICATORS, ...parsed };
+  } catch {
+    return { ...DEFAULT_INDICATORS };
+  }
+}
 
 function loadDrawingsForSymbol(symbol: string): SavedDrawing[] {
   try {
@@ -207,31 +446,14 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const [zoom, setZoom] = useState<ZoomRange>('ALL');
   const [scaleMode, setScaleMode] = useState<ScaleMode>('normal');
   const [showGrid, setShowGrid] = useState(true);
-
-  // Overlays
-  const [showVolume, setShowVolume] = useState(true);
-  const [showSmaN, setShowSmaN] = useState(true);
-  const [showEma9, setShowEma9] = useState(false);
-  const [showEma20, setShowEma20] = useState(false);
-  const [showEma50, setShowEma50] = useState(false);
-  const [showBollinger, setShowBollinger] = useState(false);
-  const [showSupertrend, setShowSupertrend] = useState(false);
-  const [showVwap, setShowVwap] = useState(false);
-  const [showMa120, setShowMa120] = useState(true);
-  const [showPivots, setShowPivots] = useState(false);
   const [show52wLines, setShow52wLines] = useState(false);
 
-  // Oscillator Sub-panes
-  const [showRsi, setShowRsi] = useState(true);
-  const [showMacd, setShowMacd] = useState(false);
-  const [showStoch, setShowStoch] = useState(false);
-  const [showAdx, setShowAdx] = useState(false);
-  const [showAtr, setShowAtr] = useState(false);
-  const [showObv, setShowObv] = useState(false);
+  const [enabled, setEnabled] = useState<Record<IndicatorId, boolean>>(loadSavedIndicators);
 
   // Popovers & Advanced Modes
   const [indicatorsModalOpen, setIndicatorsModalOpen] = useState(false);
   const [indicatorSearch, setIndicatorSearch] = useState('');
+  const [indicatorCategory, setIndicatorCategory] = useState<'All' | IndicatorCategory>('All');
   const [compareModalOpen, setCompareModalOpen] = useState(false);
   const [compareSearch, setCompareSearch] = useState('');
   const [compareSymbol, setCompareSymbol] = useState<string | null>(null);
@@ -270,6 +492,25 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : false
   );
 
+  const toggleInd = useCallback((id: IndicatorId) => {
+    setEnabled((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  const applyPreset = useCallback((ids: IndicatorId[]) => {
+    const next: Record<IndicatorId, boolean> = { ...DEFAULT_INDICATORS };
+    for (const k of Object.keys(next) as IndicatorId[]) next[k] = false;
+    for (const id of ids) next[id] = true;
+    setEnabled(next);
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(INDICATORS_STORAGE_KEY, JSON.stringify(enabled));
+    } catch {
+      // ignore storage quota errors
+    }
+  }, [enabled]);
+
   useEffect(() => {
     setDrawings(loadDrawingsForSymbol(symbol));
     setPendingPoint(null);
@@ -297,7 +538,6 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     return () => obs.disconnect();
   }, []);
 
-  // Fetch comparison symbol OHLCV when selected
   useEffect(() => {
     if (!compareSymbol) {
       setCompareHistory([]);
@@ -336,7 +576,6 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     [compareSymbol, compareHistory, timeframe]
   );
 
-  // Replay playback timer
   useEffect(() => {
     if (!replayMode || !replayPlaying) return;
     const id = window.setInterval(() => {
@@ -393,22 +632,97 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const activeBar = hovered ?? latestBar;
   const latestRaw = history[history.length - 1] ?? null;
 
-  // Computed Indicators
+  // Core Snapshot Indicators (always computed for live TA Snapshot + Consensus Gauge)
   const rsiData = useMemo(() => calcRsi(visibleBars, 14), [visibleBars]);
   const macdData = useMemo(() => calcMacd(visibleBars), [visibleBars]);
   const stochData = useMemo(() => calcStochastic(visibleBars, 14, 3, 3), [visibleBars]);
   const adxData = useMemo(() => calcAdx(visibleBars, 14), [visibleBars]);
   const atrSeries = useMemo(() => calcAtrSeries(visibleBars, 14), [visibleBars]);
-  const obvData = useMemo(() => calcObv(visibleBars), [visibleBars]);
   const supertrendData = useMemo(() => calcSupertrend(visibleBars, 10, 3), [visibleBars]);
+  const ichimokuData = useMemo(() => calcIchimoku(visibleBars, 9, 26, 52), [visibleBars]);
+  const cciData = useMemo(() => calcCci(visibleBars, 20), [visibleBars]);
+  const mfiData = useMemo(() => calcMfi(visibleBars, 14), [visibleBars]);
+  const willrData = useMemo(() => calcWilliamsR(visibleBars, 14), [visibleBars]);
+  const cmfData = useMemo(() => calcCmf(visibleBars, 20), [visibleBars]);
+  const ema20Data = useMemo(() => calcEma(visibleBars, 20), [visibleBars]);
+  const ema50Data = useMemo(() => calcEma(visibleBars, 50), [visibleBars]);
   const pivotLevels = useMemo(() => calcClassicPivots(visibleBars), [visibleBars]);
 
   const latestRsi = rsiData[rsiData.length - 1]?.value ?? null;
   const latestAtr = atrSeries[atrSeries.length - 1]?.value ?? null;
   const latestMacd = macdData.macd[macdData.macd.length - 1]?.value ?? null;
+  const latestMacdSig = macdData.signal[macdData.signal.length - 1]?.value ?? null;
   const latestStochK = stochData.k[stochData.k.length - 1]?.value ?? null;
   const latestStochD = stochData.d[stochData.d.length - 1]?.value ?? null;
   const latestAdx = adxData.adx[adxData.adx.length - 1]?.value ?? null;
+  const latestPlusDi = adxData.plusDi[adxData.plusDi.length - 1]?.value ?? null;
+  const latestMinusDi = adxData.minusDi[adxData.minusDi.length - 1]?.value ?? null;
+  const latestCci = cciData[cciData.length - 1]?.value ?? null;
+  const latestMfi = mfiData[mfiData.length - 1]?.value ?? null;
+  const latestWillr = willrData[willrData.length - 1]?.value ?? null;
+  const latestCmf = cmfData[cmfData.length - 1]?.value ?? null;
+
+  // Consensus Signal Summary across 10 core studies
+  const technicalConsensus = useMemo(() => {
+    let bull = 0;
+    let bear = 0;
+    let neut = 0;
+    const vote = (condBull: boolean, condBear: boolean) => {
+      if (condBull) bull++;
+      else if (condBear) bear++;
+      else neut++;
+    };
+
+    if (latestRsi !== null) vote(latestRsi > 52 && latestRsi < 75, latestRsi < 48 && latestRsi > 25);
+    if (latestMacd !== null && latestMacdSig !== null) vote(latestMacd > latestMacdSig, latestMacd < latestMacdSig);
+    if (latestStochK !== null && latestStochD !== null) vote(latestStochK > latestStochD && latestStochK < 85, latestStochK < latestStochD && latestStochK > 15);
+    if (latestCci !== null) vote(latestCci > 50, latestCci < -50);
+    if (latestMfi !== null) vote(latestMfi > 52 && latestMfi < 80, latestMfi < 48 && latestMfi > 20);
+    if (latestWillr !== null) vote(latestWillr > -45 && latestWillr < -15, latestWillr < -55 && latestWillr > -85);
+    if (latestAdx !== null && latestPlusDi !== null && latestMinusDi !== null && latestAdx >= 18) {
+      vote(latestPlusDi > latestMinusDi, latestMinusDi > latestPlusDi);
+    } else if (latestAdx !== null) {
+      neut++;
+    }
+    if (supertrendData.latestTrend) vote(supertrendData.latestTrend === 'bullish', supertrendData.latestTrend === 'bearish');
+    if (ichimokuData.latestSignal) vote(ichimokuData.latestSignal === 'bullish', ichimokuData.latestSignal === 'bearish');
+    const e20 = ema20Data[ema20Data.length - 1]?.value;
+    const e50 = ema50Data[ema50Data.length - 1]?.value;
+    if (e20 !== undefined && e50 !== undefined && latestBar) {
+      vote(latestBar.close > e20 && e20 > e50, latestBar.close < e20 && e20 < e50);
+    }
+
+    const net = bull - bear;
+    const verdict =
+      net >= 5
+        ? 'Strong Buy'
+        : net >= 2
+          ? 'Buy'
+          : net <= -5
+            ? 'Strong Sell'
+            : net <= -2
+              ? 'Sell'
+              : 'Neutral';
+
+    return { bull, bear, neut, verdict };
+  }, [
+    ema20Data,
+    ema50Data,
+    ichimokuData.latestSignal,
+    latestAdx,
+    latestBar,
+    latestCci,
+    latestMacd,
+    latestMacdSig,
+    latestMfi,
+    latestMinusDi,
+    latestPlusDi,
+    latestRsi,
+    latestStochD,
+    latestStochK,
+    latestWillr,
+    supertrendData.latestTrend,
+  ]);
 
   const volAnalysis = useMemo(() => {
     if (history.length === 0) return null;
@@ -427,17 +741,120 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     };
   }, [history, lookbackDays]);
 
+  const indicatorCatalog: IndicatorMeta[] = useMemo(
+    () => [
+      // Trend & MAs (Overlays)
+      { id: 'smaN', label: `SMA (${lookbackDays})`, shortLabel: `SMA(${lookbackDays})`, category: 'Trend & MAs', pane: 'Overlay', desc: `${lookbackDays}-period simple moving average` },
+      { id: 'sma20', label: 'SMA (20)', shortLabel: 'SMA(20)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Short-term 20-period simple moving average' },
+      { id: 'sma50', label: 'SMA (50)', shortLabel: 'SMA(50)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Institutional 50-period simple moving average' },
+      { id: 'sma200', label: 'SMA (200)', shortLabel: 'SMA(200)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Long-term 200-period secular trend baseline' },
+      { id: 'ema9', label: 'EMA (9)', shortLabel: 'EMA(9)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Fast 9-period exponential trendline' },
+      { id: 'ema20', label: 'EMA (20)', shortLabel: 'EMA(20)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Swing 20-period exponential average' },
+      { id: 'ema50', label: 'EMA (50)', shortLabel: 'EMA(50)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Medium-term 50-period institutional EMA' },
+      { id: 'ema200', label: 'EMA (200)', shortLabel: 'EMA(200)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Macro 200-period exponential trendline' },
+      { id: 'wma20', label: 'WMA (20)', shortLabel: 'WMA(20)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Linearly weighted moving average emphasizing recent closes' },
+      { id: 'hma20', label: 'Hull MA (20)', shortLabel: 'HMA(20)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Ultra-smooth zero-lag Hull moving average' },
+      { id: 'dema20', label: 'DEMA (20)', shortLabel: 'DEMA(20)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Double Exponential Moving Average for faster trend turns' },
+      { id: 'tema20', label: 'TEMA (20)', shortLabel: 'TEMA(20)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Triple Exponential Moving Average reducing lag further' },
+      { id: 'kama', label: 'KAMA (10, 2, 30)', shortLabel: 'KAMA', category: 'Trend & MAs', pane: 'Overlay', desc: 'Kaufman Adaptive MA adjusting speed to trend noise' },
+      { id: 'alma9', label: 'ALMA (9, 0.85, 6)', shortLabel: 'ALMA(9)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Arnaud Legoux Gaussian-weighted moving average' },
+      { id: 'mcginley', label: 'McGinley Dynamic (14)', shortLabel: 'McGinley', category: 'Trend & MAs', pane: 'Overlay', desc: 'Self-adjusting trend follower minimizing whipsaws' },
+      { id: 'emaRibbon', label: 'EMA Ribbon (8/13/21/34/55)', shortLabel: 'Ribbon', category: 'Trend & MAs', pane: 'Overlay', desc: 'Multi-line Fibonacci EMA ribbon visualizing momentum expansion' },
+      { id: 'ma120', label: 'MA 120 / 180 (1D)', shortLabel: 'MA120/180', category: 'Trend & MAs', pane: 'Overlay', desc: 'ShareSansar 120-day & 180-day moving averages' },
+      { id: 'supertrend', label: 'Supertrend (10, 3)', shortLabel: 'Supertrend', category: 'Trend & MAs', pane: 'Overlay', desc: 'ATR trailing trend flip & dynamic stop line' },
+      { id: 'psar', label: 'Parabolic SAR (0.02, 0.2)', shortLabel: 'PSAR', category: 'Trend & MAs', pane: 'Overlay', desc: 'Stop-and-reverse trailing dot system' },
+      { id: 'ichimoku', label: 'Ichimoku Cloud (9, 26, 52)', shortLabel: 'Ichimoku', category: 'Trend & MAs', pane: 'Overlay', desc: 'Tenkan, Kijun, Senkou Span A/B & Chikou Span' },
+      { id: 'alligator', label: 'Williams Alligator (13, 8, 5)', shortLabel: 'Alligator', category: 'Trend & MAs', pane: 'Overlay', desc: 'Jaw, Teeth & Lips smoothed SMMA trend lines' },
+      { id: 'zigzag', label: 'ZigZag Swing Structure (5%)', shortLabel: 'ZigZag 5%', category: 'Trend & MAs', pane: 'Overlay', desc: 'Connects >=5% swing highs and lows to clarify market structure' },
+
+      // Bands & Channels (Overlays)
+      { id: 'bb', label: 'Bollinger Bands (20, 2)', shortLabel: 'BB(20,2)', category: 'Bands & Channels', pane: 'Overlay', desc: 'Upper, Basis SMA(20), and Lower 2-sigma volatility bands' },
+      { id: 'keltner', label: 'Keltner Channels (20, 2)', shortLabel: 'Keltner', category: 'Bands & Channels', pane: 'Overlay', desc: 'EMA(20) ± 2×ATR(10) volatility envelope' },
+      { id: 'donchian', label: 'Donchian Channels (20)', shortLabel: 'Donchian', category: 'Bands & Channels', pane: 'Overlay', desc: '20-bar highest high, midpoint & lowest low turtle bands' },
+      { id: 'envelope', label: 'Price Envelope (20, ±5%)', shortLabel: 'Envelope', category: 'Bands & Channels', pane: 'Overlay', desc: 'Fixed ±5% percentage channel around SMA(20)' },
+      { id: 'linreg', label: 'Linear Regression Channel (50)', shortLabel: 'LinReg(50)', category: 'Bands & Channels', pane: 'Overlay', desc: 'Least-squares trend midline with ±2 standard error bands' },
+
+      // Volatility & Pivots
+      { id: 'pivots', label: 'Pivot Points (Classic R3–S3)', shortLabel: 'Pivots', category: 'Volatility & Pivots', pane: 'Overlay', desc: 'PP, R1–R3, S1–S3 derived from previous completed session' },
+      { id: 'fibPivots', label: 'Fibonacci Pivot Points', shortLabel: 'Fib Pivots', category: 'Volatility & Pivots', pane: 'Overlay', desc: '0.382 / 0.618 / 1.000 Fibonacci pivot support & resistance' },
+      { id: 'camPivots', label: 'Camarilla Pivots (H3/H4/L3/L4)', shortLabel: 'Camarilla', category: 'Volatility & Pivots', pane: 'Overlay', desc: 'Tight breakout/mean-reversion Camarilla zones' },
+      { id: 'atr', label: 'ATR (14)', shortLabel: 'ATR(14)', category: 'Volatility & Pivots', pane: 'Oscillator', desc: 'Average True Range volatility pane in NPR' },
+      { id: 'bbw', label: 'Bollinger BandWidth (%)', shortLabel: 'BBWidth', category: 'Volatility & Pivots', pane: 'Oscillator', desc: 'Measures band squeeze compression prior to breakouts' },
+      { id: 'bbPctB', label: 'Bollinger %B', shortLabel: 'BB %B', category: 'Volatility & Pivots', pane: 'Oscillator', desc: 'Price location within Bollinger Bands (0 = lower, 1 = upper)' },
+      { id: 'hvol', label: 'Historical Volatility (20)', shortLabel: 'HistVol', category: 'Volatility & Pivots', pane: 'Oscillator', desc: 'Annualized 20-bar log-return volatility (%)' },
+
+      // Momentum & Oscillators
+      { id: 'rsi', label: 'RSI (14)', shortLabel: 'RSI(14)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Relative Strength Index with 70/30 thresholds' },
+      { id: 'stochRsi', label: 'Stochastic RSI (14, 14, 3, 3)', shortLabel: 'StochRSI', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Fast %K/%D oscillator applied to RSI for early turns' },
+      { id: 'macd', label: 'MACD (12, 26, 9)', shortLabel: 'MACD', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Trend momentum convergence/divergence & histogram' },
+      { id: 'ppo', label: 'PPO (12, 26, 9)', shortLabel: 'PPO', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Percentage Price Oscillator (scale-free MACD in %)' },
+      { id: 'stoch', label: 'Stochastic (14, 3, 3)', shortLabel: 'Stoch(14)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: '%K / %D momentum oscillator with 80/20 zones' },
+      { id: 'adx', label: 'ADX / DMI (14)', shortLabel: 'ADX(14)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Trend strength (ADX) + directional +DI / -DI' },
+      { id: 'cci', label: 'CCI (20)', shortLabel: 'CCI(20)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Commodity Channel Index with ±100 extreme levels' },
+      { id: 'willr', label: 'Williams %R (14)', shortLabel: 'W%R(14)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Overbought (-20) & oversold (-80) range momentum' },
+      { id: 'ao', label: 'Awesome Oscillator (5, 34)', shortLabel: 'AO', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Bill Williams 5/34 midpoint momentum histogram' },
+      { id: 'roc', label: 'Rate of Change — ROC (12)', shortLabel: 'ROC(12)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: '12-bar percentage velocity around zero line' },
+      { id: 'mom', label: 'Momentum (10)', shortLabel: 'MOM(10)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: '10-bar net NPR price change oscillator' },
+      { id: 'trix', label: 'TRIX (15)', shortLabel: 'TRIX(15)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Triple-smoothed EMA rate-of-change trend filter' },
+      { id: 'uo', label: 'Ultimate Oscillator (7, 14, 28)', shortLabel: 'UO', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Multi-horizon weighted buying pressure (70/30)' },
+      { id: 'cmo', label: 'Chande Momentum — CMO (14)', shortLabel: 'CMO(14)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Un-smoothed up/down momentum between -100 and +100' },
+      { id: 'dpo', label: 'Detrended Price Osc (20)', shortLabel: 'DPO(20)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Isolates short-term cycles by removing trend' },
+      { id: 'aroon', label: 'Aroon Up / Down (25)', shortLabel: 'Aroon(25)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Measures time since 25-bar high vs 25-bar low' },
+      { id: 'coppock', label: 'Coppock Curve (14, 11, 10)', shortLabel: 'Coppock', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Long-term trend reversal & bottoming histogram' },
+      { id: 'vortex', label: 'Vortex Indicator (14)', shortLabel: 'Vortex', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'VI+ vs VI- directional trend crossovers' },
+      { id: 'elder', label: 'Elder Ray Bull/Bear (13)', shortLabel: 'Elder Ray', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Buying & selling power relative to EMA(13)' },
+      { id: 'fisher', label: 'Fisher Transform (10)', shortLabel: 'Fisher(10)', category: 'Momentum & Oscillators', pane: 'Oscillator', desc: 'Gaussian price normalization highlighting sharp reversals' },
+
+      // Volume & Flow
+      { id: 'vol', label: 'Volume', shortLabel: 'Volume', category: 'Volume & Flow', pane: 'Overlay', desc: 'Session share volume histogram' },
+      { id: 'vwap', label: 'Session VWAP (1D)', shortLabel: 'VWAP', category: 'Volume & Flow', pane: 'Overlay', desc: 'Daily volume-weighted average execution price' },
+      { id: 'rvwap', label: 'Rolling VWAP (20)', shortLabel: 'RVWAP(20)', category: 'Volume & Flow', pane: 'Overlay', desc: '20-bar cumulative turnover/volume anchor (1D/1W/1M)' },
+      { id: 'vwma20', label: 'VWMA (20)', shortLabel: 'VWMA(20)', category: 'Volume & Flow', pane: 'Overlay', desc: 'Volume-weighted moving average giving heavy-volume days more weight' },
+      { id: 'mfi', label: 'Money Flow Index — MFI (14)', shortLabel: 'MFI(14)', category: 'Volume & Flow', pane: 'Oscillator', desc: 'Volume-weighted RSI with 80/20 overbought/oversold thresholds' },
+      { id: 'obv', label: 'On-Balance Volume (OBV)', shortLabel: 'OBV', category: 'Volume & Flow', pane: 'Oscillator', desc: 'Cumulative directional volume flow' },
+      { id: 'cmf', label: 'Chaikin Money Flow (20)', shortLabel: 'CMF(20)', category: 'Volume & Flow', pane: 'Oscillator', desc: 'Accumulation/distribution pressure between -1 and +1' },
+      { id: 'adLine', label: 'Accumulation / Distribution Line', shortLabel: 'A/D Line', category: 'Volume & Flow', pane: 'Oscillator', desc: 'Cumulative close-location-weighted volume flow' },
+      { id: 'chaikinOsc', label: 'Chaikin Oscillator (3, 10)', shortLabel: 'ChaikinOsc', category: 'Volume & Flow', pane: 'Oscillator', desc: 'EMA(3) - EMA(10) momentum of A/D Line' },
+      { id: 'force', label: 'Elder Force Index (13)', shortLabel: 'Force(13)', category: 'Volume & Flow', pane: 'Oscillator', desc: 'Price change × volume smoothed by 13-period EMA' },
+      { id: 'eom', label: 'Ease of Movement (14)', shortLabel: 'EOM(14)', category: 'Volume & Flow', pane: 'Oscillator', desc: 'Price movement relative to share volume' },
+      { id: 'volOsc', label: 'Volume Oscillator (5, 20)', shortLabel: 'VolOsc', category: 'Volume & Flow', pane: 'Oscillator', desc: '% spread between 5-bar and 20-bar volume SMAs' },
+      { id: 'vpt', label: 'Volume Price Trend (VPT)', shortLabel: 'VPT', category: 'Volume & Flow', pane: 'Oscillator', desc: 'Cumulative percentage-return-weighted volume' },
+    ],
+    [lookbackDays]
+  );
+
+  const subpaneIds: IndicatorId[] = useMemo(
+    () => indicatorCatalog.filter((i) => i.pane === 'Oscillator').map((i) => i.id),
+    [indicatorCatalog]
+  );
+
+  const activePaneCount = useMemo(
+    () => subpaneIds.reduce((cnt, id) => cnt + (enabled[id] ? 1 : 0), 0),
+    [enabled, subpaneIds]
+  );
+
+  const activeIndicatorList = useMemo(
+    () => indicatorCatalog.filter((i) => enabled[i.id]),
+    [enabled, indicatorCatalog]
+  );
+
+  const filteredIndicators = useMemo(() => {
+    const q = indicatorSearch.trim().toLowerCase();
+    return indicatorCatalog.filter((i) => {
+      if (indicatorCategory !== 'All' && i.category !== indicatorCategory) return false;
+      if (!q) return true;
+      return (
+        i.label.toLowerCase().includes(q) ||
+        i.shortLabel.toLowerCase().includes(q) ||
+        i.desc.toLowerCase().includes(q) ||
+        i.category.toLowerCase().includes(q)
+      );
+    });
+  }, [indicatorCatalog, indicatorCategory, indicatorSearch]);
+
   const triggerOverlaySync = useCallback(() => {
     setRenderTick((t) => (t + 1) % 1000000);
   }, []);
-
-  const activePaneCount =
-    (showRsi ? 1 : 0) +
-    (showMacd ? 1 : 0) +
-    (showStoch ? 1 : 0) +
-    (showAdx ? 1 : 0) +
-    (showAtr ? 1 : 0) +
-    (showObv ? 1 : 0);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -452,8 +869,8 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     const borderColor = isDark ? '#1e293b' : '#e2e8f0';
     const bg = isDark ? '#0b1220' : '#ffffff';
 
-    const subPaneHeight = 88;
-    const defaultInlineH = 430 + activePaneCount * subPaneHeight;
+    const subPaneHeight = activePaneCount <= 3 ? 86 : activePaneCount <= 6 ? 72 : 62;
+    const defaultInlineH = 420 + activePaneCount * subPaneHeight;
     const initialH = isFullscreen
       ? Math.max(460, chartWrapRef.current?.clientHeight || window.innerHeight - 155)
       : defaultInlineH;
@@ -486,7 +903,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
         mode: effectivePriceScaleMode,
         scaleMargins: {
           top: 0.08,
-          bottom: showVolume ? 0.24 : 0.06,
+          bottom: enabled.vol ? 0.24 : 0.06,
         },
       },
       timeScale: {
@@ -497,16 +914,12 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     });
     chartRef.current = chart;
 
-    // Main Price Series according to selected TradingView Chart Style
+    // Main Price Series
     let mainSeries: ISeriesApi<SeriesType, Time>;
     if (chartStyle === 'bars') {
       const s = chart.addSeries(
         BarSeries,
-        {
-          upColor: '#10b981',
-          downColor: '#ef4444',
-          thinBars: false,
-        },
+        { upColor: '#10b981', downColor: '#ef4444', thinBars: false },
         0
       );
       s.setData(
@@ -533,14 +946,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       s.setData(visibleBars.map((b) => ({ time: b.time as Time, value: b.close })));
       mainSeries = s;
     } else if (chartStyle === 'line') {
-      const s = chart.addSeries(
-        LineSeries,
-        {
-          color: '#2563eb',
-          lineWidth: 2,
-        },
-        0
-      );
+      const s = chart.addSeries(LineSeries, { color: '#2563eb', lineWidth: 2 }, 0);
       s.setData(visibleBars.map((b) => ({ time: b.time as Time, value: b.close })));
       mainSeries = s;
     } else {
@@ -572,6 +978,24 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     }
     mainSeriesRef.current = mainSeries;
 
+    const addOverlayLine = (
+      data: LineData<Time>[],
+      title: string,
+      color: string,
+      lineWidth: 1 | 2 | 3 | 4 = 1,
+      lineStyle: LineStyle = LineStyle.Solid,
+      lastValueVisible = false
+    ) => {
+      if (data.length === 0) return;
+      chart
+        .addSeries(
+          LineSeries,
+          { color, lineWidth, lineStyle, priceLineVisible: false, lastValueVisible, title },
+          0
+        )
+        .setData(data);
+    };
+
     // Comparison Overlay Symbol
     if (compareSymbol && compareBars.length > 0) {
       const visibleTimeSet = new Set(visibleBars.map((b) => b.time));
@@ -579,81 +1003,115 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
         .filter((b) => visibleTimeSet.has(b.time))
         .map((b) => ({ time: b.time as Time, value: b.close }));
       if (aligned.length > 0) {
-        const cmpSeries = chart.addSeries(
-          LineSeries,
-          {
-            color: '#f59e0b',
-            lineWidth: 2,
-            priceLineVisible: false,
-            lastValueVisible: true,
-            title: compareSymbol,
-          },
-          0
-        );
-        cmpSeries.setData(aligned);
+        addOverlayLine(aligned, compareSymbol, '#f59e0b', 2, LineStyle.Solid, true);
       }
     }
 
-    // Support & Resistance levels
-    if (showSR && levels.length > 0 && effectivePriceScaleMode !== PriceScaleMode.Percentage) {
-      for (const lv of levels) {
-        mainSeries.createPriceLine({
-          price: lv.value,
-          color: lv.color,
-          lineWidth: 1,
-          lineStyle: LineStyle.Dashed,
-          axisLabelVisible: true,
-          title: lv.label,
-        });
+    // Price Lines (S/R, Pivots, 52w, User H-lines)
+    if (effectivePriceScaleMode !== PriceScaleMode.Percentage) {
+      if (showSR && levels.length > 0) {
+        for (const lv of levels) {
+          mainSeries.createPriceLine({
+            price: lv.value,
+            color: lv.color,
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: lv.label,
+          });
+        }
+      }
+
+      if (enabled.pivots && pivotLevels) {
+        for (const p of [
+          { title: 'R3', price: pivotLevels.r3, color: '#dc2626' },
+          { title: 'R2', price: pivotLevels.r2, color: '#ef4444' },
+          { title: 'R1', price: pivotLevels.r1, color: '#f97316' },
+          { title: 'PP', price: pivotLevels.pp, color: '#64748b' },
+          { title: 'S1', price: pivotLevels.s1, color: '#10b981' },
+          { title: 'S2', price: pivotLevels.s2, color: '#059669' },
+          { title: 'S3', price: pivotLevels.s3, color: '#047857' },
+        ]) {
+          mainSeries.createPriceLine({
+            price: p.price,
+            color: p.color,
+            lineWidth: 1,
+            lineStyle: LineStyle.Dotted,
+            axisLabelVisible: true,
+            title: p.title,
+          });
+        }
+      }
+
+      if (enabled.fibPivots) {
+        const fp = calcFibPivots(visibleBars);
+        if (fp) {
+          for (const p of [
+            { title: 'Fib R3', price: fp.r3, color: '#e11d48' },
+            { title: 'Fib R2', price: fp.r2, color: '#f43f5e' },
+            { title: 'Fib R1', price: fp.r1, color: '#fb7185' },
+            { title: 'Fib PP', price: fp.pp, color: '#8b5cf6' },
+            { title: 'Fib S1', price: fp.s1, color: '#38bdf8' },
+            { title: 'Fib S2', price: fp.s2, color: '#0ea5e9' },
+            { title: 'Fib S3', price: fp.s3, color: '#0284c7' },
+          ]) {
+            mainSeries.createPriceLine({
+              price: p.price,
+              color: p.color,
+              lineWidth: 1,
+              lineStyle: LineStyle.Dashed,
+              axisLabelVisible: true,
+              title: p.title,
+            });
+          }
+        }
+      }
+
+      if (enabled.camPivots) {
+        const cam = calcCamarillaPivots(visibleBars);
+        if (cam) {
+          for (const p of [
+            { title: 'Cam H4', price: cam.h4, color: '#b91c1c' },
+            { title: 'Cam H3', price: cam.h3, color: '#f97316' },
+            { title: 'Cam L3', price: cam.l3, color: '#14b8a6' },
+            { title: 'Cam L4', price: cam.l4, color: '#0f766e' },
+          ]) {
+            mainSeries.createPriceLine({
+              price: p.price,
+              color: p.color,
+              lineWidth: 1,
+              lineStyle: LineStyle.Dotted,
+              axisLabelVisible: true,
+              title: p.title,
+            });
+          }
+        }
+      }
+
+      if (show52wLines && latestRaw) {
+        if (latestRaw.w52_high && latestRaw.w52_high > 0) {
+          mainSeries.createPriceLine({
+            price: latestRaw.w52_high,
+            color: '#0ea5e9',
+            lineWidth: 1,
+            lineStyle: LineStyle.Dotted,
+            axisLabelVisible: true,
+            title: '52w High',
+          });
+        }
+        if (latestRaw.w52_low && latestRaw.w52_low > 0) {
+          mainSeries.createPriceLine({
+            price: latestRaw.w52_low,
+            color: '#f43f5e',
+            lineWidth: 1,
+            lineStyle: LineStyle.Dotted,
+            axisLabelVisible: true,
+            title: '52w Low',
+          });
+        }
       }
     }
 
-    // Classic Pivot Points overlay
-    if (showPivots && pivotLevels && effectivePriceScaleMode !== PriceScaleMode.Percentage) {
-      const pDefs = [
-        { title: 'R2', price: pivotLevels.r2, color: '#ef4444' },
-        { title: 'R1', price: pivotLevels.r1, color: '#f97316' },
-        { title: 'PP', price: pivotLevels.pp, color: '#64748b' },
-        { title: 'S1', price: pivotLevels.s1, color: '#10b981' },
-        { title: 'S2', price: pivotLevels.s2, color: '#059669' },
-      ];
-      for (const p of pDefs) {
-        mainSeries.createPriceLine({
-          price: p.price,
-          color: p.color,
-          lineWidth: 1,
-          lineStyle: LineStyle.Dotted,
-          axisLabelVisible: true,
-          title: p.title,
-        });
-      }
-    }
-
-    // 52w High/Low optional lines
-    if (show52wLines && latestRaw && effectivePriceScaleMode !== PriceScaleMode.Percentage) {
-      if (latestRaw.w52_high && latestRaw.w52_high > 0) {
-        mainSeries.createPriceLine({
-          price: latestRaw.w52_high,
-          color: '#0ea5e9',
-          lineWidth: 1,
-          lineStyle: LineStyle.Dotted,
-          axisLabelVisible: true,
-          title: '52w High',
-        });
-      }
-      if (latestRaw.w52_low && latestRaw.w52_low > 0) {
-        mainSeries.createPriceLine({
-          price: latestRaw.w52_low,
-          color: '#f43f5e',
-          lineWidth: 1,
-          lineStyle: LineStyle.Dotted,
-          axisLabelVisible: true,
-          title: '52w Low',
-        });
-      }
-    }
-
-    // User horizontal drawings as native price lines
     if (!hideDrawings) {
       for (const d of drawings) {
         if (d.kind === 'hline') {
@@ -669,19 +1127,14 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       }
     }
 
-    // Volume histogram on pane 0 overlay scale
-    if (showVolume) {
+    // Volume histogram on pane 0
+    if (enabled.vol) {
       const volSeries = chart.addSeries(
         HistogramSeries,
-        {
-          priceFormat: { type: 'volume' },
-          priceScaleId: 'volume',
-        },
+        { priceFormat: { type: 'volume' }, priceScaleId: 'volume' },
         0
       );
-      chart.priceScale('volume').applyOptions({
-        scaleMargins: { top: 0.78, bottom: 0 },
-      });
+      chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.78, bottom: 0 } });
       const volData: HistogramData<Time>[] = visibleBars.map((b) => ({
         time: b.time as Time,
         value: b.volume,
@@ -697,243 +1150,267 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       volSeries.setData(volData);
     }
 
-    // Overlay Moving Averages & Bands
-    if (showSmaN) {
-      const smaData = calcSma(visibleBars, lookbackDays);
-      if (smaData.length > 0) {
-        const smaSeries = chart.addSeries(
-          LineSeries,
-          {
-            color: '#2563eb',
-            lineWidth: 2,
-            priceLineVisible: false,
-            lastValueVisible: true,
-            title: `SMA(${lookbackDays})`,
-          },
-          0
-        );
-        smaSeries.setData(smaData);
+    // Moving Averages & Trend Overlays
+    if (enabled.smaN) addOverlayLine(calcSma(visibleBars, lookbackDays), `SMA(${lookbackDays})`, '#2563eb', 2, LineStyle.Solid, true);
+    if (enabled.sma20) addOverlayLine(calcSma(visibleBars, 20), 'SMA(20)', '#0ea5e9', 1, LineStyle.Solid, true);
+    if (enabled.sma50) addOverlayLine(calcSma(visibleBars, 50), 'SMA(50)', '#f97316', 2, LineStyle.Solid, true);
+    if (enabled.sma200) addOverlayLine(calcSma(visibleBars, 200), 'SMA(200)', '#dc2626', 2, LineStyle.Solid, true);
+    if (enabled.ema9) addOverlayLine(calcEma(visibleBars, 9), 'EMA(9)', '#14b8a6', 1, LineStyle.Solid, true);
+    if (enabled.ema20) addOverlayLine(ema20Data, 'EMA(20)', '#f59e0b', 2, LineStyle.Solid, true);
+    if (enabled.ema50) addOverlayLine(ema50Data, 'EMA(50)', '#a855f7', 2, LineStyle.Solid, true);
+    if (enabled.ema200) addOverlayLine(calcEma(visibleBars, 200), 'EMA(200)', '#e11d48', 2, LineStyle.Dashed, true);
+    if (enabled.wma20) addOverlayLine(calcWma(visibleBars, 20), 'WMA(20)', '#06b6d4', 1, LineStyle.Solid, true);
+    if (enabled.hma20) addOverlayLine(calcHma(visibleBars, 20), 'HMA(20)', '#22c55e', 2, LineStyle.Solid, true);
+    if (enabled.dema20) addOverlayLine(calcDema(visibleBars, 20), 'DEMA(20)', '#6366f1', 1, LineStyle.Solid, true);
+    if (enabled.tema20) addOverlayLine(calcTema(visibleBars, 20), 'TEMA(20)', '#ec4899', 1, LineStyle.Solid, true);
+    if (enabled.kama) addOverlayLine(calcKama(visibleBars, 10, 2, 30), 'KAMA', '#3b82f6', 2, LineStyle.Solid, true);
+    if (enabled.vwma20) addOverlayLine(calcVwma(visibleBars, 20), 'VWMA(20)', '#84cc16', 1, LineStyle.Solid, true);
+    if (enabled.alma9) addOverlayLine(calcAlma(visibleBars, 9, 0.85, 6), 'ALMA(9)', '#d946ef', 2, LineStyle.Solid, true);
+    if (enabled.mcginley) addOverlayLine(calcMcGinley(visibleBars, 14), 'McGinley(14)', '#f43f5e', 2, LineStyle.Solid, true);
+
+    if (enabled.emaRibbon) {
+      const ribbonDefs: Array<{ p: number; color: string }> = [
+        { p: 8, color: '#22d3ee' },
+        { p: 13, color: '#38bdf8' },
+        { p: 21, color: '#3b82f6' },
+        { p: 34, color: '#6366f1' },
+        { p: 55, color: '#a855f7' },
+      ];
+      for (const r of ribbonDefs) {
+        addOverlayLine(calcEma(visibleBars, r.p), `EMA(${r.p})`, r.color, 1, LineStyle.Solid, false);
       }
     }
 
-    if (showEma9) {
-      const ema9 = calcEma(visibleBars, 9);
-      if (ema9.length > 0) {
-        chart
-          .addSeries(
-            LineSeries,
-            {
-              color: '#14b8a6',
-              lineWidth: 1,
-              priceLineVisible: false,
-              lastValueVisible: true,
-              title: 'EMA(9)',
-            },
-            0
-          )
-          .setData(ema9);
-      }
-    }
-
-    if (showEma20) {
-      const ema20 = calcEma(visibleBars, 20);
-      if (ema20.length > 0) {
-        chart
-          .addSeries(
-            LineSeries,
-            {
-              color: '#f59e0b',
-              lineWidth: 2,
-              priceLineVisible: false,
-              lastValueVisible: true,
-              title: 'EMA(20)',
-            },
-            0
-          )
-          .setData(ema20);
-      }
-    }
-
-    if (showEma50) {
-      const ema50 = calcEma(visibleBars, 50);
-      if (ema50.length > 0) {
-        chart
-          .addSeries(
-            LineSeries,
-            {
-              color: '#a855f7',
-              lineWidth: 2,
-              priceLineVisible: false,
-              lastValueVisible: true,
-              title: 'EMA(50)',
-            },
-            0
-          )
-          .setData(ema50);
-      }
-    }
-
-    if (showBollinger) {
+    if (enabled.bb) {
       const bb = calcBollinger(visibleBars, 20, 2);
-      if (bb.upper.length > 0) {
-        chart
-          .addSeries(
-            LineSeries,
-            {
-              color: 'rgba(148, 163, 184, 0.85)',
-              lineWidth: 1,
-              lineStyle: LineStyle.Dotted,
-              priceLineVisible: false,
-              lastValueVisible: false,
-              title: 'BB Upper',
-            },
-            0
-          )
-          .setData(bb.upper);
-        chart
-          .addSeries(
-            LineSeries,
-            {
-              color: 'rgba(148, 163, 184, 0.85)',
-              lineWidth: 1,
-              lineStyle: LineStyle.Dotted,
-              priceLineVisible: false,
-              lastValueVisible: false,
-              title: 'BB Lower',
-            },
-            0
-          )
-          .setData(bb.lower);
-      }
+      addOverlayLine(bb.upper, 'BB Upper', 'rgba(148, 163, 184, 0.85)', 1, LineStyle.Dotted, false);
+      addOverlayLine(bb.basis, 'BB Basis', 'rgba(148, 163, 184, 0.55)', 1, LineStyle.Dashed, false);
+      addOverlayLine(bb.lower, 'BB Lower', 'rgba(148, 163, 184, 0.85)', 1, LineStyle.Dotted, false);
     }
 
-    if (showSupertrend && supertrendData.up.length > 0) {
+    if (enabled.keltner) {
+      const kc = calcKeltner(visibleBars, 20, 2, 10);
+      addOverlayLine(kc.upper, 'KC Upper', '#0ea5e9', 1, LineStyle.Dashed, false);
+      addOverlayLine(kc.basis, 'KC Mid', '#38bdf8', 1, LineStyle.Dotted, false);
+      addOverlayLine(kc.lower, 'KC Lower', '#0ea5e9', 1, LineStyle.Dashed, false);
+    }
+
+    if (enabled.donchian) {
+      const dc = calcDonchian(visibleBars, 20);
+      addOverlayLine(dc.upper, 'DC High', '#10b981', 1, LineStyle.Solid, false);
+      addOverlayLine(dc.mid, 'DC Mid', '#64748b', 1, LineStyle.Dotted, false);
+      addOverlayLine(dc.lower, 'DC Low', '#ef4444', 1, LineStyle.Solid, false);
+    }
+
+    if (enabled.envelope) {
+      const env = calcEnvelope(visibleBars, 20, 0.05);
+      addOverlayLine(env.upper, 'Env +5%', '#f59e0b', 1, LineStyle.Dotted, false);
+      addOverlayLine(env.lower, 'Env -5%', '#f59e0b', 1, LineStyle.Dotted, false);
+    }
+
+    if (enabled.linreg) {
+      const lr = calcLinearRegressionChannel(visibleBars, 50, 2);
+      addOverlayLine(lr.upper, 'Reg +2σ', '#a855f7', 1, LineStyle.Dashed, false);
+      addOverlayLine(lr.mid, 'LinReg(50)', '#8b5cf6', 2, LineStyle.Solid, true);
+      addOverlayLine(lr.lower, 'Reg -2σ', '#a855f7', 1, LineStyle.Dashed, false);
+    }
+
+    if (enabled.zigzag) {
+      addOverlayLine(calcZigZag(visibleBars, 5), 'ZigZag 5%', '#f97316', 2, LineStyle.Solid, false);
+    }
+
+    if (enabled.supertrend && supertrendData.up.length > 0) {
       chart
         .addSeries(
           LineSeries,
-          {
-            color: '#10b981',
-            lineWidth: 2,
-            priceLineVisible: false,
-            lastValueVisible: false,
-            title: 'ST Up',
-          },
+          { color: '#10b981', lineWidth: 2, priceLineVisible: false, lastValueVisible: false, title: 'ST Up' },
           0
         )
         .setData(supertrendData.up);
       chart
         .addSeries(
           LineSeries,
-          {
-            color: '#ef4444',
-            lineWidth: 2,
-            priceLineVisible: false,
-            lastValueVisible: false,
-            title: 'ST Down',
-          },
+          { color: '#ef4444', lineWidth: 2, priceLineVisible: false, lastValueVisible: false, title: 'ST Down' },
           0
         )
         .setData(supertrendData.down);
     }
 
-    if (showVwap && timeframe === '1D') {
-      const vwapData: LineData<Time>[] = visibleBars
-        .filter((b) => b.vwap !== null)
-        .map((b) => ({ time: b.time as Time, value: Number(b.vwap!.toFixed(2)) }));
-      if (vwapData.length > 0) {
+    if (enabled.psar) {
+      const psar = calcParabolicSar(visibleBars, 0.02, 0.2);
+      if (psar.up.length > 0) {
         chart
           .addSeries(
             LineSeries,
             {
-              color: '#06b6d4',
-              lineWidth: 1,
-              lineStyle: LineStyle.Dashed,
+              color: '#10b981',
+              lineVisible: false,
+              pointMarkersVisible: true,
+              pointMarkersRadius: 2,
               priceLineVisible: false,
-              lastValueVisible: true,
-              title: 'VWAP',
+              lastValueVisible: false,
+              title: 'SAR Bull',
             },
             0
           )
-          .setData(vwapData);
+          .setData(psar.up);
+        chart
+          .addSeries(
+            LineSeries,
+            {
+              color: '#ef4444',
+              lineVisible: false,
+              pointMarkersVisible: true,
+              pointMarkersRadius: 2,
+              priceLineVisible: false,
+              lastValueVisible: false,
+              title: 'SAR Bear',
+            },
+            0
+          )
+          .setData(psar.down);
       }
     }
 
-    if (showMa120 && timeframe === '1D') {
+    if (enabled.ichimoku) {
+      addOverlayLine(ichimokuData.tenkan, 'Tenkan(9)', '#0ea5e9', 1, LineStyle.Solid, true);
+      addOverlayLine(ichimokuData.kijun, 'Kijun(26)', '#ef4444', 1, LineStyle.Solid, true);
+      addOverlayLine(ichimokuData.spanA, 'Span A', 'rgba(16, 185, 129, 0.78)', 1, LineStyle.Dashed, false);
+      addOverlayLine(ichimokuData.spanB, 'Span B', 'rgba(239, 68, 68, 0.78)', 1, LineStyle.Dashed, false);
+      addOverlayLine(ichimokuData.chikou, 'Chikou', '#84cc16', 1, LineStyle.Dotted, false);
+    }
+
+    if (enabled.alligator) {
+      const alli = calcAlligator(visibleBars);
+      addOverlayLine(alli.jaw, 'Jaw(13)', '#2563eb', 2, LineStyle.Solid, false);
+      addOverlayLine(alli.teeth, 'Teeth(8)', '#ef4444', 1, LineStyle.Solid, false);
+      addOverlayLine(alli.lips, 'Lips(5)', '#10b981', 1, LineStyle.Solid, false);
+    }
+
+    if (enabled.rvwap) {
+      addOverlayLine(calcRollingVwap(visibleBars, 20), 'RVWAP(20)', '#06b6d4', 2, LineStyle.Solid, true);
+    }
+
+    if (enabled.vwap && timeframe === '1D') {
+      const vwapData: LineData<Time>[] = visibleBars
+        .filter((b) => b.vwap !== null)
+        .map((b) => ({ time: b.time as Time, value: Number(b.vwap!.toFixed(2)) }));
+      addOverlayLine(vwapData, 'VWAP', '#06b6d4', 1, LineStyle.Dashed, true);
+    }
+
+    if (enabled.ma120 && timeframe === '1D') {
       const d120Data = visibleBars
         .filter((b) => b.d120 !== null)
         .map((b) => ({ time: b.time as Time, value: b.d120! }));
       const d180Data = visibleBars
         .filter((b) => b.d180 !== null)
         .map((b) => ({ time: b.time as Time, value: b.d180! }));
-
-      if (d120Data.length > 0) {
-        chart
-          .addSeries(
-            LineSeries,
-            {
-              color: '#8b5cf6',
-              lineWidth: 1,
-              priceLineVisible: false,
-              lastValueVisible: false,
-              title: 'MA120',
-            },
-            0
-          )
-          .setData(d120Data);
-      }
-      if (d180Data.length > 0) {
-        chart
-          .addSeries(
-            LineSeries,
-            {
-              color: '#ec4899',
-              lineWidth: 1,
-              priceLineVisible: false,
-              lastValueVisible: false,
-              title: 'MA180',
-            },
-            0
-          )
-          .setData(d180Data);
-      }
+      addOverlayLine(d120Data, 'MA120', '#8b5cf6', 1, LineStyle.Solid, false);
+      addOverlayLine(d180Data, 'MA180', '#ec4899', 1, LineStyle.Solid, false);
     }
 
-    // Oscillator Sub-panes
+    // Oscillator & Volume Sub-panes
     let nextPane = 1;
-    if (showRsi && rsiData.length > 0) {
-      const rsiPane = nextPane++;
-      const rsiSeries = chart.addSeries(
-        LineSeries,
+    const addSubLinePane = (
+      seriesDefs: Array<{
+        data: LineData<Time>[];
+        title: string;
+        color: string;
+        lineWidth?: 1 | 2 | 3 | 4;
+        lastValue?: boolean;
+        refLines?: Array<{ price: number; color: string; title: string }>;
+      }>
+    ) => {
+      const valid = seriesDefs.filter((s) => s.data.length > 0);
+      if (valid.length === 0) return;
+      const paneIdx = nextPane++;
+      for (const sDef of valid) {
+        const ser = chart.addSeries(
+          LineSeries,
+          {
+            color: sDef.color,
+            lineWidth: sDef.lineWidth ?? 1,
+            priceLineVisible: false,
+            lastValueVisible: sDef.lastValue ?? true,
+            title: sDef.title,
+          },
+          paneIdx
+        );
+        ser.setData(sDef.data);
+        if (sDef.refLines) {
+          for (const rf of sDef.refLines) {
+            ser.createPriceLine({
+              price: rf.price,
+              color: rf.color,
+              lineWidth: 1,
+              lineStyle: LineStyle.Dashed,
+              axisLabelVisible: true,
+              title: rf.title,
+            });
+          }
+        }
+      }
+      chart.panes()[paneIdx]?.setHeight(subPaneHeight);
+    };
+
+    const addSubHistPane = (
+      data: HistogramData<Time>[],
+      title: string,
+      zeroLine = true
+    ) => {
+      if (data.length === 0) return;
+      const paneIdx = nextPane++;
+      const s = chart.addSeries(
+        HistogramSeries,
+        { priceLineVisible: false, lastValueVisible: true, title },
+        paneIdx
+      );
+      s.setData(data);
+      if (zeroLine) {
+        s.createPriceLine({
+          price: 0,
+          color: '#64748b',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
+          axisLabelVisible: false,
+          title: '0',
+        });
+      }
+      chart.panes()[paneIdx]?.setHeight(subPaneHeight);
+    };
+
+    if (enabled.rsi) {
+      addSubLinePane([
         {
+          data: rsiData,
+          title: 'RSI(14)',
           color: '#6366f1',
           lineWidth: 2,
-          priceLineVisible: false,
-          lastValueVisible: true,
-          title: 'RSI(14)',
+          refLines: [
+            { price: 70, color: '#ef4444', title: '70' },
+            { price: 30, color: '#10b981', title: '30' },
+          ],
         },
-        rsiPane
-      );
-      rsiSeries.setData(rsiData);
-      rsiSeries.createPriceLine({
-        price: 70,
-        color: '#ef4444',
-        lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        axisLabelVisible: true,
-        title: '70',
-      });
-      rsiSeries.createPriceLine({
-        price: 30,
-        color: '#10b981',
-        lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        axisLabelVisible: true,
-        title: '30',
-      });
-      chart.panes()[rsiPane]?.setHeight(subPaneHeight);
+      ]);
     }
 
-    if (showMacd && macdData.macd.length > 0) {
+    if (enabled.stochRsi) {
+      const srsi = calcStochRsi(visibleBars, 14, 14, 3, 3);
+      addSubLinePane([
+        {
+          data: srsi.k,
+          title: 'SRSI %K',
+          color: '#2563eb',
+          refLines: [
+            { price: 80, color: '#ef4444', title: '80' },
+            { price: 20, color: '#10b981', title: '20' },
+          ],
+        },
+        { data: srsi.d, title: 'SRSI %D', color: '#f97316' },
+      ]);
+    }
+
+    if (enabled.macd && macdData.macd.length > 0) {
       const macdPane = nextPane++;
       chart
         .addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, macdPane)
@@ -955,73 +1432,326 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       chart.panes()[macdPane]?.setHeight(subPaneHeight);
     }
 
-    if (showStoch && stochData.k.length > 0) {
-      const stochPane = nextPane++;
-      const kS = chart.addSeries(
-        LineSeries,
-        { color: '#0ea5e9', lineWidth: 1, priceLineVisible: false, lastValueVisible: true, title: '%K' },
-        stochPane
-      );
-      const dS = chart.addSeries(
-        LineSeries,
-        { color: '#f97316', lineWidth: 1, priceLineVisible: false, lastValueVisible: true, title: '%D' },
-        stochPane
-      );
-      kS.setData(stochData.k);
-      dS.setData(stochData.d);
-      kS.createPriceLine({ price: 80, color: '#ef4444', lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: '80' });
-      kS.createPriceLine({ price: 20, color: '#10b981', lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: '20' });
-      chart.panes()[stochPane]?.setHeight(subPaneHeight);
+    if (enabled.ppo) {
+      const ppo = calcPpo(visibleBars);
+      if (ppo.ppo.length > 0) {
+        const ppoPane = nextPane++;
+        chart
+          .addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, ppoPane)
+          .setData(ppo.hist);
+        chart
+          .addSeries(
+            LineSeries,
+            { color: '#0ea5e9', lineWidth: 1, priceLineVisible: false, lastValueVisible: true, title: 'PPO%' },
+            ppoPane
+          )
+          .setData(ppo.ppo);
+        chart
+          .addSeries(
+            LineSeries,
+            { color: '#f59e0b', lineWidth: 1, priceLineVisible: false, lastValueVisible: true, title: 'Sig' },
+            ppoPane
+          )
+          .setData(ppo.signal);
+        chart.panes()[ppoPane]?.setHeight(subPaneHeight);
+      }
     }
 
-    if (showAdx && adxData.adx.length > 0) {
-      const adxPane = nextPane++;
-      const adxS = chart.addSeries(
-        LineSeries,
-        { color: '#eab308', lineWidth: 2, priceLineVisible: false, lastValueVisible: true, title: 'ADX' },
-        adxPane
-      );
-      adxS.setData(adxData.adx);
-      chart
-        .addSeries(
-          LineSeries,
-          { color: '#10b981', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, title: '+DI' },
-          adxPane
-        )
-        .setData(adxData.plusDi);
-      chart
-        .addSeries(
-          LineSeries,
-          { color: '#ef4444', lineWidth: 1, priceLineVisible: false, lastValueVisible: false, title: '-DI' },
-          adxPane
-        )
-        .setData(adxData.minusDi);
-      adxS.createPriceLine({ price: 25, color: '#64748b', lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: '25' });
-      chart.panes()[adxPane]?.setHeight(subPaneHeight);
+    if (enabled.stoch) {
+      addSubLinePane([
+        {
+          data: stochData.k,
+          title: '%K',
+          color: '#0ea5e9',
+          refLines: [
+            { price: 80, color: '#ef4444', title: '80' },
+            { price: 20, color: '#10b981', title: '20' },
+          ],
+        },
+        { data: stochData.d, title: '%D', color: '#f97316' },
+      ]);
     }
 
-    if (showAtr && atrSeries.length > 0) {
-      const atrPane = nextPane++;
-      chart
-        .addSeries(
-          LineSeries,
-          { color: '#ec4899', lineWidth: 2, priceLineVisible: false, lastValueVisible: true, title: 'ATR(14)' },
-          atrPane
-        )
-        .setData(atrSeries);
-      chart.panes()[atrPane]?.setHeight(subPaneHeight);
+    if (enabled.adx) {
+      addSubLinePane([
+        {
+          data: adxData.adx,
+          title: 'ADX',
+          color: '#eab308',
+          lineWidth: 2,
+          refLines: [{ price: 25, color: '#64748b', title: '25' }],
+        },
+        { data: adxData.plusDi, title: '+DI', color: '#10b981', lastValue: false },
+        { data: adxData.minusDi, title: '-DI', color: '#ef4444', lastValue: false },
+      ]);
     }
 
-    if (showObv && obvData.length > 0) {
-      const obvPane = nextPane++;
-      chart
-        .addSeries(
-          LineSeries,
-          { color: '#14b8a6', lineWidth: 2, priceLineVisible: false, lastValueVisible: true, title: 'OBV' },
-          obvPane
-        )
-        .setData(obvData);
-      chart.panes()[obvPane]?.setHeight(subPaneHeight);
+    if (enabled.atr) {
+      addSubLinePane([{ data: atrSeries, title: 'ATR(14)', color: '#ec4899', lineWidth: 2 }]);
+    }
+
+    if (enabled.bbw) {
+      addSubLinePane([{ data: calcBbWidth(visibleBars, 20, 2), title: 'BBWidth%', color: '#8b5cf6', lineWidth: 2 }]);
+    }
+
+    if (enabled.bbPctB) {
+      addSubLinePane([
+        {
+          data: calcBbPercentB(visibleBars, 20, 2),
+          title: 'BB %B',
+          color: '#06b6d4',
+          lineWidth: 2,
+          refLines: [
+            { price: 1, color: '#ef4444', title: '1.0' },
+            { price: 0, color: '#10b981', title: '0.0' },
+          ],
+        },
+      ]);
+    }
+
+    if (enabled.hvol) {
+      addSubLinePane([{ data: calcHistoricalVolatility(visibleBars, 20), title: 'HistVol%', color: '#f43f5e', lineWidth: 2 }]);
+    }
+
+    if (enabled.cci) {
+      addSubLinePane([
+        {
+          data: cciData,
+          title: 'CCI(20)',
+          color: '#14b8a6',
+          lineWidth: 2,
+          refLines: [
+            { price: 100, color: '#ef4444', title: '+100' },
+            { price: -100, color: '#10b981', title: '-100' },
+          ],
+        },
+      ]);
+    }
+
+    if (enabled.willr) {
+      addSubLinePane([
+        {
+          data: willrData,
+          title: 'W%R(14)',
+          color: '#a855f7',
+          lineWidth: 2,
+          refLines: [
+            { price: -20, color: '#ef4444', title: '-20' },
+            { price: -80, color: '#10b981', title: '-80' },
+          ],
+        },
+      ]);
+    }
+
+    if (enabled.mfi) {
+      addSubLinePane([
+        {
+          data: mfiData,
+          title: 'MFI(14)',
+          color: '#0ea5e9',
+          lineWidth: 2,
+          refLines: [
+            { price: 80, color: '#ef4444', title: '80' },
+            { price: 20, color: '#10b981', title: '20' },
+          ],
+        },
+      ]);
+    }
+
+    if (enabled.ao) {
+      addSubHistPane(calcAwesomeOscillator(visibleBars, 5, 34), 'AO');
+    }
+
+    if (enabled.roc) {
+      addSubLinePane([
+        {
+          data: calcRoc(visibleBars, 12),
+          title: 'ROC(12)%',
+          color: '#3b82f6',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+      ]);
+    }
+
+    if (enabled.mom) {
+      addSubLinePane([
+        {
+          data: calcMomentum(visibleBars, 10),
+          title: 'MOM(10)',
+          color: '#22c55e',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+      ]);
+    }
+
+    if (enabled.trix) {
+      addSubLinePane([
+        {
+          data: calcTrix(visibleBars, 15),
+          title: 'TRIX(15)',
+          color: '#f59e0b',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+      ]);
+    }
+
+    if (enabled.uo) {
+      addSubLinePane([
+        {
+          data: calcUltimateOscillator(visibleBars, 7, 14, 28),
+          title: 'UO(7,14,28)',
+          color: '#ec4899',
+          lineWidth: 2,
+          refLines: [
+            { price: 70, color: '#ef4444', title: '70' },
+            { price: 30, color: '#10b981', title: '30' },
+          ],
+        },
+      ]);
+    }
+
+    if (enabled.cmo) {
+      addSubLinePane([
+        {
+          data: calcCmo(visibleBars, 14),
+          title: 'CMO(14)',
+          color: '#6366f1',
+          lineWidth: 2,
+          refLines: [
+            { price: 50, color: '#ef4444', title: '+50' },
+            { price: -50, color: '#10b981', title: '-50' },
+          ],
+        },
+      ]);
+    }
+
+    if (enabled.dpo) {
+      addSubLinePane([
+        {
+          data: calcDpo(visibleBars, 20),
+          title: 'DPO(20)',
+          color: '#06b6d4',
+          lineWidth: 1,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+      ]);
+    }
+
+    if (enabled.aroon) {
+      const ar = calcAroon(visibleBars, 25);
+      addSubLinePane([
+        { data: ar.up, title: 'AroonUp', color: '#10b981', lineWidth: 2 },
+        { data: ar.down, title: 'AroonDn', color: '#ef4444', lineWidth: 2 },
+      ]);
+    }
+
+    if (enabled.coppock) {
+      addSubHistPane(calcCoppock(visibleBars), 'Coppock');
+    }
+
+    if (enabled.vortex) {
+      const vx = calcVortex(visibleBars, 14);
+      addSubLinePane([
+        {
+          data: vx.plus,
+          title: 'VI+',
+          color: '#10b981',
+          lineWidth: 2,
+          refLines: [{ price: 1, color: '#64748b', title: '1.0' }],
+        },
+        { data: vx.minus, title: 'VI-', color: '#ef4444', lineWidth: 2 },
+      ]);
+    }
+
+    if (enabled.elder) {
+      const er = calcElderRay(visibleBars, 13);
+      if (er.bull.length > 0) {
+        const erPane = nextPane++;
+        chart.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: true, title: 'BullPow' }, erPane).setData(er.bull);
+        chart.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: true, title: 'BearPow' }, erPane).setData(er.bear);
+        chart.panes()[erPane]?.setHeight(subPaneHeight);
+      }
+    }
+
+    if (enabled.fisher) {
+      const ft = calcFisherTransform(visibleBars, 10);
+      addSubLinePane([
+        {
+          data: ft.fisher,
+          title: 'Fisher(10)',
+          color: '#2563eb',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+        { data: ft.trigger, title: 'Trigger', color: '#f97316' },
+      ]);
+    }
+
+    if (enabled.obv) {
+      addSubLinePane([{ data: calcObv(visibleBars), title: 'OBV', color: '#14b8a6', lineWidth: 2 }]);
+    }
+
+    if (enabled.cmf) {
+      addSubLinePane([
+        {
+          data: cmfData,
+          title: 'CMF(20)',
+          color: '#10b981',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0.0' }],
+        },
+      ]);
+    }
+
+    if (enabled.adLine) {
+      addSubLinePane([{ data: calcAdLine(visibleBars), title: 'A/D Line', color: '#3b82f6', lineWidth: 2 }]);
+    }
+
+    if (enabled.chaikinOsc) {
+      addSubLinePane([
+        {
+          data: calcChaikinOscillator(visibleBars, 3, 10),
+          title: 'ChaikinOsc',
+          color: '#f59e0b',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+      ]);
+    }
+
+    if (enabled.force) {
+      addSubLinePane([
+        {
+          data: calcForceIndex(visibleBars, 13),
+          title: 'Force(13)',
+          color: '#ef4444',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+      ]);
+    }
+
+    if (enabled.eom) {
+      addSubLinePane([
+        {
+          data: calcEaseOfMovement(visibleBars, 14),
+          title: 'EOM(14)',
+          color: '#8b5cf6',
+          lineWidth: 2,
+          refLines: [{ price: 0, color: '#64748b', title: '0' }],
+        },
+      ]);
+    }
+
+    if (enabled.volOsc) {
+      addSubHistPane(calcVolumeOscillator(visibleBars, 5, 20), 'VolOsc%');
+    }
+
+    if (enabled.vpt) {
+      addSubLinePane([{ data: calcVpt(visibleBars), title: 'VPT', color: '#0ea5e9', lineWidth: 2 }]);
     }
 
     // Visible range zoom
@@ -1157,47 +1887,38 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     adxData,
     atrSeries,
     barMap,
+    cciData,
     chartStyle,
+    cmfData,
     compareBars,
     compareSymbol,
     drawings,
+    ema20Data,
+    ema50Data,
+    enabled,
     fullBars,
     hideDrawings,
+    ichimokuData,
     isDark,
     isFullscreen,
     latestRaw,
     levels,
     lookbackDays,
     macdData,
-    obvData,
+    mfiData,
     pivotLevels,
     replayMode,
     rsiData,
     scaleMode,
     show52wLines,
-    showAdx,
-    showAtr,
-    showBollinger,
-    showEma20,
-    showEma50,
-    showEma9,
     showGrid,
-    showMa120,
-    showMacd,
-    showObv,
-    showPivots,
-    showRsi,
     showSR,
-    showSmaN,
-    showStoch,
-    showSupertrend,
-    showVolume,
-    showVwap,
     stochData,
     supertrendData,
     timeframe,
     triggerOverlaySync,
     visibleBars,
+    willrData,
     zoom,
   ]);
 
@@ -1207,7 +1928,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     const chart = chartRef.current;
     const series = mainSeriesRef.current;
     const wrapW = chartWrapRef.current?.clientWidth || 900;
-    const wrapH = chartWrapRef.current?.clientHeight || 430;
+    const wrapH = chartWrapRef.current?.clientHeight || 420;
     if (!chart || !series || visibleBars.length === 0 || hideDrawings) {
       return { items: [], wrapW, wrapH };
     }
@@ -1268,56 +1989,6 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       .filter((s) => !q || s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q))
       .slice(0, 60);
   }, [symbols, symbol, compareSearch]);
-
-  const indicatorCatalog: IndicatorOption[] = useMemo(
-    () => [
-      { id: 'vol', label: 'Volume', category: 'Overlay', desc: 'Session share volume histogram', active: showVolume, toggle: () => setShowVolume((v) => !v) },
-      { id: 'smaN', label: `SMA (${lookbackDays})`, category: 'Overlay', desc: `${lookbackDays}-period simple moving average`, active: showSmaN, toggle: () => setShowSmaN((v) => !v) },
-      { id: 'ema9', label: 'EMA (9)', category: 'Overlay', desc: 'Fast 9-period exponential trendline', active: showEma9, toggle: () => setShowEma9((v) => !v) },
-      { id: 'ema20', label: 'EMA (20)', category: 'Overlay', desc: 'Swing 20-period exponential average', active: showEma20, toggle: () => setShowEma20((v) => !v) },
-      { id: 'ema50', label: 'EMA (50)', category: 'Overlay', desc: 'Medium-term 50-period institutional baseline', active: showEma50, toggle: () => setShowEma50((v) => !v) },
-      { id: 'bb', label: 'Bollinger Bands (20, 2)', category: 'Overlay', desc: '2-sigma volatility bands for squeezes & breakouts', active: showBollinger, toggle: () => setShowBollinger((v) => !v) },
-      { id: 'st', label: 'Supertrend (10, 3)', category: 'Overlay', desc: 'ATR trailing trend & stop-flip line', active: showSupertrend, toggle: () => setShowSupertrend((v) => !v) },
-      { id: 'vwap', label: 'VWAP (1D)', category: 'Overlay', desc: 'Volume-weighted average execution price', active: showVwap, toggle: () => setShowVwap((v) => !v) },
-      { id: 'ma120', label: 'MA 120 / 180 (1D)', category: 'Overlay', desc: 'ShareSansar 120-day & 180-day moving averages', active: showMa120, toggle: () => setShowMa120((v) => !v) },
-      { id: 'pivots', label: 'Pivot Points (Classic)', category: 'Overlay', desc: 'PP, R1, R2, S1, S2 from previous completed bar', active: showPivots, toggle: () => setShowPivots((v) => !v) },
-      { id: 'rsi', label: 'RSI (14)', category: 'Oscillator', desc: 'Relative Strength Index with 70/30 thresholds', active: showRsi, toggle: () => setShowRsi((v) => !v) },
-      { id: 'macd', label: 'MACD (12, 26, 9)', category: 'Oscillator', desc: 'Trend momentum convergence/divergence & histogram', active: showMacd, toggle: () => setShowMacd((v) => !v) },
-      { id: 'stoch', label: 'Stochastic (14, 3, 3)', category: 'Oscillator', desc: '%K / %D momentum oscillator with 80/20 zones', active: showStoch, toggle: () => setShowStoch((v) => !v) },
-      { id: 'adx', label: 'ADX / DMI (14)', category: 'Oscillator', desc: 'Trend strength (ADX) + directional +DI / -DI', active: showAdx, toggle: () => setShowAdx((v) => !v) },
-      { id: 'atr', label: 'ATR (14)', category: 'Oscillator', desc: 'Average True Range volatility pane in NPR', active: showAtr, toggle: () => setShowAtr((v) => !v) },
-      { id: 'obv', label: 'On-Balance Volume (OBV)', category: 'Oscillator', desc: 'Cumulative volume flow for accumulation/distribution', active: showObv, toggle: () => setShowObv((v) => !v) },
-    ],
-    [
-      lookbackDays,
-      showAdx,
-      showAtr,
-      showBollinger,
-      showEma20,
-      showEma50,
-      showEma9,
-      showMa120,
-      showMacd,
-      showObv,
-      showPivots,
-      showRsi,
-      showSmaN,
-      showStoch,
-      showSupertrend,
-      showVolume,
-      showVwap,
-    ]
-  );
-
-  const filteredIndicators = useMemo(() => {
-    const q = indicatorSearch.trim().toLowerCase();
-    if (!q) return indicatorCatalog;
-    return indicatorCatalog.filter(
-      (i) => i.label.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)
-    );
-  }, [indicatorCatalog, indicatorSearch]);
-
-  const activeIndicatorCount = indicatorCatalog.filter((i) => i.active).length;
 
   const stepSymbol = (dir: -1 | 1) => {
     if (!onSelectSymbol || symbols.length === 0) return;
@@ -1407,6 +2078,30 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     { id: 'note', label: 'Price Note Callout', icon: StickyNote },
   ];
 
+  const categories: Array<'All' | IndicatorCategory> = [
+    'All',
+    'Trend & MAs',
+    'Bands & Channels',
+    'Volatility & Pivots',
+    'Momentum & Oscillators',
+    'Volume & Flow',
+  ];
+
+  const quickButtons: Array<{ id: IndicatorId; label: string }> = [
+    { id: 'vol', label: 'Volume' },
+    { id: 'smaN', label: `SMA(${lookbackDays})` },
+    { id: 'ema20', label: 'EMA(20)' },
+    { id: 'ema50', label: 'EMA(50)' },
+    { id: 'ichimoku', label: 'Ichimoku' },
+    { id: 'supertrend', label: 'Supertrend' },
+    { id: 'psar', label: 'PSAR' },
+    { id: 'bb', label: 'BB(20,2)' },
+    { id: 'rsi', label: 'RSI(14)' },
+    { id: 'macd', label: 'MACD' },
+    { id: 'stoch', label: 'Stoch(14)' },
+    { id: 'cmf', label: 'CMF(20)' },
+  ];
+
   return (
     <div className={wrapperClass}>
       {/* Top TradingView Advanced Header Bar */}
@@ -1417,7 +2112,6 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             : 'border-b border-slate-100 dark:border-slate-800 pb-2.5'
         }`}
       >
-        {/* Left: Symbol Switcher + Timeframes + Chart Style + Indicators + Compare + Replay */}
         <div className="flex flex-wrap items-center gap-1.5">
           {symbols.length > 0 && onSelectSymbol ? (
             <div className="flex items-center gap-1">
@@ -1534,7 +2228,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             }`}
           >
             <SlidersHorizontal className="w-3 h-3" />
-            <span>Indicators ({activeIndicatorCount})</span>
+            <span>
+              Indicators ({activeIndicatorList.length}/{indicatorCatalog.length})
+            </span>
           </button>
 
           {/* Compare Symbol Button */}
@@ -1587,7 +2283,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           </button>
         </div>
 
-        {/* Right: Zoom Ranges + Scale + Screenshot + Sidebar + Fullscreen */}
+        {/* Right Controls */}
         <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           <div className="inline-flex items-center gap-0.5 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-md">
             {(['1M', '3M', '6M', '1Y', 'ALL'] as ZoomRange[]).map((z) => (
@@ -1824,7 +2520,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                         }`}
             </span>
           )}
-          {showSupertrend && supertrendData.latestTrend && (
+          {enabled.supertrend && supertrendData.latestTrend && (
             <span
               className={
                 supertrendData.latestTrend === 'bullish'
@@ -1836,17 +2532,22 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
               {supertrendData.latestValue !== null ? formatNum(supertrendData.latestValue) : ''}
             </span>
           )}
-          {latestRsi !== null && showRsi && (
+          {latestRsi !== null && enabled.rsi && (
             <span className="text-indigo-600 dark:text-indigo-400">
-              RSI(14): <span className="font-semibold">{latestRsi.toFixed(1)}</span>
+              RSI: <span className="font-semibold">{latestRsi.toFixed(1)}</span>
             </span>
           )}
-          {latestStochK !== null && showStoch && (
+          {latestCci !== null && enabled.cci && (
+            <span className="text-teal-600 dark:text-teal-400">
+              CCI: {latestCci.toFixed(0)}
+            </span>
+          )}
+          {latestMfi !== null && enabled.mfi && (
             <span className="text-sky-600 dark:text-sky-400">
-              Stoch: {latestStochK.toFixed(1)}/{latestStochD?.toFixed(1) ?? '–'}
+              MFI: {latestMfi.toFixed(1)}
             </span>
           )}
-          {latestAdx !== null && showAdx && (
+          {latestAdx !== null && enabled.adx && (
             <span className="text-amber-600 dark:text-amber-400">
               ADX: {latestAdx.toFixed(1)}
             </span>
@@ -1859,7 +2560,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
         </div>
       </div>
 
-      {/* Main Terminal Grid: Left Drawing Rail + Center Chart Canvas + Right TA Sidebar */}
+      {/* Main Terminal Grid */}
       <div
         className={`flex flex-col lg:flex-row gap-2.5 ${
           isFullscreen ? 'flex-1 min-h-0 px-3 pb-3 pt-1' : ''
@@ -1953,7 +2654,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             )}
           </nav>
 
-          {/* Chart Canvas + Advanced SVG Vector Drawings Overlay */}
+          {/* Chart Canvas + SVG Overlay */}
           <div
             ref={chartWrapRef}
             className={`relative flex-1 min-w-0 overflow-hidden rounded border border-slate-200 dark:border-slate-800 ${
@@ -1979,10 +2680,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                   placeholder="Add note (e.g. Breakout)"
                   className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs w-44"
                 />
-                <button
-                  type="submit"
-                  className="px-2 py-0.5 rounded bg-blue-600 text-white font-medium"
-                >
+                <button type="submit" className="px-2 py-0.5 rounded bg-blue-600 text-white font-medium">
                   Save
                 </button>
                 <button
@@ -1998,7 +2696,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
               </form>
             )}
 
-            {/* SVG Overlay for Trendlines, Rays, Vertical Lines, Fibs, Long Position, Measure, Notes */}
+            {/* SVG Vector Drawings Overlay */}
             {projectedOverlays.items.length > 0 && (
               <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
                 {projectedOverlays.items.map(({ drawing, c1, c2 }) => {
@@ -2084,14 +2782,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                     }
                     return (
                       <g key={drawing.id}>
-                        <line
-                          x1={c1.x}
-                          y1={c1.y}
-                          x2={endX}
-                          y2={endY}
-                          stroke="#0ea5e9"
-                          strokeWidth={2}
-                        />
+                        <line x1={c1.x} y1={c1.y} x2={endX} y2={endY} stroke="#0ea5e9" strokeWidth={2} />
                         <circle cx={c1.x} cy={c1.y} r={3.5} fill="#0ea5e9" />
                         <circle cx={c2.x} cy={c2.y} r={3.5} fill="#0ea5e9" />
                       </g>
@@ -2171,14 +2862,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                           stroke="#ef4444"
                           strokeWidth={1}
                         />
-                        <line
-                          x1={boxX}
-                          y1={c1.y}
-                          x2={boxX + boxW}
-                          y2={c1.y}
-                          stroke="#0f172a"
-                          strokeWidth={1.5}
-                        />
+                        <line x1={boxX} y1={c1.y} x2={boxX + boxW} y2={c1.y} stroke="#0f172a" strokeWidth={1.5} />
                         <rect x={boxX + 4} y={profitTop + 4} width={154} height={16} rx={3} fill="#059669" />
                         <text
                           x={boxX + 9}
@@ -2203,15 +2887,13 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                     );
                   }
 
-                  // Price Range / Measure
                   const p1 = drawing.p1.price;
                   const p2 = drawing.p2.price;
                   const diff = p2 - p1;
                   const pct = p1 > 0 ? (diff / p1) * 100 : 0;
                   const i1 = barIndexMap.get(drawing.p1.time);
                   const i2 = barIndexMap.get(drawing.p2.time);
-                  const barCount =
-                    i1 !== undefined && i2 !== undefined ? Math.abs(i2 - i1) : null;
+                  const barCount = i1 !== undefined && i2 !== undefined ? Math.abs(i2 - i1) : null;
                   const rx = Math.min(c1.x, c2.x);
                   const ry = Math.min(c1.y, c2.y);
                   const rw = Math.max(2, Math.abs(c2.x - c1.x));
@@ -2261,10 +2943,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
         {sidebarOpen && (
           <aside
             className={`w-full lg:w-64 shrink-0 border border-slate-200 dark:border-slate-800 rounded-md bg-slate-50/70 dark:bg-slate-900/90 p-3 space-y-4 text-xs overflow-y-auto ${
-              isFullscreen ? 'h-full' : 'max-h-[620px]'
+              isFullscreen ? 'h-full' : 'max-h-[680px]'
             }`}
           >
-            {/* Watchlist Quick Switch in Full Screen */}
             {isFullscreen && watchlist.length > 0 && onSelectSymbol && (
               <div className="space-y-1.5 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="font-semibold text-slate-800 dark:text-slate-200">Watchlist</div>
@@ -2287,37 +2968,94 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
               </div>
             )}
 
-            {/* Quick Indicator Toggles */}
+            {/* 10-Indicator Technical Consensus */}
             <div className="space-y-1.5">
+              <div className="flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
+                <span>Technical Summary</span>
+                <span
+                  className={`font-mono text-[11px] font-semibold ${
+                    technicalConsensus.verdict.includes('Buy')
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : technicalConsensus.verdict.includes('Sell')
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {technicalConsensus.verdict}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1 text-center font-mono tabular-nums text-[10px] bg-white dark:bg-slate-950 p-1.5 rounded border border-slate-200 dark:border-slate-800">
+                <div>
+                  <div className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {technicalConsensus.bull}
+                  </div>
+                  <div className="text-slate-400">Buy</div>
+                </div>
+                <div>
+                  <div className="text-slate-600 dark:text-slate-300 font-semibold">
+                    {technicalConsensus.neut}
+                  </div>
+                  <div className="text-slate-400">Neutral</div>
+                </div>
+                <div>
+                  <div className="text-red-600 dark:text-red-400 font-semibold">
+                    {technicalConsensus.bear}
+                  </div>
+                  <div className="text-slate-400">Sell</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Indicators Stack */}
+            <div className="space-y-1.5 border-t border-slate-200 dark:border-slate-800 pt-3">
+              <div className="flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
+                <span>Active ({activeIndicatorList.length})</span>
+                <button
+                  type="button"
+                  onClick={() => setIndicatorsModalOpen(true)}
+                  className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                >
+                  + Browse {indicatorCatalog.length}
+                </button>
+              </div>
+              {activeIndicatorList.length === 0 ? (
+                <div className="text-[11px] text-slate-400">No active indicators.</div>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {activeIndicatorList.map((ind) => (
+                    <button
+                      key={ind.id}
+                      type="button"
+                      onClick={() => toggleInd(ind.id)}
+                      title={`Remove ${ind.label}`}
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-[10px] font-mono text-slate-700 dark:text-slate-200 hover:border-red-400 hover:text-red-600"
+                    >
+                      <span>{ind.shortLabel}</span>
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Indicator Toggles */}
+            <div className="space-y-1.5 border-t border-slate-200 dark:border-slate-800 pt-3">
               <div className="flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
                 <span>Quick Indicators</span>
                 <InfoTip
-                  title="TradingView Technical Suite"
-                  body="Toggle primary overlays & sub-panes here, or open the searchable Indicators menu above for EMA(9/50), Supertrend, Pivots, Stochastic, ADX, ATR, and OBV."
+                  title="67-Indicator Technical Library"
+                  body="Toggle primary studies here or click Indicators in the toolbar for all 67 overlays, channels, pivots, momentum oscillators, and volume flow studies."
                   align="right"
                 />
               </div>
               <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                {[
-                  { label: 'Volume', active: showVolume, toggle: () => setShowVolume((v) => !v) },
-                  { label: `SMA(${lookbackDays})`, active: showSmaN, toggle: () => setShowSmaN((v) => !v) },
-                  { label: 'EMA(20)', active: showEma20, toggle: () => setShowEma20((v) => !v) },
-                  { label: 'EMA(50)', active: showEma50, toggle: () => setShowEma50((v) => !v) },
-                  { label: 'Supertrend', active: showSupertrend, toggle: () => setShowSupertrend((v) => !v) },
-                  { label: 'BB(20,2)', active: showBollinger, toggle: () => setShowBollinger((v) => !v) },
-                  { label: 'VWAP', active: showVwap, toggle: () => setShowVwap((v) => !v) },
-                  { label: 'MA120/180', active: showMa120, toggle: () => setShowMa120((v) => !v) },
-                  { label: 'RSI(14)', active: showRsi, toggle: () => setShowRsi((v) => !v) },
-                  { label: 'MACD', active: showMacd, toggle: () => setShowMacd((v) => !v) },
-                  { label: 'Stoch(14)', active: showStoch, toggle: () => setShowStoch((v) => !v) },
-                  { label: 'ADX(14)', active: showAdx, toggle: () => setShowAdx((v) => !v) },
-                ].map((ind) => (
+                {quickButtons.map((ind) => (
                   <button
-                    key={ind.label}
+                    key={ind.id}
                     type="button"
-                    onClick={ind.toggle}
+                    onClick={() => toggleInd(ind.id)}
                     className={`px-2 py-1.5 rounded border text-left font-medium truncate transition-colors ${
-                      ind.active
+                      enabled[ind.id]
                         ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300'
                         : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
@@ -2360,8 +3098,34 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                   </span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-slate-400">CCI(20)</span>
+                  <span>{latestCci !== null ? latestCci.toFixed(0) : '–'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">MFI(14)</span>
+                  <span>{latestMfi !== null ? latestMfi.toFixed(1) : '–'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Williams %R</span>
+                  <span>{latestWillr !== null ? latestWillr.toFixed(1) : '–'}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-slate-400">ADX(14)</span>
                   <span>{latestAdx !== null ? latestAdx.toFixed(1) : '–'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">CMF(20)</span>
+                  <span
+                    className={
+                      latestCmf !== null && latestCmf > 0.05
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : latestCmf !== null && latestCmf < -0.05
+                          ? 'text-red-600 dark:text-red-400'
+                          : ''
+                    }
+                  >
+                    {latestCmf !== null ? latestCmf.toFixed(2) : '–'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Supertrend</span>
@@ -2413,11 +3177,20 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                   </label>
                 )}
                 <label className="flex items-center justify-between cursor-pointer text-slate-700 dark:text-slate-300">
-                  <span>Classic Pivot Points (R2–S2)</span>
+                  <span>Classic Pivots (R3–S3)</span>
                   <input
                     type="checkbox"
-                    checked={showPivots}
-                    onChange={(e) => setShowPivots(e.target.checked)}
+                    checked={enabled.pivots}
+                    onChange={() => toggleInd('pivots')}
+                    className="rounded border-slate-300 text-blue-600"
+                  />
+                </label>
+                <label className="flex items-center justify-between cursor-pointer text-slate-700 dark:text-slate-300">
+                  <span>Fibonacci Pivots</span>
+                  <input
+                    type="checkbox"
+                    checked={enabled.fibPivots}
+                    onChange={() => toggleInd('fibPivots')}
                     className="rounded border-slate-300 text-blue-600"
                   />
                 </label>
@@ -2553,13 +3326,15 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           onClick={() => setIndicatorsModalOpen(false)}
         >
           <div
-            className="w-full max-w-lg rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden"
+            className="w-full max-w-2xl rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2 font-semibold text-sm text-slate-900 dark:text-slate-100">
                 <Layers className="w-4 h-4 text-blue-600" />
-                <span>Indicators &amp; Oscillators</span>
+                <span>
+                  Technical Indicators Library ({indicatorCatalog.length} studies · {activeIndicatorList.length} active)
+                </span>
               </div>
               <button
                 type="button"
@@ -2569,7 +3344,24 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-3 border-b border-slate-100 dark:border-slate-800">
+
+            {/* Strategy Presets */}
+            <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="text-slate-400 font-medium mr-1">Presets:</span>
+              {INDICATOR_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => applyPreset(p.ids)}
+                  className="px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search + Category Tabs */}
+            <div className="p-3 border-b border-slate-100 dark:border-slate-800 space-y-2.5">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -2577,39 +3369,64 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                   autoFocus
                   value={indicatorSearch}
                   onChange={(e) => setIndicatorSearch(e.target.value)}
-                  placeholder="Search SMA, EMA, Supertrend, Bollinger, RSI, MACD, Stochastic, ADX, OBV…"
+                  placeholder="Search 67 indicators: HMA, KAMA, Ichimoku, Parabolic SAR, Keltner, StochRSI, CCI, MFI, Fisher, CMF, Vortex…"
                   className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100"
                 />
               </div>
-            </div>
-            <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredIndicators.map((ind) => (
-                <button
-                  key={ind.id}
-                  type="button"
-                  onClick={ind.toggle}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                        {ind.label}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">{ind.category}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{ind.desc}</p>
-                  </div>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[11px] font-medium shrink-0 ${
-                      ind.active
-                        ? 'bg-blue-600 text-white'
-                        : 'border border-slate-200 dark:border-slate-700 text-slate-500'
+              <div className="flex flex-wrap gap-1 text-[11px]">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setIndicatorCategory(cat)}
+                    className={`px-2 py-1 rounded border transition-colors ${
+                      indicatorCategory === cat
+                        ? 'border-blue-600 bg-blue-600 text-white font-medium'
+                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    {ind.active ? 'Active' : 'Add'}
-                  </span>
-                </button>
-              ))}
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+              {filteredIndicators.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-400">
+                  No indicators matched &ldquo;{indicatorSearch}&rdquo;.
+                </div>
+              ) : (
+                filteredIndicators.map((ind) => (
+                  <button
+                    key={ind.id}
+                    type="button"
+                    onClick={() => toggleInd(ind.id)}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                          {ind.label}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {ind.category} · {ind.pane}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{ind.desc}</p>
+                    </div>
+                    <span
+                      className={`px-2.5 py-0.5 rounded text-[11px] font-medium shrink-0 ${
+                        enabled[ind.id]
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-slate-200 dark:border-slate-700 text-slate-500'
+                      }`}
+                    >
+                      {enabled[ind.id] ? 'Active' : 'Add'}
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -2682,7 +3499,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       {!isFullscreen && (
         <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
           <span>
-            Scroll/pinch to zoom · Drag to pan · Use left drawing rail (Magnet OHLC snap, Fib, Long R:R, Rays) · Replay or Full Screen
+            Scroll/pinch to zoom · Drag to pan · 67 technical indicators &amp; presets · Magnet OHLC drawing rail · Replay or Full Screen
           </span>
           <span>TradingView Lightweight Charts · EOD NEPSE Data</span>
         </div>

@@ -4980,6 +4980,63 @@
       "lastError": null,
       "validationStatus": "Verified",
       "dataQualityFlags": []
+    },
+    "FMDBLP": {
+      "symbol": "FMDBLP",
+      "companyName": "First Microfinance Laghubitta Bittiya Sanstha Limited Promoter Share",
+      "sector": "Microfinance",
+      "sectorGroup": "Microfinance",
+      "status": "Pending",
+      "latestFiscalYear": null,
+      "latestQuarter": null,
+      "latestPublicationDate": null,
+      "lastAttemptAt": null,
+      "lastSuccessAt": null,
+      "nextRetryAt": null,
+      "retryCount": 0,
+      "lastError": null,
+      "validationStatus": "Incomplete",
+      "dataQualityFlags": [
+        "incomplete"
+      ]
+    },
+    "ILBSP": {
+      "symbol": "ILBSP",
+      "companyName": "Infinity Laghubitta Bittiya Sanstha Limited Promoter Share",
+      "sector": "Microfinance",
+      "sectorGroup": "Microfinance",
+      "status": "Pending",
+      "latestFiscalYear": null,
+      "latestQuarter": null,
+      "latestPublicationDate": null,
+      "lastAttemptAt": null,
+      "lastSuccessAt": null,
+      "nextRetryAt": null,
+      "retryCount": 0,
+      "lastError": null,
+      "validationStatus": "Incomplete",
+      "dataQualityFlags": [
+        "incomplete"
+      ]
+    },
+    "LSLPO": {
+      "symbol": "LSLPO",
+      "companyName": "Laxmi Sunrise Bank Limited Promoter Share",
+      "sector": "Commercial Banks",
+      "sectorGroup": "Banking",
+      "status": "Pending",
+      "latestFiscalYear": null,
+      "latestQuarter": null,
+      "latestPublicationDate": null,
+      "lastAttemptAt": null,
+      "lastSuccessAt": null,
+      "nextRetryAt": null,
+      "retryCount": 0,
+      "lastError": null,
+      "validationStatus": "Incomplete",
+      "dataQualityFlags": [
+        "incomplete"
+      ]
     }
   },
   "logs": [

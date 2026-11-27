@@ -1025,13 +1025,15 @@ export interface CompanyLedgerFile {
  * Structured multi-period fundamental repository stored in `data/financial/vault/`.
  */
 export class FundamentalVault {
+  private readonly dataDir: string;
   public readonly finDir: string;
   public readonly vaultDir: string;
   public readonly ledgersDir: string;
   private cache = new Map<string, CompanyLedgerFile>();
   private initialized = false;
 
-  constructor(private readonly dataDir: string) {
+  constructor(dataDir: string) {
+    this.dataDir = dataDir;
     this.finDir = path.resolve(dataDir, 'financial');
     this.vaultDir = path.resolve(this.finDir, 'vault');
     this.ledgersDir = path.resolve(this.vaultDir, 'ledgers');

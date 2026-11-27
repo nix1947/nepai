@@ -203,6 +203,8 @@ Return ONLY valid JSON:
 }
 
 export class FundamentalMonitorService {
+  private readonly store: MarketStore;
+  private readonly vault: FundamentalVault;
   private readonly statePath: string;
   private config: MonitorConfig;
   private entries = new Map<string, MonitorSymbolEntry>();
@@ -223,10 +225,12 @@ export class FundamentalMonitorService {
   };
 
   constructor(
-    private readonly store: MarketStore,
-    private readonly vault: FundamentalVault,
+    store: MarketStore,
+    vault: FundamentalVault,
     options: { enableCron?: boolean } = {}
   ) {
+    this.store = store;
+    this.vault = vault;
     this.vault.initIfNeeded();
     this.statePath = path.resolve(this.vault.vaultDir, 'monitor-state.json');
     const loaded = this.loadState();

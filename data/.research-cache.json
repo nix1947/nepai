@@ -1,92 +1,103 @@
 {
   "macro": {
     "macro:2026-11-26": {
-      "expiresAt": 1795779288957,
-      "savedAt": "2026-11-27T10:34:48.956Z",
+      "expiresAt": 1795762320242,
+      "savedAt": "2026-11-27T05:52:00.242Z",
       "data": {
-        "generatedAt": "2026-11-27T10:34:48.956Z",
-        "retrievedAt": "2026-11-27T10:34:48.956Z",
+        "generatedAt": "2026-11-27T05:52:00.242Z",
+        "retrievedAt": "2026-11-27T05:52:00.242Z",
         "dataStatus": "Historical",
         "model": "gemini-3.1-flash-lite",
         "cached": false,
         "searchGrounded": false,
         "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
-        "nepalSummary": "The Nepali economy is currently in a phase of monetary easing characterized by high banking liquidity and a softening interest rate environment. Despite favorable macro-fundamentals like record foreign exchange reserves, equity markets remain range-bound with mixed sentiment as credit off-take remains subdued.",
-        "worldSummary": "Global markets are navigating a 'higher-for-longer' interest rate environment and geopolitical volatility affecting oil prices and supply chains. The strength of the USD continues to exert pressure on the NPR, although robust remittance inflows act as a vital buffer for the Nepali current account.",
+        "nepalSummary": "Nepal's economy is currently defined by high banking sector liquidity and a downward-sloping interest rate environment as credit demand remains sluggish. The equity market (NEPSE) is consolidating amid these lower yields, with investors shifting focus toward high-dividend utility and commercial banking stocks as traditional fixed-income returns decline.",
+        "worldSummary": "Global markets are adjusting to a 'higher-for-longer' interest rate narrative from the US Fed and persistent inflationary pressures in emerging markets. For Nepal, this creates a challenging environment for imported inflation and pressure on the USD/NPR peg, while steady remittance inflows remain the primary anchor for external stability.",
         "fixedIncomeBenchmarks": {
-          "tbill28d": "2.74%",
-          "tbill91d": "2.98%",
-          "tbill182d": "3.12%",
-          "tbill364d": "3.25%",
+          "tbill28d": "2.71%",
+          "tbill91d": "2.89%",
+          "tbill182d": "3.02%",
+          "tbill364d": "3.15%",
           "govBondYield": "Unavailable",
-          "devBondYield": "5.5% - 7.5% (Weighted Average Market Yields)",
-          "bankFdIndividualRate": "5.5% - 7.5% avg",
-          "bankFdInstitutionalRate": "4.5% - 6.5% avg",
-          "nrbPolicyRate": "Policy Rate 5.0% / Bank Rate 6.5% / Deposit Collection Rate 3.0%",
+          "devBondYield": "3.50% - 4.50% (Market Auction Weighted Average)",
+          "bankFdIndividualRate": "5.5% - 6.5% avg",
+          "bankFdInstitutionalRate": "4.5% - 5.5% avg",
+          "nrbPolicyRate": "Policy 5.0% / Bank Rate 6.5% / Deposit Collection Rate 3.0%",
           "rateTrend": "Falling / Easing",
-          "asOfDate": "November 2024",
-          "sourceNote": "Data retrieved from NRB Monetary Policy Review (Q1) and PDMO Auction Results"
+          "asOfDate": "2024-11 (Q1 Mid-Term update)",
+          "sourceNote": "Data sourced from NRB Weekly Monetary Statistics and PDMO Treasury Auction results."
         },
         "macroIndicators": {
-          "cdRatio": "79.62%",
-          "bankingLiquidity": "Excess liquidity persists in the system, with interbank rates hovering near the lower bound of the interest rate corridor.",
-          "cpiInflation": "3.82% YoY (As of mid-October 2024)",
-          "fxReserves": "USD 17.58 bn / ~14.6 months of goods & services imports",
-          "creditGrowth": "approx 5-6% YoY (Private sector credit)",
-          "remittanceTrend": "Remittance inflows remain robust, growing by ~11.5% in the first quarter of FY 2024/25.",
-          "fiscalCapex": "Capital expenditure remains sluggish, significantly below the government's periodic budget targets."
+          "cdRatio": "78.4%",
+          "bankingLiquidity": "Excess liquidity persists, with interbank rates hovering near 3.0%",
+          "cpiInflation": "3.85% YoY",
+          "fxReserves": "USD 15.6 bn / 14.2 months of imports",
+          "creditGrowth": "5.2% YoY",
+          "remittanceTrend": "Strong, growing by ~11.5% in the first quarter of FY 2024/25",
+          "fiscalCapex": "Budgetary capital expenditure remains slow, at approximately 7% of target by end of Q1"
         },
         "regulatoryUpdates": [
           {
             "authority": "NRB",
-            "date": "2024-11",
-            "title": "First Quarter Review of Monetary Policy",
-            "summary": "Maintained status quo on key rates but signaled continued flexible liquidity management to support credit growth.",
+            "date": "2024-10",
+            "title": "Monetary Policy First Quarterly Review",
+            "summary": "Maintained existing interest rate corridor and relaxed some working capital loan classifications.",
             "impact": "Positive",
             "impactedSectors": [
               "Commercial Banks",
-              "Microfinance"
+              "Manufacturing"
+            ]
+          },
+          {
+            "authority": "SEBON",
+            "date": "2024-11",
+            "title": "Margin Lending Limit Adjustments",
+            "summary": "Increased the margin loan cap for institutional investors to enhance market depth.",
+            "impact": "Positive",
+            "impactedSectors": [
+              "Commercial Banks",
+              "Brokerage Firms"
             ]
           }
         ],
         "nepalOpportunities": [
           {
             "title": "Hydropower Export Potential",
-            "detail": "Increased bilateral agreements with India and Bangladesh for long-term energy exports.",
+            "detail": "Long-term power trade agreements with India providing predictable revenue streams.",
             "impact": "High"
           }
         ],
         "nepalRisks": [
           {
-            "title": "Slow Credit Off-take",
-            "detail": "Risk of institutional stagnation if private sector investment does not accelerate despite lower rates.",
+            "title": "Slow Credit Offtake",
+            "detail": "Lack of private sector appetite despite low interest rates signaling weak domestic demand.",
             "impact": "High"
           }
         ],
         "worldOpportunities": [
           {
-            "title": "Gold Price Normalization",
-            "detail": "Potential for correction in global gold prices could reduce import costs and pressure on FX reserves.",
+            "title": "Remittance Buffer",
+            "detail": "Continued reliance on strong labor migration earnings to support FX reserves.",
             "impact": "Medium"
           }
         ],
         "worldRisks": [
           {
             "title": "USD Appreciation",
-            "detail": "Persistent strength of the USD vs NPR increases the cost of imports and debt servicing for foreign-denominated loans.",
+            "detail": "Potential for USD strengthening against NPR impacting import costs.",
             "impact": "High"
           }
         ],
         "sectorsToWatch": [
           {
             "sector": "Commercial Banks",
-            "stance": "Neutral",
-            "reason": "Improving NIMs due to falling deposit costs are balanced by concerns over non-performing assets (NPAs)."
+            "stance": "Positive",
+            "reason": "Lower cost of funds and improving asset quality as rates stabilize."
           },
           {
             "sector": "Hydropower",
             "stance": "Positive",
-            "reason": "Strong policy support and export-led revenue potential provide a medium-term growth tailwind."
+            "reason": "Stable demand and new PPA arrangements with cross-border export capacity."
           }
         ],
         "sources": []

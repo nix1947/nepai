@@ -1,0 +1,730 @@
+{
+  "symbol": "STC",
+  "companyName": "Salt Trading Corporation Limited",
+  "sector": "Trading",
+  "companyId": "122",
+  "scrapedAt": "2026-11-27T10:30:11.575Z",
+  "sourceUrl": "https://www.sharesansar.com/company/stc",
+  "periods": [
+    "4th Quarter 2082/2083"
+  ],
+  "tabs": [
+    {
+      "key": "balance",
+      "title": "BALANCE SHEET",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "4th Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "Assets",
+          "isSectionHeader": true,
+          "particulars": "Assets",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Plant, Property and Equipment",
+          "values": [
+            "1,414,696.07"
+          ],
+          "numericValues": [
+            1414696.07
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Capital Work In Progress",
+          "values": [
+            "3,493.56"
+          ],
+          "numericValues": [
+            3493.56
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Deferred Tax",
+          "values": [
+            "206,097.08"
+          ],
+          "numericValues": [
+            206097.08
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Investment",
+          "values": [
+            "682,559.92"
+          ],
+          "numericValues": [
+            682559.92
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Intangible Assets",
+          "values": [
+            "1,404.52"
+          ],
+          "numericValues": [
+            1404.52
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Other Non-Current Assets",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Non Current Assets",
+          "values": [
+            "2,308,251.16"
+          ],
+          "numericValues": [
+            2308251.16
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Cash and Cash Equivalents",
+          "values": [
+            "522,998.19"
+          ],
+          "numericValues": [
+            522998.19
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Inventory",
+          "values": [
+            "2,256,530.85"
+          ],
+          "numericValues": [
+            2256530.85
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Trade Receivables",
+          "values": [
+            "488,867.29"
+          ],
+          "numericValues": [
+            488867.29
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Prepayments",
+          "values": [
+            "1,459,587.85"
+          ],
+          "numericValues": [
+            1459587.85
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Advances",
+          "values": [
+            "1,152,452.12"
+          ],
+          "numericValues": [
+            1152452.12
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Other Current Assets",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Current Assets",
+          "values": [
+            "5,880,436.29"
+          ],
+          "numericValues": [
+            5880436.29
+          ]
+        },
+        {
+          "section": "Assets",
+          "isSectionHeader": false,
+          "particulars": "Total Assets",
+          "values": [
+            "8,188,687.45"
+          ],
+          "numericValues": [
+            8188687.45
+          ]
+        },
+        {
+          "section": "Non Current Liabilities",
+          "isSectionHeader": true,
+          "particulars": "Non Current Liabilities",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Non Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Deferred Tax Liability",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Non Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Retirement Benefit Obligation",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Non Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Borrowings",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Non Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Other Non Current Liabilities",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Non Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Non Current Liabilities",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": true,
+          "particulars": "Current Liabilities",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Retirement Benefit Obligation",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Borrowings",
+          "values": [
+            "6,031,077.62"
+          ],
+          "numericValues": [
+            6031077.62
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Trade Payables",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Other Financial Liabilities",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Income Tax Liability",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Provision",
+          "values": [
+            "366,592.59"
+          ],
+          "numericValues": [
+            366592.59
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Other Current Liabilities",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Current Liabilities",
+          "values": [
+            "6,397,670.22"
+          ],
+          "numericValues": [
+            6397670.22
+          ]
+        },
+        {
+          "section": "Current Liabilities",
+          "isSectionHeader": false,
+          "particulars": "Total Liabilities",
+          "values": [
+            "6,397,670.22"
+          ],
+          "numericValues": [
+            6397670.22
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": true,
+          "particulars": "Equity",
+          "values": [],
+          "numericValues": []
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Equity Share Capital",
+          "values": [
+            "352,788.65"
+          ],
+          "numericValues": [
+            352788.65
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Reserve and Surplus",
+          "values": [
+            "1,438,228.58"
+          ],
+          "numericValues": [
+            1438228.58
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Total Equity",
+          "values": [
+            "1,791,017.23"
+          ],
+          "numericValues": [
+            1791017.23
+          ]
+        },
+        {
+          "section": "Equity",
+          "isSectionHeader": false,
+          "particulars": "Total Equity and Liabilities",
+          "values": [
+            "8,188,687.45"
+          ],
+          "numericValues": [
+            8188687.45
+          ]
+        }
+      ]
+    },
+    {
+      "key": "profitloss",
+      "title": "PROFIT & LOSS ACCOUNT",
+      "headers": [
+        "Particulars (Rs. in '000)",
+        "4th Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Revenue from Operations",
+          "values": [
+            "12,225,697.49"
+          ],
+          "numericValues": [
+            12225697.49
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Cost of Sales",
+          "values": [
+            "11,339,268.55"
+          ],
+          "numericValues": [
+            11339268.55
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Gross Profit",
+          "values": [
+            "886,428.94"
+          ],
+          "numericValues": [
+            886428.94
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other Operating Income",
+          "values": [
+            "245,564.58"
+          ],
+          "numericValues": [
+            245564.58
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Selling and Distribution Expenses",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Employee Expenses",
+          "values": [
+            "307,654.41"
+          ],
+          "numericValues": [
+            307654.41
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Administrative Expenses",
+          "values": [
+            "139,045.83"
+          ],
+          "numericValues": [
+            139045.83
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Other Operating Expenses",
+          "values": [
+            "144,737.75"
+          ],
+          "numericValues": [
+            144737.75
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Profit from Operations",
+          "values": [
+            "540,555.52"
+          ],
+          "numericValues": [
+            540555.52
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Finance Costs",
+          "values": [
+            "304,000.00"
+          ],
+          "numericValues": [
+            304000
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Depreciation",
+          "values": [
+            "13,759.67"
+          ],
+          "numericValues": [
+            13759.67
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Profit Before Tax",
+          "values": [
+            "222,639.79"
+          ],
+          "numericValues": [
+            222639.79
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Current Tax",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Deferred Tax",
+          "values": [
+            "85,659.95"
+          ],
+          "numericValues": [
+            85659.95
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Prior Period Tax Adjustments",
+          "values": [
+            "0.00"
+          ],
+          "numericValues": [
+            0
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net Profit",
+          "values": [
+            "136,979.84"
+          ],
+          "numericValues": [
+            136979.84
+          ]
+        }
+      ]
+    },
+    {
+      "key": "ratioanalysis",
+      "title": "RATIO ANALYSIS",
+      "headers": [
+        "Particulars",
+        "4th Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Gross Margin",
+          "values": [
+            "7.25"
+          ],
+          "numericValues": [
+            7.25
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Operating Profit Margin",
+          "values": [
+            "4.42"
+          ],
+          "numericValues": [
+            4.42
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Net Profit Margin",
+          "values": [
+            "1.12"
+          ],
+          "numericValues": [
+            1.12
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Current Ratio",
+          "values": [
+            "0.92"
+          ],
+          "numericValues": [
+            0.92
+          ]
+        }
+      ]
+    },
+    {
+      "key": "keyratios",
+      "title": "KEY RATIOS",
+      "headers": [
+        "Particulars",
+        "4th Quarter 2082/2083"
+      ],
+      "rows": [
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Networth per Share (Rs.)",
+          "values": [
+            "507.67"
+          ],
+          "numericValues": [
+            507.67
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Earning Per Share annualized(Rs.)",
+          "values": [
+            "38.83"
+          ],
+          "numericValues": [
+            38.83
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Price to Earning Ratio (times)",
+          "values": [
+            "133.13"
+          ],
+          "numericValues": [
+            133.13
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Price to Book ratio(times)",
+          "values": [
+            "10.18"
+          ],
+          "numericValues": [
+            10.18
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Equity (%)",
+          "values": [
+            "7.65"
+          ],
+          "numericValues": [
+            7.65
+          ]
+        },
+        {
+          "section": "General",
+          "isSectionHeader": false,
+          "particulars": "Return on Asset (%)",
+          "values": [
+            "1.67"
+          ],
+          "numericValues": [
+            1.67
+          ]
+        }
+      ]
+    }
+  ]
+}

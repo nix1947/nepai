@@ -1,0 +1,81 @@
+Symbol,Tab,Section,Particulars,3rd Quarter 2082/2083
+NRIC,BALANCE SHEET,Assets,Goodwill & Intangible Assets,"1,024.97"
+NRIC,BALANCE SHEET,Assets,Property and Equipment,"582,653.95"
+NRIC,BALANCE SHEET,Assets,Investment Properties,0.00
+NRIC,BALANCE SHEET,Assets,Deferred Tax Assets,"182,811.53"
+NRIC,BALANCE SHEET,Assets,Investment in Subsidiaries,0.00
+NRIC,BALANCE SHEET,Assets,Investment in Associates,0.00
+NRIC,BALANCE SHEET,Assets,Investments,"17,360,732.49"
+NRIC,BALANCE SHEET,Assets,Loans,"167,956.17"
+NRIC,BALANCE SHEET,Assets,Reinsurance Assets,"7,068,903.54"
+NRIC,BALANCE SHEET,Assets,Current Tax Assets,"1,555,666.78"
+NRIC,BALANCE SHEET,Assets,Insurance Receivables,"6,045,617.80"
+NRIC,BALANCE SHEET,Assets,Other Assets,"3,663,424.20"
+NRIC,BALANCE SHEET,Assets,Other Financial Assets,"349,463.71"
+NRIC,BALANCE SHEET,Assets,Cash and Cash Equivalent,"2,556,926.10"
+NRIC,BALANCE SHEET,Assets,Total Assets,"39,535,181.25"
+NRIC,BALANCE SHEET,Equity,Share Capital,"13,422,187.08"
+NRIC,BALANCE SHEET,Equity,Share Application Money Pending Allotment,0.00
+NRIC,BALANCE SHEET,Equity,Share Premium,0.00
+NRIC,BALANCE SHEET,Equity,Special Reserve,"4,921,649.02"
+NRIC,BALANCE SHEET,Equity,Catastrophe Reserve,"427,611.63"
+NRIC,BALANCE SHEET,Equity,Retained Earnings,"-4,906,557.12"
+NRIC,BALANCE SHEET,Equity,Other Equity,"792,368.47"
+NRIC,BALANCE SHEET,Equity,Total Equity,"14,657,259.08"
+NRIC,BALANCE SHEET,Liabilities,Provisions,"1,383,266.37"
+NRIC,BALANCE SHEET,Liabilities,Gross Insurance Contract Liabilities,"21,160,612.88"
+NRIC,BALANCE SHEET,Liabilities,Deferred Tax Liabilities,0.00
+NRIC,BALANCE SHEET,Liabilities,Insurance Payable,"1,701,690.22"
+NRIC,BALANCE SHEET,Liabilities,Current Tax Liabilities,0.00
+NRIC,BALANCE SHEET,Liabilities,Borrowings,0.00
+NRIC,BALANCE SHEET,Liabilities,Other Liabilities,"631,391.88"
+NRIC,BALANCE SHEET,Liabilities,Other Financial Liabilities,960.82
+NRIC,BALANCE SHEET,Liabilities,Total Liabilities,"24,877,922.17"
+NRIC,BALANCE SHEET,Liabilities,Total Equity and Liabilities,"39,535,181.25"
+NRIC,PROFIT & LOSS ACCOUNT,Income,Gross Earned Premiums,"6,798,578.93"
+NRIC,PROFIT & LOSS ACCOUNT,Income,Premium Ceded,"961,059.00"
+NRIC,PROFIT & LOSS ACCOUNT,Income,Net Earned Premiums,"5,837,519.93"
+NRIC,PROFIT & LOSS ACCOUNT,Income,Commission Income,0.00
+NRIC,PROFIT & LOSS ACCOUNT,Income,Other Direct Income,"327,621.26"
+NRIC,PROFIT & LOSS ACCOUNT,Income,Income from Investments and Loans,"475,450.67"
+NRIC,PROFIT & LOSS ACCOUNT,Income,Net Gain/(Loss) of Fair Value Changes,0.00
+NRIC,PROFIT & LOSS ACCOUNT,Income,Net Realized Gains/(Losses),0.00
+NRIC,PROFIT & LOSS ACCOUNT,Income,Other Income,"41,075.40"
+NRIC,PROFIT & LOSS ACCOUNT,Income,Total Income,"6,681,667.25"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Gross Claims Paid,"3,772,475.42"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Claims Ceded,"-532,724.89"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Gross Change in Contract Liabilities,"11,094,395.30"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Change in Contract Liabilities Ceded to Reinsurers,"-3,499,643.64"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Net Benefits and Claims Paid,"10,834,502.19"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Commission Expenses,"1,280,948.68"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Service Fees,"36,688.95"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Other Direct Expenses,"256,920.20"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Employee Benefits Expenses,"71,965.51"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Depreciation and Amortization Expenses,"12,493.07"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Impairment Losses,0.00
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Other Operating Expenses,"27,842.93"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Finance Cost,601.07
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Total Expenses,"12,521,962.59"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/ (Loss) Before Share of Net Profits of Associates,"-5,840,295.34"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Share of Net Profit of Associates,0.00
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Profit Before Tax,"-5,840,295.34"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Income Tax Expenses,0.00
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Net Profit/(Loss) for The Year,"-5,840,295.34"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Other Comprehensive Income,"-29,933.13"
+NRIC,PROFIT & LOSS ACCOUNT,Expenses,Total Comprehensive Income,"-5,870,228.46"
+NRIC,RATIO ANALYSIS,General,Net Premium/Gross Premium (%),85.86
+NRIC,RATIO ANALYSIS,General,Net Profit/Gross Premium (%),0.00
+NRIC,RATIO ANALYSIS,General,Return on Invested Capital (%),0.00
+NRIC,KEY RATIOS,General,Annualized Earning Per Share (Rs.),-43.51
+NRIC,KEY RATIOS,General,P/E Ratio (times),0.00
+NRIC,KEY RATIOS,General,Networth per share (Rs.),109.20
+NRIC,KEY RATIOS,General,Price to Book Ratio,9.29
+NRIC,KEY RATIOS,General,Return on Equity (ROE %),0.00
+NRIC,KEY RATIOS,General,Return on Assets (ROA %),0.00
+NRIC,KEY RATIOS,General,Solvency Ratio,3.65
+NRIC,OTHERS,General,Total Issued Policy Count,0.00
+NRIC,OTHERS,General,Total Renewed Policy Count,0.00
+NRIC,OTHERS,General,Total Claims Paid Count,0.00
+NRIC,OTHERS,General,Outstanding Claims Count,0.00
+NRIC,OTHERS,General,Long Term Investments ('000'),"4,182,993.46"
+NRIC,OTHERS,General,Short Term Investments ('000'),"13,177,739.03"

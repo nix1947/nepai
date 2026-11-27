@@ -1,0 +1,60 @@
+Symbol,Tab,Section,Particulars,4th Quarter 2082/2083
+STC,BALANCE SHEET,Assets,"Plant, Property and Equipment","1,414,696.07"
+STC,BALANCE SHEET,Assets,Capital Work In Progress,"3,493.56"
+STC,BALANCE SHEET,Assets,Deferred Tax,"206,097.08"
+STC,BALANCE SHEET,Assets,Investment,"682,559.92"
+STC,BALANCE SHEET,Assets,Intangible Assets,"1,404.52"
+STC,BALANCE SHEET,Assets,Other Non-Current Assets,0.00
+STC,BALANCE SHEET,Assets,Non Current Assets,"2,308,251.16"
+STC,BALANCE SHEET,Assets,Cash and Cash Equivalents,"522,998.19"
+STC,BALANCE SHEET,Assets,Inventory,"2,256,530.85"
+STC,BALANCE SHEET,Assets,Trade Receivables,"488,867.29"
+STC,BALANCE SHEET,Assets,Prepayments,"1,459,587.85"
+STC,BALANCE SHEET,Assets,Advances,"1,152,452.12"
+STC,BALANCE SHEET,Assets,Other Current Assets,0.00
+STC,BALANCE SHEET,Assets,Current Assets,"5,880,436.29"
+STC,BALANCE SHEET,Assets,Total Assets,"8,188,687.45"
+STC,BALANCE SHEET,Non Current Liabilities,Deferred Tax Liability,0.00
+STC,BALANCE SHEET,Non Current Liabilities,Retirement Benefit Obligation,0.00
+STC,BALANCE SHEET,Non Current Liabilities,Borrowings,0.00
+STC,BALANCE SHEET,Non Current Liabilities,Other Non Current Liabilities,0.00
+STC,BALANCE SHEET,Non Current Liabilities,Non Current Liabilities,0.00
+STC,BALANCE SHEET,Current Liabilities,Retirement Benefit Obligation,0.00
+STC,BALANCE SHEET,Current Liabilities,Borrowings,"6,031,077.62"
+STC,BALANCE SHEET,Current Liabilities,Trade Payables,0.00
+STC,BALANCE SHEET,Current Liabilities,Other Financial Liabilities,0.00
+STC,BALANCE SHEET,Current Liabilities,Income Tax Liability,0.00
+STC,BALANCE SHEET,Current Liabilities,Provision,"366,592.59"
+STC,BALANCE SHEET,Current Liabilities,Other Current Liabilities,0.00
+STC,BALANCE SHEET,Current Liabilities,Current Liabilities,"6,397,670.22"
+STC,BALANCE SHEET,Current Liabilities,Total Liabilities,"6,397,670.22"
+STC,BALANCE SHEET,Equity,Equity Share Capital,"352,788.65"
+STC,BALANCE SHEET,Equity,Reserve and Surplus,"1,438,228.58"
+STC,BALANCE SHEET,Equity,Total Equity,"1,791,017.23"
+STC,BALANCE SHEET,Equity,Total Equity and Liabilities,"8,188,687.45"
+STC,PROFIT & LOSS ACCOUNT,General,Revenue from Operations,"12,225,697.49"
+STC,PROFIT & LOSS ACCOUNT,General,Cost of Sales,"11,339,268.55"
+STC,PROFIT & LOSS ACCOUNT,General,Gross Profit,"886,428.94"
+STC,PROFIT & LOSS ACCOUNT,General,Other Operating Income,"245,564.58"
+STC,PROFIT & LOSS ACCOUNT,General,Selling and Distribution Expenses,0.00
+STC,PROFIT & LOSS ACCOUNT,General,Employee Expenses,"307,654.41"
+STC,PROFIT & LOSS ACCOUNT,General,Administrative Expenses,"139,045.83"
+STC,PROFIT & LOSS ACCOUNT,General,Other Operating Expenses,"144,737.75"
+STC,PROFIT & LOSS ACCOUNT,General,Profit from Operations,"540,555.52"
+STC,PROFIT & LOSS ACCOUNT,General,Finance Costs,"304,000.00"
+STC,PROFIT & LOSS ACCOUNT,General,Depreciation,"13,759.67"
+STC,PROFIT & LOSS ACCOUNT,General,Profit Before Tax,"222,639.79"
+STC,PROFIT & LOSS ACCOUNT,General,Current Tax,0.00
+STC,PROFIT & LOSS ACCOUNT,General,Deferred Tax,"85,659.95"
+STC,PROFIT & LOSS ACCOUNT,General,Prior Period Tax Adjustments,0.00
+STC,PROFIT & LOSS ACCOUNT,General,Net Profit,"136,979.84"
+STC,RATIO ANALYSIS,General,Gross Margin,7.25
+STC,RATIO ANALYSIS,General,Operating Profit Margin,4.42
+STC,RATIO ANALYSIS,General,Net Profit Margin,1.12
+STC,RATIO ANALYSIS,General,Current Ratio,0.92
+STC,KEY RATIOS,General,Networth per Share (Rs.),507.67
+STC,KEY RATIOS,General,Earning Per Share annualized(Rs.),38.83
+STC,KEY RATIOS,General,Price to Earning Ratio (times),133.13
+STC,KEY RATIOS,General,Price to Book ratio(times),10.18
+STC,KEY RATIOS,General,Return on Equity (%),7.65
+STC,KEY RATIOS,General,Return on Asset (%),1.67

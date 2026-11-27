@@ -3,7 +3,7 @@
   "companyName": "Salt Trading Corporation Limited",
   "sector": "Trading & Others",
   "sectorGroup": "Other",
-  "updatedAt": "2026-11-27T08:56:37.910Z",
+  "updatedAt": "2026-11-27T10:36:31.303Z",
   "records": [
     {
       "id": "STC:2082/83:Q4",
@@ -16,7 +16,7 @@
       "periodLabel": "Q4 FY 2082/83",
       "sortKey": 20824,
       "publicationDate": null,
-      "collectionDate": "2026-11-27T08:31:02.787Z",
+      "collectionDate": "2026-11-27T10:30:11.575Z",
       "dataSource": "ShareSansar",
       "sourceUrl": "https://www.sharesansar.com/company/stc",
       "validationStatus": "Verified",

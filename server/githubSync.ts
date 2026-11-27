@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { isValidDateStr, MarketStore } from './marketStore.ts';
@@ -120,9 +121,11 @@ export async function getGitHubAccount(): Promise<GitHubAccountInfo> {
   return { authenticated: true, login, repos };
 }
 
-function collectProjectFiles(projectRoot: string): Array<{ repoPath: string; contentBase64: string }> {
+function collectProjectFiles(
+  projectRoot: string
+): Array<{ repoPath: string; contentBase64: string; gitSha: string }> {
   const root = path.resolve(projectRoot);
-  const files: Array<{ repoPath: string; contentBase64: string }> = [];
+  const files: Array<{ repoPath: string; contentBase64: string; gitSha: string }> = [];
 
   const ignoredTopDirs = new Set(['node_modules', 'dist', 'build', 'coverage', '.git']);
   const ignoredFiles = new Set(['.DS_Store', 'scheduler.json']);
@@ -144,9 +147,16 @@ function collectProjectFiles(projectRoot: string): Array<{ repoPath: string; con
         if (entry.name.endsWith('.log')) continue;
         const stat = fs.statSync(full);
         if (stat.size > 5 * 1024 * 1024) continue; // skip oversized artifacts
+        const buf = fs.readFileSync(full);
+        const gitSha = crypto
+          .createHash('sha1')
+          .update(`blob ${buf.length}\0`)
+          .update(buf)
+          .digest('hex');
         files.push({
           repoPath: rel,
-          contentBase64: fs.readFileSync(full).toString('base64'),
+          contentBase64: buf.toString('base64'),
+          gitSha,
         });
       }
     }
@@ -304,15 +314,59 @@ export async function pushProjectToGitHub(
     }
   }
 
-  // Create blobs in bounded parallel batches
-  const treeEntries: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }> = [];
-  const batchSize = 8;
-  for (let i = 0; i < files.length; i += batchSize) {
-    const batch = files.slice(i, i + batchSize);
+  // Fetch existing remote tree so unchanged files reuse existing blob SHAs
+  const existingBlobShas = new Map<string, string>();
+  if (parentCommitSha) {
+    try {
+      const prevTreeRes = await fetch(
+        `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+          repoName
+        )}/git/trees/${encodeURIComponent(parentCommitSha)}?recursive=1`,
+        { headers }
+      );
+      if (prevTreeRes.ok) {
+        const prevTreeData = (await prevTreeRes.json()) as {
+          truncated?: boolean;
+          tree?: Array<{ path?: string; type?: string; sha?: string }>;
+        };
+        if (!prevTreeData.truncated && Array.isArray(prevTreeData.tree)) {
+          for (const entry of prevTreeData.tree) {
+            if (entry.type === 'blob' && entry.path && entry.sha) {
+              existingBlobShas.set(entry.path, entry.sha);
+            }
+          }
+        }
+      }
+    } catch {
+      // Fallback to uploading blobs if tree lookup fails
+    }
+  }
+
+  const unchangedEntries: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }> = [];
+  const filesToUpload: typeof files = [];
+  for (const file of files) {
+    const existingSha = existingBlobShas.get(file.repoPath);
+    if (existingSha && existingSha === file.gitSha) {
+      unchangedEntries.push({
+        path: file.repoPath,
+        mode: '100644',
+        type: 'blob',
+        sha: existingSha,
+      });
+    } else {
+      filesToUpload.push(file);
+    }
+  }
+
+  // Create blobs only for new or changed files in small batches
+  const uploadedEntries: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }> = [];
+  const batchSize = 4;
+  for (let i = 0; i < filesToUpload.length; i += batchSize) {
+    const batch = filesToUpload.slice(i, i + batchSize);
     const createdBlobs = await Promise.all(
       batch.map(async (file) => {
         let blobRes: Response | null = null;
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 4; attempt++) {
           blobRes = await fetch(
             `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
               repoName
@@ -326,8 +380,13 @@ export async function pushProjectToGitHub(
               }),
             }
           );
-          if (blobRes.status !== 409) break;
-          await new Promise((r) => setTimeout(r, 1000));
+          if (blobRes.status !== 409 && blobRes.status !== 403 && blobRes.status !== 429) break;
+          const retryAfter = Number(blobRes.headers.get('retry-after') || '0');
+          const waitMs =
+            Number.isFinite(retryAfter) && retryAfter > 0
+              ? Math.min(30_000, retryAfter * 1000)
+              : 1500 * Math.pow(2, attempt);
+          await new Promise((r) => setTimeout(r, waitMs));
         }
         if (!blobRes || !blobRes.ok) {
           const errText = blobRes ? await blobRes.text() : 'no response';
@@ -344,8 +403,12 @@ export async function pushProjectToGitHub(
         };
       })
     );
-    treeEntries.push(...createdBlobs);
+    uploadedEntries.push(...createdBlobs);
   }
+
+  const treeEntries = [...unchangedEntries, ...uploadedEntries].sort((a, b) =>
+    a.path.localeCompare(b.path)
+  );
 
   // Create tree (full snapshot)
   const treeRes = await fetch(

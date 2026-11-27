@@ -14,8 +14,10 @@ import {
   getFundamentallyRiskyStocks,
   getMarketOpportunityVsRisk,
 } from './server/riskEngine.ts';
+import { runQuantAnalysis, runQuantBacktest } from './server/quantEngine.ts';
 import { DailyScheduler } from './server/scheduler.ts';
 import type { ScannerKind } from './src/types/market.ts';
+import type { QuantEngineConfig } from './src/types/quant.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -231,6 +233,60 @@ async function startServer() {
       params: cleanParams,
     });
     res.json({ rows });
+  });
+
+  // ---------------------------------------------------------------- Quantitative Statistical Advantage Engine Routes
+  app.post('/api/quant/analyze', (req, res) => {
+    try {
+      const dates = store.getDates();
+      if (dates.length === 0) {
+        res.status(404).json({ error: 'No trading data loaded' });
+        return;
+      }
+      const rawAsOf = typeof req.body?.asOf === 'string' ? req.body.asOf : undefined;
+      if (rawAsOf && !isValidDateStr(rawAsOf)) {
+        res.status(400).json({ error: 'Invalid asOf date format (expected YYYY-MM-DD)' });
+        return;
+      }
+      const equityOnly = req.body?.equityOnly !== false;
+      const config =
+        req.body?.config && typeof req.body.config === 'object'
+          ? (req.body.config as Partial<QuantEngineConfig>)
+          : undefined;
+      const result = runQuantAnalysis(store, { asOf: rawAsOf, equityOnly, config });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Quantitative analysis engine failed',
+      });
+    }
+  });
+
+  app.post('/api/quant/backtest', (req, res) => {
+    try {
+      const dates = store.getDates();
+      if (dates.length === 0) {
+        res.status(404).json({ error: 'No trading data loaded' });
+        return;
+      }
+      const rawAsOf = typeof req.body?.asOf === 'string' ? req.body.asOf : undefined;
+      if (rawAsOf && !isValidDateStr(rawAsOf)) {
+        res.status(400).json({ error: 'Invalid asOf date format (expected YYYY-MM-DD)' });
+        return;
+      }
+      const asOfDate = rawAsOf && dates.includes(rawAsOf) ? rawAsOf : dates[dates.length - 1];
+      const equityOnly = req.body?.equityOnly !== false;
+      const config =
+        req.body?.config && typeof req.body.config === 'object'
+          ? (req.body.config as Partial<QuantEngineConfig>)
+          : undefined;
+      const { backtest } = runQuantBacktest(store, asOfDate, equityOnly, config);
+      res.json(backtest);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Quantitative backtest failed',
+      });
+    }
   });
 
   // ---------------------------------------------------------------- Gemini Search Grounded Research

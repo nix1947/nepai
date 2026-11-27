@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Star } from 'lucide-react';
+import { ArrowUpRight, Search, Star } from 'lucide-react';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { InfoTip } from '../components/InfoTip';
 import { NepseTradePlanner } from '../components/NepseTradePlanner';
@@ -15,12 +15,14 @@ interface StockExplorerViewProps {
   dates: string[];
   equityOnly: boolean;
   initialSymbol?: string | null;
+  onInspectInQuant?: (symbol: string) => void;
 }
 
 export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
   dates,
   equityOnly,
   initialSymbol,
+  onInspectInQuant,
 }) => {
   const { settings, updateSettings } = useTradingSettings();
   const [symbols, setSymbols] = useState<SymbolInfo[]>([]);
@@ -208,18 +210,30 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
             </select>
 
             {selectedSymbol && (
-              <button
-                type="button"
-                onClick={() => toggleSymbol(selectedSymbol)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border transition-colors ${
-                  isStarred
-                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-500 text-amber-500' : ''}`} />
-                <span>{isStarred ? 'Starred' : 'Watchlist'}</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => toggleSymbol(selectedSymbol)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border transition-colors ${
+                    isStarred
+                      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-500 text-amber-500' : ''}`} />
+                  <span>{isStarred ? 'Starred' : 'Watchlist'}</span>
+                </button>
+                {onInspectInQuant && (
+                  <button
+                    type="button"
+                    onClick={() => onInspectInQuant(selectedSymbol)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors whitespace-nowrap"
+                  >
+                    <span>Quant Decision Gate</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
             )}
           </div>
 

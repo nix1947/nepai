@@ -1,78 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Calculator, ChevronDown, ChevronUp, Lock, PencilLine } from 'lucide-react';
+import {
+  calcNepseBuyCost,
+  calcNepseSellProceeds,
+  solvePriceForNetProceeds,
+} from '../utils/nepseFees';
 
 interface NepseTradePlannerProps {
   symbol: string;
   lastClose: number;
   suggestedStop?: number | null;
   suggestedTarget?: number | null;
-}
-
-// SEBON-regulated Nepal equity broker commission slabs
-function calcBrokerCommission(amount: number): number {
-  if (amount <= 0) return 0;
-  let rate = 0.0024;
-  if (amount <= 50_000) rate = 0.0036;
-  else if (amount <= 500_000) rate = 0.0033;
-  else if (amount <= 2_000_000) rate = 0.0031;
-  else if (amount <= 10_000_000) rate = 0.0027;
-  return Math.max(10, amount * rate);
-}
-
-function calcBuyTotal(shares: number, price: number): { gross: number; fee: number; total: number } {
-  const gross = shares * price;
-  if (gross <= 0 || shares <= 0) return { gross: 0, fee: 0, total: 0 };
-  const broker = calcBrokerCommission(gross);
-  const sebon = gross * 0.00015;
-  const dp = 25;
-  const fee = broker + sebon + dp;
-  return { gross, fee, total: gross + fee };
-}
-
-function calcSellNet(
-  shares: number,
-  sellPrice: number,
-  buyTotal: number,
-  cgtRate: number
-): { gross: number; fee: number; cgt: number; netReceivable: number; netProfit: number } {
-  const gross = shares * sellPrice;
-  if (gross <= 0 || shares <= 0) {
-    return { gross: 0, fee: 0, cgt: 0, netReceivable: 0, netProfit: 0 };
-  }
-  const broker = calcBrokerCommission(gross);
-  const sebon = gross * 0.00015;
-  const dp = 25;
-  const fee = broker + sebon + dp;
-  const preTaxProceeds = gross - fee;
-  const taxableGain = Math.max(0, preTaxProceeds - buyTotal);
-  const cgt = taxableGain * cgtRate;
-  const netReceivable = preTaxProceeds - cgt;
-  return {
-    gross,
-    fee,
-    cgt,
-    netReceivable,
-    netProfit: netReceivable - buyTotal,
-  };
-}
-
-// Solves exact per-share exit price where netReceivable === targetNetProceeds using binary search
-function solvePriceForNetProceeds(
-  shares: number,
-  buyTotal: number,
-  cgtRate: number,
-  targetNetProceeds: number
-): number {
-  if (shares <= 0 || buyTotal <= 0) return 0;
-  let lo = 0.01;
-  let hi = (targetNetProceeds / shares) * 1.25 + 100;
-  for (let i = 0; i < 48; i++) {
-    const mid = (lo + hi) / 2;
-    const net = calcSellNet(shares, mid, buyTotal, cgtRate).netReceivable;
-    if (net < targetNetProceeds) lo = mid;
-    else hi = mid;
-  }
-  return (lo + hi) / 2;
 }
 
 function formatNpr(val: number, decimals = 2): string {
@@ -201,9 +139,9 @@ export const NepseTradePlanner: React.FC<NepseTradePlannerProps> = ({
     const shares = Math.max(0, Math.min(riskBasedShares, maxAffordableShares));
     const cappedByCapital = riskBasedShares > maxAffordableShares;
 
-    const buy = calcBuyTotal(shares, entry);
-    const stopSell = calcSellNet(shares, stop, buy.total, cgtRate);
-    const targetSell = calcSellNet(shares, target, buy.total, cgtRate);
+    const buy = calcNepseBuyCost(shares, entry, 0);
+    const stopSell = calcNepseSellProceeds(shares, stop, buy.total, 0, cgtRate);
+    const targetSell = calcNepseSellProceeds(shares, target, buy.total, 0, cgtRate);
 
     const stopLossAmount = Math.max(0, buy.total - stopSell.netReceivable);
     const expectedProfit = targetSell.netProfit;

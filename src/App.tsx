@@ -93,6 +93,8 @@ export default function App() {
   const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus | null>(null);
   const [equityOnly, setEquityOnly] = useState<boolean>(true);
   const [explorerSymbol, setExplorerSymbol] = useState<string | null>(null);
+  const [quantSymbol, setQuantSymbol] = useState<string | null>(null);
+  const [quantNavTick, setQuantNavTick] = useState<number>(0);
   const [loadingMeta, setLoadingMeta] = useState<boolean>(true);
   const [pulling, setPulling] = useState<boolean>(false);
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
@@ -207,6 +209,12 @@ export default function App() {
   const inspectSymbol = (symbol: string) => {
     setExplorerSymbol(symbol);
     setActiveTab('explorer');
+  };
+
+  const inspectInQuant = (symbol: string) => {
+    setQuantSymbol(symbol);
+    setQuantNavTick((n) => n + 1);
+    setActiveTab('scanners');
   };
 
   const currentNav = NAV_ITEMS.find((n) => n.id === activeTab)!;
@@ -571,6 +579,8 @@ export default function App() {
                 <ScannersView
                   dates={dates}
                   equityOnly={equityOnly}
+                  initialQuantSymbol={quantSymbol}
+                  initialQuantTick={quantNavTick}
                   onInspectSymbol={inspectSymbol}
                 />
               )}
@@ -579,6 +589,7 @@ export default function App() {
                   dates={dates}
                   equityOnly={equityOnly}
                   initialSymbol={explorerSymbol}
+                  onInspectInQuant={inspectInQuant}
                 />
               )}
               {activeTab === 'macro' && (

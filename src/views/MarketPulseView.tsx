@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowDownRight, ArrowUpRight, Gauge, Layers, Star } from 'lucide-react';
-import { DataTable, type ColumnDef } from '../components/DataTable';
+import { ArrowDownRight, ArrowUpRight, Gauge, Layers } from 'lucide-react';
+import { createWatchlistColumn, DataTable, type ColumnDef } from '../components/DataTable';
 import { InfoTip } from '../components/InfoTip';
 import { LOOKBACK_PRESETS, useTradingSettings } from '../hooks/useTradingSettings';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -198,29 +198,11 @@ export const MarketPulseView: React.FC<MarketPulseViewProps> = ({
 
   const cols: ColumnDef<MarketPulseRow>[] = useMemo(
     () => [
-      {
-        key: '_star',
-        label: '',
-        align: 'left',
-        sortable: false,
-        widthClass: 'w-8',
-        render: (r) => {
-          const starred = hasSymbol(r.symbol);
-          return (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleSymbol(r.symbol);
-              }}
-              aria-label={starred ? `Remove ${r.symbol} from watchlist` : `Add ${r.symbol} to watchlist`}
-              className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
-            >
-              <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
-            </button>
-          );
-        },
-      },
+      createWatchlistColumn<MarketPulseRow>({
+        getSymbol: (r) => r.symbol,
+        hasSymbol,
+        toggleSymbol,
+      }),
       {
         key: 'symbol',
         label: 'Symbol',

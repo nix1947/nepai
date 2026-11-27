@@ -12,6 +12,37 @@ export interface ColumnDef<T> {
   widthClass?: string;
 }
 
+export function createWatchlistColumn<T>(opts: {
+  getSymbol: (row: T) => string;
+  hasSymbol: (symbol: string) => boolean;
+  toggleSymbol: (symbol: string) => void;
+}): ColumnDef<T> {
+  return {
+    key: '_star',
+    label: '',
+    align: 'left',
+    sortable: false,
+    widthClass: 'w-8',
+    render: (row) => {
+      const sym = opts.getSymbol(row);
+      const starred = opts.hasSymbol(sym);
+      return (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            opts.toggleSymbol(sym);
+          }}
+          aria-label={starred ? `Remove ${sym} from watchlist` : `Add ${sym} to watchlist`}
+          className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
+        >
+          <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
+        </button>
+      );
+    },
+  };
+}
+
 interface DataTableProps<T> {
   rows: T[];
   columns: ColumnDef<T>[];

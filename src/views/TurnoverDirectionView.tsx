@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Flame, Star } from 'lucide-react';
+import { ChevronDown, ChevronUp, Flame } from 'lucide-react';
 import { AlgorithmExplainPanel } from '../components/AlgorithmExplainPanel';
 import { TurnoverScatterChart } from '../components/Charts';
-import { DataTable, type ColumnDef } from '../components/DataTable';
+import { createWatchlistColumn, DataTable, type ColumnDef } from '../components/DataTable';
 import { PeriodPicker, resolvePeriodRange, type PeriodMode } from '../components/PeriodPicker';
 import { ALGORITHM_DOCS } from '../data/algorithmDocs';
 import { useWatchlist } from '../hooks/useWatchlist';
@@ -89,29 +89,11 @@ export const TurnoverDirectionView: React.FC<TurnoverDirectionViewProps> = ({
   const upSharePct = totalFlowTurn > 0 ? Math.round((data.upTurnover / totalFlowTurn) * 100) : 50;
 
   const makeCols = (dir: 'up' | 'down'): ColumnDef<RangeSummaryRow>[] => [
-    {
-      key: '_star',
-      label: '',
-      align: 'left',
-      sortable: false,
-      widthClass: 'w-8',
-      render: (r) => {
-        const starred = hasSymbol(r.symbol);
-        return (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleSymbol(r.symbol);
-            }}
-            aria-label={starred ? `Remove ${r.symbol} from watchlist` : `Add ${r.symbol} to watchlist`}
-            className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
-          >
-            <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
-          </button>
-        );
-      },
-    },
+    createWatchlistColumn<RangeSummaryRow>({
+      getSymbol: (r) => r.symbol,
+      hasSymbol,
+      toggleSymbol,
+    }),
     {
       key: 'symbol',
       label: 'Symbol',

@@ -6,12 +6,11 @@ import {
   ArrowUpRight,
   Flame,
   Sparkles,
-  Star,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
 import { HorizontalTurnoverBar, WeeklyHeatmapChart } from '../components/Charts';
-import { DataTable, type ColumnDef } from '../components/DataTable';
+import { createWatchlistColumn, DataTable, type ColumnDef } from '../components/DataTable';
 import { InfoTip } from '../components/InfoTip';
 import { MiniSparkline } from '../components/MiniSparkline';
 import { PeriodPicker, resolvePeriodRange, type PeriodMode } from '../components/PeriodPicker';
@@ -232,29 +231,11 @@ export const TopTurnoverView: React.FC<TopTurnoverViewProps> = ({
   }, [weeklyData.rows]);
 
   const enhancedCols: ColumnDef<TopTurnoverEnhancedRow>[] = [
-    {
-      key: '_star',
-      label: '',
-      align: 'left',
-      sortable: false,
-      widthClass: 'w-8',
-      render: (r) => {
-        const starred = hasSymbol(r.symbol);
-        return (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleSymbol(r.symbol);
-            }}
-            aria-label={starred ? `Remove ${r.symbol} from watchlist` : `Add ${r.symbol} to watchlist`}
-            className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
-          >
-            <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
-          </button>
-        );
-      },
-    },
+    createWatchlistColumn<TopTurnoverEnhancedRow>({
+      getSymbol: (r) => r.symbol,
+      hasSymbol,
+      toggleSymbol,
+    }),
     {
       key: 'symbol',
       label: 'Symbol',

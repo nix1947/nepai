@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { AlgorithmExplainPanel } from '../components/AlgorithmExplainPanel';
 import { CandlestickVolumeChart, type HorizontalLevel } from '../components/Charts';
-import { DataTable, type ColumnDef } from '../components/DataTable';
+import { createWatchlistColumn, DataTable, type ColumnDef } from '../components/DataTable';
+import { QuantEngineWorkbench } from '../components/quant/QuantEngineWorkbench';
 import { SCANNER_DOC_MAP } from '../data/algorithmDocs';
 import { useWatchlist } from '../hooks/useWatchlist';
 import type { PriceRow, ScannerKind, ScannerResultRow } from '../types/market';
@@ -11,6 +12,8 @@ import { formatCrore, formatNum, formatPct } from '../utils/format';
 interface ScannersViewProps {
   dates: string[];
   equityOnly: boolean;
+  initialQuantSymbol?: string | null;
+  initialQuantTick?: number;
   onInspectSymbol: (symbol: string) => void;
 }
 
@@ -28,6 +31,8 @@ const SCANNER_OPTIONS: Array<{ id: ScannerKind; label: string }> = [
 export const ScannersView: React.FC<ScannersViewProps> = ({
   dates,
   equityOnly,
+  initialQuantSymbol,
+  initialQuantTick,
   onInspectSymbol,
 }) => {
   const [kind, setKind] = useState<ScannerKind>('potential');
@@ -208,29 +213,11 @@ export const ScannersView: React.FC<ScannersViewProps> = ({
 
   const columns = useMemo((): ColumnDef<ScannerResultRow>[] => {
     const baseCols: ColumnDef<ScannerResultRow>[] = [
-      {
-        key: '_star',
-        label: '',
-        align: 'left',
-        sortable: false,
-        widthClass: 'w-8',
-        render: (r) => {
-          const starred = hasSymbol(r.symbol);
-          return (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleSymbol(r.symbol);
-              }}
-              aria-label={starred ? `Remove ${r.symbol} from watchlist` : `Add ${r.symbol} to watchlist`}
-              className="p-0.5 text-slate-400 hover:text-amber-500 transition-colors"
-            >
-              <Star className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`} />
-            </button>
-          );
-        },
-      },
+      createWatchlistColumn<ScannerResultRow>({
+        getSymbol: (r) => r.symbol,
+        hasSymbol,
+        toggleSymbol,
+      }),
       {
         key: 'symbol',
         label: 'Symbol',
@@ -451,7 +438,7 @@ export const ScannersView: React.FC<ScannersViewProps> = ({
     return null;
   }, [pickedRow]);
 
-  return (
+  const classicScannersContent = (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex-1 min-w-[260px]">
@@ -784,5 +771,16 @@ export const ScannersView: React.FC<ScannersViewProps> = ({
         </div>
       )}
     </div>
+  );
+
+  return (
+    <QuantEngineWorkbench
+      dates={dates}
+      equityOnly={equityOnly}
+      initialSymbol={initialQuantSymbol}
+      initialNavTick={initialQuantTick}
+      onInspectSymbol={onInspectSymbol}
+      classicScannersContent={classicScannersContent}
+    />
   );
 };

@@ -13,6 +13,8 @@ import type {
   ScannerKind,
   ScannerResultRow,
   SectorPulseMetric,
+  SectorRotationQuadrantNode,
+  SmartMoneyRadarRow,
   StockComparisonResponse,
   SymbolInfo,
   TopTurnoverAnalyticsResponse,
@@ -1925,6 +1927,142 @@ export class MarketStore {
       }
     }
 
+    const smartMoneyLeaders: SmartMoneyRadarRow[] = [];
+    const sectorAvgTradeMap = new Map<string, number[]>();
+    const sectorRet20Map = new Map<string, number[]>();
+    const sectorRet5Map = new Map<string, number[]>();
+    const marketRet20List: number[] = [];
+    const marketRet5List: number[] = [];
+
+    for (const row of pulse.rows) {
+      const fullHist = (this.bySymbol.get(row.symbol) || []).filter((h) => h.date <= targetDay);
+      if (fullHist.length < 5) continue;
+
+      const last = fullHist[fullHist.length - 1];
+      const base20 = fullHist[Math.max(0, fullHist.length - 20)];
+      const base5 = fullHist[Math.max(0, fullHist.length - 5)];
+      const ret20 =
+        (base20.prev_close || base20.close) > 0
+          ? (last.close / (base20.prev_close || base20.close) - 1) * 100
+          : 0;
+      const ret5 =
+        (base5.prev_close || base5.close) > 0
+          ? (last.close / (base5.prev_close || base5.close) - 1) * 100
+          : 0;
+
+      marketRet20List.push(ret20);
+      marketRet5List.push(ret5);
+      const sec20 = sectorRet20Map.get(row.sector) || [];
+      sec20.push(ret20);
+      sectorRet20Map.set(row.sector, sec20);
+
+      const sec5 = sectorRet5Map.get(row.sector) || [];
+      sec5.push(ret5);
+      sectorRet5Map.set(row.sector, sec5);
+
+      const avgTx = row.trans > 0 ? row.turnover / row.trans : 0;
+      if (avgTx > 0) {
+        const arr = sectorAvgTradeMap.get(row.sector) || [];
+        arr.push(avgTx);
+        sectorAvgTradeMap.set(row.sector, arr);
+      }
+
+      const window20 = fullHist.slice(-Math.max(cleanN, 20));
+      const avgTurn20 = mean(window20.map((h) => h.turnover));
+      if (avgTurn20 < 800_000) continue;
+
+      const avgTxList20 = window20
+        .filter((h) => h.trans > 0)
+        .map((h) => h.turnover / h.trans);
+      const baseAvgTx = Math.max(1, mean(avgTxList20));
+      const avgTradeSizeMult = round2(avgTx / baseAvgTx);
+
+      const upVol = window20.filter((h) => h.diff > 0).reduce((s, h) => s + h.volume, 0);
+      const dnVol = window20.filter((h) => h.diff < 0).reduce((s, h) => s + h.volume, 0);
+      const upDownVolRatio = round2(upVol / Math.max(dnVol, 1));
+
+      // Pocket Pivot check: today up, vol > max down-day vol in prior 10 sessions, close >= 97% of SMA20
+      const prior10 = fullHist.slice(-11, -1);
+      const maxDownVol10 = prior10
+        .filter((h) => h.diff < 0)
+        .reduce((mx, h) => Math.max(mx, h.volume), 0);
+      const sma20 = mean(window20.map((h) => h.close));
+      const pocketPivot =
+        (row.diff_pct ?? 0) > 0 &&
+        maxDownVol10 > 0 &&
+        row.volume > maxDownVol10 &&
+        row.close >= sma20 * 0.97 &&
+        row.close <= sma20 * 1.12;
+
+      // Stage-2 proxy out of 6 quick checks
+      let st2 = 0;
+      if (row.close > sma20) st2++;
+      if (row.d120 && row.close > row.d120) st2++;
+      if (row.d180 && row.close > row.d180) st2++;
+      if (row.gap_52h_pct !== null && row.gap_52h_pct <= 20) st2++;
+      if (row.pos_52w_pct !== null && row.pos_52w_pct >= 55) st2++;
+      if (upDownVolRatio >= 1.2) st2++;
+
+      const closePos = row.close_pos_pct ?? 50;
+      const smScore = round1(
+        clip(
+          clip((upDownVolRatio / 2.2) * 40, 0, 40) +
+            clip((avgTradeSizeMult / 2.0) * 28, 0, 28) +
+            (closePos / 100) * 18 +
+            (pocketPivot ? 14 : 0),
+          0,
+          100
+        )
+      );
+
+      if (smScore >= 52 || pocketPivot) {
+        smartMoneyLeaders.push({
+          symbol: row.symbol,
+          name: row.name,
+          sector: row.sector,
+          ltp: row.ltp || row.close,
+          changePct: row.diff_pct ?? 0,
+          smartMoneyScore: smScore,
+          avgTradeSizeNpr: Math.round(avgTx),
+          avgTradeSizeMult,
+          upDownVolRatio,
+          pocketPivot,
+          stage2ProxyScore: st2,
+          vwapPct: row.vwap_pct,
+        });
+      }
+    }
+
+    const mktMean20 = mean(marketRet20List);
+    const mktMean5 = mean(marketRet5List);
+    const sectorRotationMatrix: SectorRotationQuadrantNode[] = pulse.sectors.map((sec) => {
+      const r20 = mean(sectorRet20Map.get(sec.sector) || [0]);
+      const r5 = mean(sectorRet5Map.get(sec.sector) || [0]);
+      const rsRatio = round2(100 + (r20 - mktMean20));
+      const rsMomentum = round2(100 + ((r5 - mktMean5) - (r20 - mktMean20) * 0.25));
+      const quadrant: SectorRotationQuadrantNode['quadrant'] =
+        rsRatio >= 100 && rsMomentum >= 100
+          ? 'Leading'
+          : rsRatio < 100 && rsMomentum >= 100
+            ? 'Improving'
+            : rsRatio >= 100 && rsMomentum < 100
+              ? 'Weakening'
+              : 'Lagging';
+      return {
+        sector: sec.sector,
+        stockCount: sec.stocks,
+        rsRatio,
+        rsMomentum,
+        quadrant,
+        turnoverSharePct: sec.turnoverSharePct,
+        rotationDeltaPct: sec.rotationDeltaPct,
+        avgChangePct: sec.avgChangePct,
+        avgTradeSizeNpr: Math.round(mean(sectorAvgTradeMap.get(sec.sector) || [0])),
+        leaderSymbol: sec.leaderSymbol,
+        leaderChangePct: sec.leaderChangePct,
+      };
+    });
+
     const sorted = points.sort((a, b) => b.radarScore - a.radarScore);
     return {
       date: targetDay,
@@ -1939,6 +2077,10 @@ export class MarketStore {
       sectorLeaders: [...pulse.sectors]
         .sort((a, b) => b.rotationDeltaPct - a.rotationDeltaPct)
         .slice(0, 11),
+      sectorRotationMatrix,
+      smartMoneyLeaders: smartMoneyLeaders
+        .sort((a, b) => b.smartMoneyScore - a.smartMoneyScore)
+        .slice(0, 25),
     };
   }
 

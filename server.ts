@@ -14,10 +14,30 @@ import {
   getFundamentallyRiskyStocks,
   getMarketOpportunityVsRisk,
 } from './server/riskEngine.ts';
-import { runQuantAnalysis, runQuantBacktest } from './server/quantEngine.ts';
+import {
+  getHighConvictionFeed,
+  invalidateQuantFeedCache,
+  runQuantAnalysis,
+  runQuantBacktest,
+} from './server/quantEngine.ts';
+import { analyzeSymbolFromStore, scanAnalyzerMarket } from './server/analyzer/index.ts';
+import { runAnalyzerBacktest } from './server/analyzer/backtest.ts';
+import {
+  getSavedFinancialCsvPath,
+  getSavedFinancials,
+  isValidSymbol,
+  listSavedFinancials,
+  scrapeBatchFinancials,
+  scrapeCompanyFinancials,
+} from './server/financialScraper.ts';
 import { DailyScheduler } from './server/scheduler.ts';
 import type { ScannerKind } from './src/types/market.ts';
 import type { QuantEngineConfig } from './src/types/quant.ts';
+import type {
+  AnalyzerConfig,
+  AnalyzerStrategyFilter,
+  AnalyzerTimeframe,
+} from './src/types/analyzer.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +45,40 @@ const __dirname = path.dirname(__filename);
 const DATA_DIR = process.env.NEPSE_DATA
   ? path.resolve(process.env.NEPSE_DATA)
   : path.resolve(__dirname, 'data');
+
+const VALID_ANALYZER_TF = new Set<AnalyzerTimeframe>(['1D', '1W', '1M']);
+const VALID_ANALYZER_STRATEGIES = new Set<AnalyzerStrategyFilter>([
+  'All',
+  'ICT',
+  'SMC',
+  'Price Action',
+  'Wyckoff',
+]);
+
+function parseAnalyzerConfigQuery(q: express.Request['query']): Partial<AnalyzerConfig> {
+  const out: Partial<AnalyzerConfig> = {};
+  const num = (key: string) => {
+    const raw = q[key];
+    if (typeof raw !== 'string' || !raw.trim()) return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const sl = num('swingLeft');
+  const sr = num('swingRight');
+  const fvg = num('fvgMinAtr');
+  const disp = num('displacementBodyAtr');
+  const eq = num('eqTolerancePct');
+  const minRr = num('minRR');
+  const sb = num('stopAtrBuffer');
+  if (sl !== undefined) out.swingLeft = sl;
+  if (sr !== undefined) out.swingRight = sr;
+  if (fvg !== undefined) out.fvgMinAtr = fvg;
+  if (disp !== undefined) out.displacementBodyAtr = disp;
+  if (eq !== undefined) out.eqTolerancePct = eq;
+  if (minRr !== undefined) out.minRR = minRr;
+  if (sb !== undefined) out.stopAtrBuffer = sb;
+  return out;
+}
 
 const VALID_SCANNERS = new Set<ScannerKind>([
   'potential',
@@ -289,6 +343,266 @@ async function startServer() {
     }
   });
 
+  app.get('/api/quant/high-conviction', (req, res) => {
+    try {
+      const dates = store.getDates();
+      if (dates.length === 0) {
+        res.status(404).json({ error: 'No trading data loaded' });
+        return;
+      }
+      const rawAsOf = typeof req.query.asOf === 'string' ? req.query.asOf : undefined;
+      if (rawAsOf && !isValidDateStr(rawAsOf)) {
+        res.status(400).json({ error: 'Invalid asOf date format (expected YYYY-MM-DD)' });
+        return;
+      }
+      const equityOnly = req.query.equityOnly !== 'false';
+      const feed = getHighConvictionFeed(store, rawAsOf, equityOnly);
+      res.json(feed);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to compute high-conviction buy feed',
+      });
+    }
+  });
+
+  app.post('/api/quant/refresh-catalysts', async (req, res) => {
+    try {
+      const rawSymbols = Array.isArray(req.body?.symbols)
+        ? req.body.symbols.map((s: unknown) => String(s || '').trim().toUpperCase()).filter(Boolean)
+        : [];
+      if (rawSymbols.length === 0) {
+        res.status(400).json({ error: 'Provide at least one stock symbol to refresh catalysts' });
+        return;
+      }
+      const nDays = req.body?.nDays ? Math.max(5, Math.min(250, Number(req.body.nDays))) : 20;
+      const data = await auditCohortStocks(store, rawSymbols.slice(0, 5), nDays);
+      invalidateQuantFeedCache();
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to refresh stock catalysts',
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- Auto Analyzer Routes
+  app.get('/api/analyzer/scan', (req, res) => {
+    try {
+      const tfRaw = typeof req.query.tf === 'string' && req.query.tf ? req.query.tf : '1D';
+      if (!VALID_ANALYZER_TF.has(tfRaw as AnalyzerTimeframe)) {
+        res.status(400).json({ error: 'Invalid timeframe (expected 1D, 1W, or 1M)' });
+        return;
+      }
+      const stratRaw =
+        typeof req.query.strategy === 'string' && req.query.strategy ? req.query.strategy : 'All';
+      if (!VALID_ANALYZER_STRATEGIES.has(stratRaw as AnalyzerStrategyFilter)) {
+        res.status(400).json({ error: 'Invalid strategy filter' });
+        return;
+      }
+      const asOfRaw = typeof req.query.asOf === 'string' && req.query.asOf ? req.query.asOf : undefined;
+      if (asOfRaw && !isValidDateStr(asOfRaw)) {
+        res.status(400).json({ error: 'Invalid asOf date format (expected YYYY-MM-DD)' });
+        return;
+      }
+      const gradeRaw = typeof req.query.minGrade === 'string' ? req.query.minGrade.toUpperCase() : 'B';
+      if (!['A', 'B', 'C'].includes(gradeRaw)) {
+        res.status(400).json({ error: 'Invalid minGrade (expected A, B, or C)' });
+        return;
+      }
+      const equityOnly = req.query.equityOnly !== 'false';
+      const config = parseAnalyzerConfigQuery(req.query);
+      const payload = scanAnalyzerMarket(store, {
+        tf: tfRaw as AnalyzerTimeframe,
+        strategy: stratRaw as AnalyzerStrategyFilter,
+        asOf: asOfRaw,
+        minGrade: gradeRaw as 'A' | 'B' | 'C',
+        equityOnly,
+        config,
+      });
+      res.json(payload);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Auto Analyzer scan failed',
+      });
+    }
+  });
+
+  app.get('/api/analyzer/backtest', (req, res) => {
+    try {
+      const symRaw =
+        typeof req.query.symbol === 'string' && req.query.symbol.trim()
+          ? req.query.symbol.trim().toUpperCase()
+          : undefined;
+      if (symRaw && !/^[A-Z0-9._-]{1,20}$/.test(symRaw)) {
+        res.status(400).json({ error: 'Invalid symbol parameter' });
+        return;
+      }
+      const tfRaw = typeof req.query.tf === 'string' && req.query.tf ? req.query.tf : '1D';
+      if (!VALID_ANALYZER_TF.has(tfRaw as AnalyzerTimeframe)) {
+        res.status(400).json({ error: 'Invalid timeframe (expected 1D, 1W, or 1M)' });
+        return;
+      }
+      const stratRaw =
+        typeof req.query.strategy === 'string' && req.query.strategy ? req.query.strategy : 'All';
+      if (!VALID_ANALYZER_STRATEGIES.has(stratRaw as AnalyzerStrategyFilter)) {
+        res.status(400).json({ error: 'Invalid strategy filter' });
+        return;
+      }
+      const holdoutRatio =
+        req.query.holdoutRatio !== undefined ? Number(req.query.holdoutRatio) : 0.35;
+      if (!Number.isFinite(holdoutRatio) || holdoutRatio < 0.1 || holdoutRatio > 0.7) {
+        res.status(400).json({ error: 'holdoutRatio must be between 0.1 and 0.7' });
+        return;
+      }
+      const equityOnly = req.query.equityOnly !== 'false';
+      const config = parseAnalyzerConfigQuery(req.query);
+      const summary = runAnalyzerBacktest(store, {
+        symbol: symRaw,
+        tf: tfRaw as AnalyzerTimeframe,
+        strategy: stratRaw as AnalyzerStrategyFilter,
+        holdoutRatio,
+        equityOnly,
+        config,
+      });
+      res.json(summary);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Auto Analyzer backtest failed',
+      });
+    }
+  });
+
+  app.get('/api/analyzer/:symbol', (req, res) => {
+    try {
+      const symbol = String(req.params.symbol || '').trim().toUpperCase();
+      if (!/^[A-Z0-9._-]{1,20}$/.test(symbol)) {
+        res.status(400).json({ error: 'Invalid ticker symbol' });
+        return;
+      }
+      const tfRaw = typeof req.query.tf === 'string' && req.query.tf ? req.query.tf : '1D';
+      if (!VALID_ANALYZER_TF.has(tfRaw as AnalyzerTimeframe)) {
+        res.status(400).json({ error: 'Invalid timeframe (expected 1D, 1W, or 1M)' });
+        return;
+      }
+      const stratRaw =
+        typeof req.query.strategy === 'string' && req.query.strategy ? req.query.strategy : 'All';
+      if (!VALID_ANALYZER_STRATEGIES.has(stratRaw as AnalyzerStrategyFilter)) {
+        res.status(400).json({ error: 'Invalid strategy filter' });
+        return;
+      }
+      const asOfRaw = typeof req.query.asOf === 'string' && req.query.asOf ? req.query.asOf : undefined;
+      if (asOfRaw && !isValidDateStr(asOfRaw)) {
+        res.status(400).json({ error: 'Invalid asOf date format (expected YYYY-MM-DD)' });
+        return;
+      }
+      const config = parseAnalyzerConfigQuery(req.query);
+      const analysis = analyzeSymbolFromStore(store, {
+        symbol,
+        tf: tfRaw as AnalyzerTimeframe,
+        strategy: stratRaw as AnalyzerStrategyFilter,
+        asOf: asOfRaw,
+        config,
+      });
+      if (!analysis) {
+        res.status(404).json({ error: `No historical sessions found for ${symbol}` });
+        return;
+      }
+      res.json(analysis);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Auto Analyzer failed',
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- ShareSansar Quarterly Financials (data/financial/)
+  app.get('/api/financials', (_req, res) => {
+    try {
+      res.json({
+        folder: 'data/financial',
+        items: listSavedFinancials(DATA_DIR),
+      });
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to list saved financials',
+      });
+    }
+  });
+
+  app.post('/api/financials/scrape-batch', async (req, res) => {
+    try {
+      let symbols: string[] = Array.isArray(req.body?.symbols)
+        ? req.body.symbols.map((s: unknown) => String(s || '').trim().toUpperCase()).filter(isValidSymbol)
+        : [];
+
+      if (symbols.length === 0) {
+        const allDates = store.getDates();
+        const latestDay = allDates[allDates.length - 1];
+        if (latestDay) {
+          symbols = store
+            .getDayPrices(latestDay, true)
+            .sort((a, b) => b.turnover - a.turnover)
+            .slice(0, 10)
+            .map((r) => r.symbol);
+        }
+      }
+
+      if (symbols.length === 0) {
+        res.status(400).json({ error: 'No valid symbols available to scrape' });
+        return;
+      }
+
+      const result = await scrapeBatchFinancials(DATA_DIR, symbols);
+      res.json({
+        ...result,
+        items: listSavedFinancials(DATA_DIR),
+      });
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Batch financials scrape failed',
+      });
+    }
+  });
+
+  app.get('/api/financials/:symbol', (req, res) => {
+    const symbol = String(req.params.symbol || '').trim().toUpperCase();
+    if (!isValidSymbol(symbol)) {
+      res.status(400).json({ error: 'Invalid ticker symbol' });
+      return;
+    }
+    if (req.query.format === 'csv') {
+      const csvPath = getSavedFinancialCsvPath(DATA_DIR, symbol);
+      if (!csvPath) {
+        res.status(404).json({ error: `No saved CSV financials found for ${symbol}` });
+        return;
+      }
+      res.download(csvPath, `${symbol}_quarterly_financials.csv`);
+      return;
+    }
+    const saved = getSavedFinancials(DATA_DIR, symbol);
+    if (!saved) {
+      res.status(404).json({ error: `No saved financials for ${symbol} yet` });
+      return;
+    }
+    res.json(saved);
+  });
+
+  app.post('/api/financials/:symbol/scrape', async (req, res) => {
+    const symbol = String(req.params.symbol || '').trim().toUpperCase();
+    if (!isValidSymbol(symbol)) {
+      res.status(400).json({ error: 'Invalid ticker symbol' });
+      return;
+    }
+    try {
+      const snapshot = await scrapeCompanyFinancials(DATA_DIR, symbol);
+      res.json(snapshot);
+    } catch (err) {
+      res.status(502).json({
+        error: err instanceof Error ? err.message : `Failed to scrape ShareSansar financials for ${symbol}`,
+      });
+    }
+  });
+
   // ---------------------------------------------------------------- Gemini Search Grounded Research
   app.post('/api/research/macro', async (req, res) => {
     try {
@@ -405,6 +719,7 @@ async function startServer() {
 
   app.post('/api/scraper/latest', async (_req, res) => {
     const entry = await scheduler.pullLatest('manual', false);
+    invalidateQuantFeedCache();
     res.json({
       entry,
       status: scheduler.getStatus(),
@@ -462,6 +777,7 @@ async function startServer() {
   app.post('/api/github/sync', async (req, res) => {
     const force = Boolean(req.body?.force);
     const entry = await scheduler.syncGitHubNow(force);
+    invalidateQuantFeedCache();
     res.json({
       entry,
       status: scheduler.getStatus(),
@@ -511,6 +827,7 @@ async function startServer() {
     }
 
     if (savedFiles > 0) {
+      invalidateQuantFeedCache();
       scheduler.recordExternalLog({
         trigger: 'upload',
         status: errors.length > 0 ? 'error' : 'success',
@@ -531,6 +848,7 @@ async function startServer() {
       return;
     }
     const deleted = store.deleteDate(date);
+    invalidateQuantFeedCache();
     res.json({ deleted, dates: store.getDates() });
   });
 

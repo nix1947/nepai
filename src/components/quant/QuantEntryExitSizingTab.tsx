@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Check, ShieldCheck, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Check, Layers, ShieldCheck, X } from 'lucide-react';
 import { NepseTradePlanner } from '../NepseTradePlanner';
 import { QuantHelpTip } from '../QuantHelpTip';
 import type {
@@ -26,6 +26,7 @@ export const QuantEntryExitSizingTab: React.FC<QuantEntryExitSizingTabProps> = (
   onOpenGlossaryTerm,
   onAddPaperTrade,
 }) => {
+  const [sizingMode, setSizingMode] = useState<'single' | 'pyramid'>('pyramid');
   const allValid = data.candidates;
   const candidate = useMemo(
     () =>
@@ -46,6 +47,7 @@ export const QuantEntryExitSizingTab: React.FC<QuantEntryExitSizingTabProps> = (
 
   const sizing = candidate.positionSizing;
   const exitPlan = candidate.exitPlan;
+  const pyramid = candidate.pyramidPlan;
 
   return (
     <div className="space-y-6">
@@ -69,18 +71,46 @@ export const QuantEntryExitSizingTab: React.FC<QuantEntryExitSizingTabProps> = (
           </select>
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {candidate.sector} · Close NPR {formatNum(candidate.indicators.close)}
+            {candidate.horizonTag ? ` · ${candidate.horizonTag}` : ''}
           </span>
         </div>
 
-        {exitPlan && sizing && (
-          <button
-            type="button"
-            onClick={() => onAddPaperTrade(candidate)}
-            className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap shrink-0"
-          >
-            + Add Plan to Paper Journal
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setSizingMode('pyramid')}
+              className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                sizingMode === 'pyramid'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              3-Tranche Pyramid Plan
+            </button>
+            <button
+              type="button"
+              onClick={() => setSizingMode('single')}
+              className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                sizingMode === 'single'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Standard Single Entry
+            </button>
+          </div>
+
+          {exitPlan && sizing && (
+            <button
+              type="button"
+              onClick={() => onAddPaperTrade(candidate)}
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap shrink-0"
+            >
+              + Add Plan to Paper Journal
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Entry Timing & Exit Policy Side-by-Side */}
@@ -244,6 +274,103 @@ export const QuantEntryExitSizingTab: React.FC<QuantEntryExitSizingTabProps> = (
           )}
         </div>
       </div>
+
+      {/* Pyramiding & Winner-Trailing Engine */}
+      {sizingMode === 'pyramid' && pyramid && (
+        <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-4 text-xs">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span>Pyramiding &amp; Winner-Trailing Plan ({candidate.symbol})</span>
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 mt-0.5">
+                Scale into strength only after initial trade proves positive (+1.0R and +1.5R), locking pilot breakeven before adding tranche 2.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono tabular-nums text-right">
+              <div>
+                <div className="font-sans text-[10px] text-slate-500">Blended Entry</div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100">
+                  NPR {formatNum(pyramid.blendedEntryPrice)}
+                </div>
+              </div>
+              <div>
+                <div className="font-sans text-[10px] text-slate-500">Total Shares</div>
+                <div className="font-semibold text-blue-600 dark:text-blue-400">
+                  {pyramid.totalShares.toLocaleString('en-US')} sh
+                </div>
+              </div>
+              <div>
+                <div className="font-sans text-[10px] text-slate-500">Pilot Max Risk</div>
+                <div className="font-semibold text-red-600 dark:text-red-400">
+                  -NPR {Math.round(pyramid.initialMaxRiskNpr).toLocaleString('en-US')}
+                </div>
+              </div>
+              <div>
+                <div className="font-sans text-[10px] text-slate-500">Breakeven Lock</div>
+                <div className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  NPR {formatNum(pyramid.breakevenLockPrice)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+                  <th className="py-2 pr-3 text-left font-medium">Tranche</th>
+                  <th className="py-2 px-3 text-right font-medium">Weight</th>
+                  <th className="py-2 px-3 text-right font-medium">Shares</th>
+                  <th className="py-2 px-3 text-right font-medium">Trigger Price</th>
+                  <th className="py-2 px-3 text-right font-medium">Stop After Fill</th>
+                  <th className="py-2 px-3 text-right font-medium">Cash Req</th>
+                  <th className="py-2 pl-3 text-left font-medium">Execution Rule</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {pyramid.tranches.map((t) => (
+                  <tr key={t.tranche}>
+                    <td className="py-2.5 pr-3 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                      #{t.tranche} · {t.label}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums">{t.sharePct}%</td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums font-semibold text-blue-600 dark:text-blue-400">
+                      {t.shares.toLocaleString('en-US')}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums">
+                      NPR {formatNum(t.triggerPrice)}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums text-emerald-700 dark:text-emerald-400">
+                      NPR {formatNum(t.stopAfterFill)}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums">
+                      NPR {Math.round(t.cashRequiredNpr).toLocaleString('en-US')}
+                    </td>
+                    <td className="py-2.5 pl-3 text-slate-600 dark:text-slate-300">{t.rule}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+            <div>
+              <div className="font-semibold text-slate-900 dark:text-slate-100">
+                Swing Winner-Trailing Protocol (5–30d)
+              </div>
+              <p className="mt-1 leading-relaxed">{pyramid.swingTrailRule}</p>
+            </div>
+            <div>
+              <div className="font-semibold text-slate-900 dark:text-slate-100">
+                Positional Stage-2 Trailing Protocol (2–6m)
+              </div>
+              <p className="mt-1 leading-relaxed">{pyramid.positionalTrailRule}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Existing NEPSE Fee-Exact Interactive Trade Planner Reused */}
       <NepseTradePlanner

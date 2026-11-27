@@ -1,0 +1,87 @@
+Symbol,Tab,Section,Particulars,1st Quarter 2083/2084
+NABIL,BALANCE SHEET,General,Cash and cash equivalent,"8,457,616.00"
+NABIL,BALANCE SHEET,General,Due from Nepal Rastra Bank,"57,037,676.00"
+NABIL,BALANCE SHEET,General,Placement with Bank and Financial Institutions,"47,154,146.00"
+NABIL,BALANCE SHEET,General,Derivative financial instruments,"33,236,018.00"
+NABIL,BALANCE SHEET,General,Other trading assets,0.00
+NABIL,BALANCE SHEET,General,Loan and advances to B/FIs,"17,323,648.00"
+NABIL,BALANCE SHEET,General,Loans and advances to customers,"476,013,619.00"
+NABIL,BALANCE SHEET,General,Investment securities,"117,187,447.00"
+NABIL,BALANCE SHEET,General,Current tax assets,0.00
+NABIL,BALANCE SHEET,General,Investment in subsidiaries,"1,798,000.00"
+NABIL,BALANCE SHEET,General,Investment in associates,"80,000.00"
+NABIL,BALANCE SHEET,General,Investment property,"3,497,463.00"
+NABIL,BALANCE SHEET,General,Property and equipment,"4,429,084.00"
+NABIL,BALANCE SHEET,General,Goodwill and Intangible assets,"304,231.00"
+NABIL,BALANCE SHEET,General,Deferred tax assets,0.00
+NABIL,BALANCE SHEET,General,Other assets,"9,147,528.00"
+NABIL,BALANCE SHEET,General,Total Assets,"775,666,476.00"
+NABIL,BALANCE SHEET,General,Due to Bank and Financial Institutions,"26,187,675.00"
+NABIL,BALANCE SHEET,General,Due to Nepal Rastra Bank,0.00
+NABIL,BALANCE SHEET,General,Derivative financial instruments,"33,039,789.00"
+NABIL,BALANCE SHEET,General,Deposits from customers,"619,231,995.00"
+NABIL,BALANCE SHEET,General,Borrowing,0.00
+NABIL,BALANCE SHEET,General,Current Tax Liabilities,"261,725.00"
+NABIL,BALANCE SHEET,General,Provisions,0.00
+NABIL,BALANCE SHEET,General,Deferred tax liabilities,"1,718,261.00"
+NABIL,BALANCE SHEET,General,Other liabilities,"11,300,312.00"
+NABIL,BALANCE SHEET,General,Debt securities issued,"12,475,060.00"
+NABIL,BALANCE SHEET,General,Subordinated Liabilities,0.00
+NABIL,BALANCE SHEET,General,Total liabilities,"704,214,817.00"
+NABIL,BALANCE SHEET,General,Share capital,"33,409,847.00"
+NABIL,BALANCE SHEET,General,Share premium,0.00
+NABIL,BALANCE SHEET,General,Retained earnings,"2,264,567.00"
+NABIL,BALANCE SHEET,General,Reserves,"35,777,246.00"
+NABIL,BALANCE SHEET,General,Total equity,"71,451,660.00"
+NABIL,BALANCE SHEET,General,Total liabilities and equity,"775,666,477.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Interest income,"9,611,832.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Interest expense,"4,874,820.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Net interest income,"4,737,012.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Fees and commission income,"1,216,630.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Fees and commission expense,"297,132.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Net fee and commission income,"919,498.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,"Net interest, fee and commission income","5,656,510.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Net trading income,"349,555.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Other operating income,"130,451.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Total operating income,"6,136,516.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Impairment charge/(reversal) for loan and other losses,"164,012.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Net operating income,"5,972,504.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Personnel expense,"1,680,680.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Other operating expense,"453,026.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Depreciation & Amortisation,"166,850.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Operating Profit,"3,671,948.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Non operating income,"2,905.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Non operating expense,"2,402.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Profit before income tax,"3,672,451.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Current Tax,"1,117,347.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Deferred Tax,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Profit for the period,"2,555,104.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) from investments in equity instruments measured at fair value,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on revalution,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Actuarial gains/(losses) on defined benefit plans,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that will not be reclassified to profit or loss,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Gains/(losses) on cash flow hedge,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Exchange gains/(losses) (arising from translating financial assets of foreign operation),0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Income tax relating to above items,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,Net other comprehsive income that are or may be reclassified to profit or loss,0.00
+NABIL,PROFIT & LOSS ACCOUNT,General,"Other Comprehensive Income For The Period, Net Of Income Tax","145,810.00"
+NABIL,PROFIT & LOSS ACCOUNT,General,Total Comprehensive Income For The Period,"2,700,914.00"
+NABIL,KEY METRICS,General,Basic Earnings Per Share(Annualized EPS),30.34
+NABIL,KEY METRICS,General,Diluted Earnings Per Share,30.34
+NABIL,KEY METRICS,General,Capital fund to RWA,11.67
+NABIL,KEY METRICS,General,Tier I Capital to RWA,9.10
+NABIL,KEY METRICS,General,CET I Capital to RWA,8.32
+NABIL,KEY METRICS,General,Non-Performing loan(NPL) to Total Loan,4.06
+NABIL,KEY METRICS,General,Total Loan loss provision to Total NPL,120.56
+NABIL,KEY METRICS,General,Cost of Funds,2.92
+NABIL,KEY METRICS,General,Credit to Deposit Ratio,80.01
+NABIL,KEY METRICS,General,Base Rate,4.41
+NABIL,KEY METRICS,General,Interest Spread Rate,3.17
+NABIL,KEY METRICS,General,Total Shareholder's Equity (in Rs '000'),"71,451,660.00"
+NABIL,KEY METRICS,General,No. of Outstanding Shares,"284,098,470.00"
+NABIL,KEY METRICS,General,Net Worth Per Share,233.90
+NABIL,KEY METRICS,General,P/E Ratio,18.03
+NABIL,KEY METRICS,General,Price to Book (P/B) Ratio,2.34
+NABIL,KEY METRICS,General,Return on Equity,12.97
+NABIL,KEY METRICS,General,Return on Assets,1.32

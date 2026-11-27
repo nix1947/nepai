@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan for the deterministic Auto Analyzer sidebar module covering EOD ICT/SMC/Price-Action/Wyckoff analysis, Lightweight Charts custom primitives, Replay mode, hold-out backtest, Trade Planner integration, optional x-api-key middleware, and test suite.",
+  "updatedAt":  "2026-11-27T04:24:07.622181005Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

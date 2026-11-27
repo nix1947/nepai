@@ -14,6 +14,8 @@ export type TradeClassification =
   | 'SELL'
   | 'REJECT';
 
+export type HorizonKind = 'Swing' | 'Positional' | 'Both';
+
 export type LearningMode = 'beginner' | 'advanced';
 
 export interface QuantWeightsConfig {
@@ -330,6 +332,69 @@ export interface SetupStatisticalSummary {
   byRegime: RegimeConditionalStat[];
 }
 
+export interface Stage2TemplateChecks {
+  scoreOutOf8: number;
+  aboveSma50: boolean;
+  aboveMa120And180: boolean;
+  sma20AboveSma50: boolean;
+  ma120Rising: boolean;
+  above52wLow25Pct: boolean;
+  within20Pct52wHigh: boolean;
+  positive20dRs: boolean;
+  positiveAccumulation: boolean;
+  isProxyMa200: boolean;
+}
+
+export interface PocketPivotSignal {
+  detected: boolean;
+  volumeRatioVsMaxDown10: number;
+  maxDownVolume10: number;
+  detail: string;
+}
+
+export interface SmartMoneyFootprint {
+  score0to100: number;
+  upDownVolRatio20: number;
+  avgTradeSizeNpr: number;
+  avgTradeSizeMult20: number;
+  closePositionPct: number;
+  label: 'Institutional Accumulation' | 'Constructive' | 'Neutral' | 'Distribution';
+}
+
+export interface FundamentalConfluence {
+  hasAudit: boolean;
+  confluenceScore0to100: number;
+  catalystTags: string[];
+  epsText: string;
+  peText: string;
+  roeText: string;
+  dividendText: string;
+  dataStatus: DataFreshnessStatus;
+  summary: string;
+}
+
+export interface PyramidTranche {
+  tranche: 1 | 2 | 3;
+  label: string;
+  sharePct: number;
+  shares: number;
+  triggerPrice: number;
+  stopAfterFill: number;
+  cashRequiredNpr: number;
+  rule: string;
+}
+
+export interface PyramidPlan {
+  tranches: PyramidTranche[];
+  blendedEntryPrice: number;
+  totalShares: number;
+  totalCashNpr: number;
+  initialMaxRiskNpr: number;
+  breakevenLockPrice: number;
+  swingTrailRule: string;
+  positionalTrailRule: string;
+}
+
 export interface QuantStockCandidate {
   symbol: string;
   name: string;
@@ -347,6 +412,13 @@ export interface QuantStockCandidate {
     opportunityScore: number | null;
     redFlags: string[];
   };
+  horizonTag?: HorizonKind;
+  convictionScore?: number;
+  stage2?: Stage2TemplateChecks;
+  pocketPivot?: PocketPivotSignal;
+  smartMoney?: SmartMoneyFootprint;
+  fundamentalConfluence?: FundamentalConfluence;
+  pyramidPlan?: PyramidPlan | null;
   indicators: StockIndicatorsSnapshot;
   technicalScore: number; // 0-100 weighted
   scoreBreakdown: TechnicalComponentScore[];
@@ -428,6 +500,30 @@ export interface MonteCarloStressSummary {
   methodologyNote: string;
 }
 
+export interface RMultipleBucket {
+  label: string;
+  count: number;
+  pctOfTrades: number;
+  avgNetReturnPct: number;
+}
+
+export interface WinnerTrailingComparison {
+  fixedTargetAvgNetPct: number;
+  fixedTargetWinRatePct: number;
+  fixedTargetMaxDdPct: number;
+  fixedTotalReturnPct: number;
+  trailingPyramidAvgNetPct: number;
+  trailingPyramidWinRatePct: number;
+  trailingPyramidMaxDdPct: number;
+  trailingPyramidTotalReturnPct: number;
+  outlier2RPlusCount: number;
+  outlier3RPlusCount: number;
+  outlier20PctCount: number;
+  rDistribution: RMultipleBucket[];
+  topWinnerCases: SimulatedTradeRecord[];
+  methodologyNote: string;
+}
+
 export interface BacktestResponse {
   generatedAt: string;
   asOfDate: string;
@@ -443,9 +539,21 @@ export interface BacktestResponse {
     isOutOfSample: boolean;
   }>;
   monteCarlo?: MonteCarloStressSummary;
+  winnerLab?: WinnerTrailingComparison;
   recentTrades: SimulatedTradeRecord[];
   methodologySafeguards: string[];
   limitations: string[];
+}
+
+export interface HighConvictionFeedResponse {
+  asOfDate: string;
+  regime: MarketRegimeLabel;
+  regimeScore: number;
+  recommendedExposureMinPct: number;
+  recommendedExposureMaxPct: number;
+  auditedSymbolsCount: number;
+  totalValidCount: number;
+  feed: QuantStockCandidate[];
 }
 
 export interface QuantEngineResponse {

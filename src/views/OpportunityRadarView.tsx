@@ -27,6 +27,7 @@ interface OpportunityRadarViewProps {
   dates: string[];
   equityOnly: boolean;
   onInspectSymbol: (symbol: string) => void;
+  onInspectInQuant?: (symbol: string) => void;
 }
 
 type RadarTab = 'acceleration' | 'accumulation' | 'divergences' | 'breakout' | 'sectors';
@@ -68,6 +69,7 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
   dates,
   equityOnly,
   onInspectSymbol,
+  onInspectInQuant,
 }) => {
   const { settings, updateSettings } = useTradingSettings();
   const nDays = settings.lookbackDays;
@@ -585,43 +587,154 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
         </div>
 
         {activeTab === 'sectors' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(radar?.sectorLeaders ?? []).map((sec) => (
-              <div
-                key={sec.sector}
-                className="p-3.5 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-2 text-xs"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">{sec.sector}</span>
-                  <span
-                    className={`font-mono font-semibold ${
-                      sec.rotationDeltaPct >= 0
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-red-600 dark:text-red-400'
-                    }`}
-                  >
-                    {sec.rotationDeltaPct >= 0 ? '+' : ''}
-                    {sec.rotationDeltaPct.toFixed(1)}% share vs {nDays}d
-                  </span>
+          <div className="space-y-5">
+            {radar?.sectorRotationMatrix && radar.sectorRotationMatrix.length > 0 && (
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                <div className="xl:col-span-7 border border-slate-200 dark:border-slate-800 rounded-md bg-slate-50/40 dark:bg-slate-950/40 p-3 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">
+                      Sector Relative Rotation Matrix (RS-Ratio vs RS-Momentum)
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-500">100 = NEPSE equal-weight baseline</span>
+                  </div>
+                  {(() => {
+                    const nodes = radar.sectorRotationMatrix!;
+                    const SW = 620;
+                    const SH = 290;
+                    const SP = { t: 24, r: 22, b: 34, l: 46 };
+                    const xs = nodes.map((n) => n.rsRatio);
+                    const ys = nodes.map((n) => n.rsMomentum);
+                    const maxDevX = Math.max(8, ...xs.map((v) => Math.abs(v - 100))) * 1.15;
+                    const maxDevY = Math.max(6, ...ys.map((v) => Math.abs(v - 100))) * 1.15;
+                    const xAt = (v: number) =>
+                      SP.l + ((v - (100 - maxDevX)) / (2 * maxDevX)) * (SW - SP.l - SP.r);
+                    const yAt = (v: number) =>
+                      SP.t + (((100 + maxDevY) - v) / (2 * maxDevY)) * (SH - SP.t - SP.b);
+                    const cx = xAt(100);
+                    const cy = yAt(100);
+                    const qColor = (q: string) =>
+                      q === 'Leading'
+                        ? '#10b981'
+                        : q === 'Improving'
+                          ? '#2563eb'
+                          : q === 'Weakening'
+                            ? '#d97706'
+                            : '#ef4444';
+                    return (
+                      <svg viewBox={`0 0 ${SW} ${SH}`} className="w-full h-auto select-none">
+                        <rect x={cx} y={SP.t} width={SW - SP.r - cx} height={cy - SP.t} fill="rgba(16, 185, 129, 0.06)" />
+                        <rect x={SP.l} y={SP.t} width={cx - SP.l} height={cy - SP.t} fill="rgba(37, 99, 235, 0.05)" />
+                        <rect x={cx} y={cy} width={SW - SP.r - cx} height={SH - SP.b - cy} fill="rgba(217, 119, 6, 0.05)" />
+                        <rect x={SP.l} y={cy} width={cx - SP.l} height={SH - SP.b - cy} fill="rgba(239, 68, 68, 0.05)" />
+                        <line x1={SP.l} y1={cy} x2={SW - SP.r} y2={cy} stroke="#94a3b8" strokeDasharray="3 3" strokeOpacity={0.7} />
+                        <line x1={cx} y1={SP.t} x2={cx} y2={SH - SP.b} stroke="#94a3b8" strokeDasharray="3 3" strokeOpacity={0.7} />
+                        <text x={SW - SP.r - 6} y={SP.t + 13} textAnchor="end" fontSize="10" fontWeight="600" fill="#10b981">LEADING</text>
+                        <text x={SP.l + 6} y={SP.t + 13} textAnchor="start" fontSize="10" fontWeight="600" fill="#2563eb">IMPROVING</text>
+                        <text x={SW - SP.r - 6} y={SH - SP.b - 6} textAnchor="end" fontSize="10" fontWeight="600" fill="#d97706">WEAKENING</text>
+                        <text x={SP.l + 6} y={SH - SP.b - 6} textAnchor="start" fontSize="10" fontWeight="600" fill="#ef4444">LAGGING</text>
+                        <text x={SW / 2} y={SH - 8} textAnchor="middle" fontSize="10" fill="#64748b">RS-Ratio vs NEPSE ({nDays}d)</text>
+                        <text x={14} y={SH / 2} textAnchor="middle" fontSize="10" fill="#64748b" transform={`rotate(-90 14 ${SH / 2})`}>RS-Momentum</text>
+                        {nodes.map((n) => {
+                          const x = xAt(n.rsRatio);
+                          const y = yAt(n.rsMomentum);
+                          const r = 4.5 + Math.sqrt(Math.max(1, n.turnoverSharePct)) * 1.4;
+                          const shortName = n.sector.replace('Development Banks', 'DevBank').replace('Hydro Power', 'Hydro').replace('Commercial Banks', 'Banks').replace('Microfinance', 'Microfin').replace('Non-Life Insurance', 'Non-Life').replace('Life Insurance', 'Life Ins');
+                          return (
+                            <g key={n.sector} onClick={() => onInspectSymbol(n.leaderSymbol)} className="cursor-pointer">
+                              <circle cx={x} cy={y} r={r} fill={qColor(n.quadrant)} fillOpacity={0.82} stroke="#ffffff" strokeWidth={1.2} />
+                              <text x={x} y={y - r - 3} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="currentColor" className="text-slate-700 dark:text-slate-200 font-mono">
+                                {shortName}
+                              </text>
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    );
+                  })()}
                 </div>
-                <div className="flex justify-between font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                  <span>Share: {sec.turnoverSharePct.toFixed(1)}% (avg {sec.avgTurnoverShareN.toFixed(1)}%)</span>
-                  <span>{sec.turnoverVsAvgN.toFixed(1)}x {nDays}d turn</span>
-                </div>
-                <div className="flex items-center justify-between pt-1 border-t border-slate-200/70 dark:border-slate-800">
-                  <span className="text-[11px] text-slate-500">
-                    Avg Chg: <span className={sec.avgChangePct >= 0 ? 'text-emerald-600' : 'text-red-600'}>{formatPct(sec.avgChangePct)}</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onInspectSymbol(sec.leaderSymbol)}
-                    className="text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Leader: {sec.leaderSymbol} →
-                  </button>
+
+                <div className="xl:col-span-5 space-y-2">
+                  <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    Quadrant Breakdown &amp; Institutional Ticket Leaders
+                  </div>
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden text-xs">
+                    {radar.sectorRotationMatrix.slice(0, 8).map((n) => (
+                      <div key={n.sector} className="px-3 py-2 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                            {n.sector}
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-500">
+                            RS {n.rsRatio.toFixed(1)} · Mom {n.rsMomentum.toFixed(1)} · Avg Ticket Rs {formatInt(n.avgTradeSizeNpr)}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div
+                            className={`font-semibold text-[11px] ${
+                              n.quadrant === 'Leading'
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : n.quadrant === 'Improving'
+                                  ? 'text-blue-600 dark:text-blue-400'
+                                  : n.quadrant === 'Weakening'
+                                    ? 'text-amber-600 dark:text-amber-400'
+                                    : 'text-red-600 dark:text-red-400'
+                            }`}
+                          >
+                            {n.quadrant}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onInspectSymbol(n.leaderSymbol)}
+                            className="font-mono text-[11px] text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            {n.leaderSymbol} ({formatPct(n.leaderChangePct)})
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))}
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {(radar?.sectorLeaders ?? []).map((sec) => (
+                <div
+                  key={sec.sector}
+                  className="p-3.5 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{sec.sector}</span>
+                    <span
+                      className={`font-mono font-semibold ${
+                        sec.rotationDeltaPct >= 0
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
+                      {sec.rotationDeltaPct >= 0 ? '+' : ''}
+                      {sec.rotationDeltaPct.toFixed(1)}% share vs {nDays}d
+                    </span>
+                  </div>
+                  <div className="flex justify-between font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                    <span>Share: {sec.turnoverSharePct.toFixed(1)}% (avg {sec.avgTurnoverShareN.toFixed(1)}%)</span>
+                    <span>{sec.turnoverVsAvgN.toFixed(1)}x {nDays}d turn</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/70 dark:border-slate-800">
+                    <span className="text-[11px] text-slate-500">
+                      Avg Chg: <span className={sec.avgChangePct >= 0 ? 'text-emerald-600' : 'text-red-600'}>{formatPct(sec.avgChangePct)}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onInspectSymbol(sec.leaderSymbol)}
+                      className="text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Leader: {sec.leaderSymbol} →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : activeRows.length === 0 ? (
           <div className="py-8 text-center text-xs text-slate-400">
@@ -699,6 +812,97 @@ export const OpportunityRadarView: React.FC<OpportunityRadarViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Smart-Money Accumulation & Pocket Pivot Leaders */}
+      {radar?.smartMoneyLeaders && radar.smartMoneyLeaders.length > 0 && (
+        <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Smart-Money Accumulation &amp; Pocket Pivot Leaders ({selectedDay})
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Ranked by institutional Rs/transaction expansion vs {nDays}d baseline, Up/Down volume imbalance, Stage-2 structure, and 10-day Pocket Pivots
+              </p>
+            </div>
+            <span className="text-[11px] font-mono text-slate-400">
+              Top {radar.smartMoneyLeaders.length} accumulation footprints
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+                  <th className="py-2 pr-3 text-left font-medium">Stock · Sector</th>
+                  <th className="py-2 px-2 text-right font-medium">LTP · Chg %</th>
+                  <th className="py-2 px-2 text-right font-medium">SM Score</th>
+                  <th className="py-2 px-2 text-right font-medium">Avg Rs / Tx</th>
+                  <th className="py-2 px-2 text-right font-medium">Up/Dn Vol</th>
+                  <th className="py-2 px-2 text-center font-medium">Pocket Pivot</th>
+                  <th className="py-2 px-2 text-right font-medium">Stage-2</th>
+                  <th className="py-2 px-2 text-right font-medium">vs VWAP</th>
+                  <th className="py-2 pl-2 text-right font-medium">Inspect</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono tabular-nums">
+                {radar.smartMoneyLeaders.map((sm) => (
+                  <tr key={sm.symbol} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="py-2 pr-3 font-sans">
+                      <button
+                        type="button"
+                        onClick={() => onInspectSymbol(sm.symbol)}
+                        className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {sm.symbol}
+                      </button>
+                      <span className="block text-[11px] text-slate-400 truncate max-w-[160px]">{sm.sector}</span>
+                    </td>
+                    <td className="py-2 px-2 text-right">
+                      <div>{formatNum(sm.ltp)}</div>
+                      <div className={`text-[11px] ${sm.changePct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {formatPct(sm.changePct)}
+                      </div>
+                    </td>
+                    <td className="py-2 px-2 text-right font-semibold text-slate-900 dark:text-slate-100">
+                      {sm.smartMoneyScore.toFixed(0)}/100
+                    </td>
+                    <td className="py-2 px-2 text-right">
+                      <div>Rs {formatInt(sm.avgTradeSizeNpr)}</div>
+                      <div className="text-[11px] text-amber-600 dark:text-amber-400">{sm.avgTradeSizeMult.toFixed(2)}x</div>
+                    </td>
+                    <td className="py-2 px-2 text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                      {sm.upDownVolRatio.toFixed(2)}x
+                    </td>
+                    <td className="py-2 px-2 text-center font-sans">
+                      {sm.pocketPivot ? (
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">Pocket Pivot ✓</span>
+                      ) : (
+                        <span className="text-slate-400">–</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-right">{sm.stage2ProxyScore}/6</td>
+                    <td className="py-2 px-2 text-right">{sm.vwapPct !== null ? formatPct(sm.vwapPct) : '–'}</td>
+                    <td className="py-2 pl-2 text-right font-sans">
+                      <div className="inline-flex items-center gap-2">
+                        {onInspectInQuant && (
+                          <button
+                            type="button"
+                            onClick={() => onInspectInQuant(sm.symbol)}
+                            className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                          >
+                            Decision Gate →
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Smart Stock Comparison Engine */}
       <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-4">

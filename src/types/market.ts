@@ -307,6 +307,35 @@ export interface RadarPoint {
   headline: string;
 }
 
+export interface SectorRotationQuadrantNode {
+  sector: string;
+  stockCount: number;
+  rsRatio: number; // centered around 100
+  rsMomentum: number; // centered around 100
+  quadrant: 'Leading' | 'Improving' | 'Weakening' | 'Lagging';
+  turnoverSharePct: number;
+  rotationDeltaPct: number;
+  avgChangePct: number;
+  avgTradeSizeNpr: number;
+  leaderSymbol: string;
+  leaderChangePct: number;
+}
+
+export interface SmartMoneyRadarRow {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  changePct: number;
+  smartMoneyScore: number;
+  avgTradeSizeNpr: number;
+  avgTradeSizeMult: number;
+  upDownVolRatio: number;
+  pocketPivot: boolean;
+  stage2ProxyScore: number;
+  vwapPct: number | null;
+}
+
 export interface OpportunityRadarResponse {
   date: string;
   nDays: number;
@@ -316,6 +345,8 @@ export interface OpportunityRadarResponse {
   divergences: RadarPoint[];
   breakoutWatchlist: RadarPoint[];
   sectorLeaders: SectorPulseMetric[];
+  sectorRotationMatrix?: SectorRotationQuadrantNode[];
+  smartMoneyLeaders?: SmartMoneyRadarRow[];
 }
 
 export interface CompareStockSummary {

@@ -1,4 +1,6 @@
-import type { PriceRow } from '../src/types/market.ts';
+import fs from 'fs';
+import path from 'path';
+import type { PriceRow, StockResearchResponse } from '../src/types/market.ts';
 import type {
   BacktestResponse,
   DataQualityIssue,
@@ -6,24 +8,33 @@ import type {
   EntryConditionCheck,
   EntryTimingPlan,
   ExitManagementPlan,
+  FundamentalConfluence,
+  HighConvictionFeedResponse,
+  HorizonKind,
   MarketRegimeLabel,
   MarketRegimeReport,
   MonteCarloStressSummary,
   NepseIndexPoint,
+  PocketPivotSignal,
   PositionSizingPlan,
+  PyramidPlan,
   QuantEngineConfig,
   QuantEngineResponse,
   QuantStockCandidate,
   RegimeConditionalStat,
+  RMultipleBucket,
   SectorRegimeStrength,
   SetupStatisticalSummary,
   SetupStrategyKind,
   SimulatedTradeRecord,
+  SmartMoneyFootprint,
+  Stage2TemplateChecks,
   StockIndicatorsSnapshot,
   SymbolDataQuality,
   TechnicalComponentScore,
   TradeClassification,
   WalkForwardFold,
+  WinnerTrailingComparison,
 } from '../src/types/quant.ts';
 import {
   calcNepseBrokerFee,
@@ -188,6 +199,289 @@ function computeMonteCarloSequenceStress(
     maxConsecutiveLossesP95: pickPct(maxLossStreaks, 0.95),
     methodologyNote:
       `1,000 deterministic bootstrap resamples (with replacement) from the ${n} actual historical simulated net trade returns (15% allocation weight per trade). Measures both outcome variance and sequence drawdown risk without fabricating synthetic trades.`,
+  };
+}
+
+function buildRMultipleDistribution(trades: SimulatedTradeRecord[]): RMultipleBucket[] {
+  const buckets: Array<{ label: string; test: (r: number) => boolean }> = [
+    { label: '< -1R', test: (r) => r < -1 },
+    { label: '-1R to 0R', test: (r) => r >= -1 && r <= 0 },
+    { label: '0R to 1R', test: (r) => r > 0 && r < 1 },
+    { label: '1R to 2R', test: (r) => r >= 1 && r < 2 },
+    { label: '2R to 3R', test: (r) => r >= 2 && r < 3 },
+    { label: '>= 3R', test: (r) => r >= 3 },
+  ];
+  const total = Math.max(1, trades.length);
+  return buckets.map((b) => {
+    const matched = trades.filter((t) => b.test(t.rMultipleNet));
+    return {
+      label: b.label,
+      count: matched.length,
+      pctOfTrades: round1((matched.length / total) * 100),
+      avgNetReturnPct: matched.length > 0 ? round2(mean(matched.map((t) => t.netReturnPct))) : 0,
+    };
+  });
+}
+
+function buildStage2AndPocketPivot(
+  bars: PriceRow[],
+  last: PriceRow,
+  sma20: number | null,
+  sma50: number | null,
+  ema20: number | null,
+  sma50SlopePct: number | null,
+  rsVsNepse20d: number | null,
+  upDownVolRatio20: number,
+  totalSessionsInStore: number
+): { stage2: Stage2TemplateChecks; pocketPivot: PocketPivotSignal } {
+  const aboveSma50 = sma50 !== null && last.close > sma50;
+  const aboveMa120And180 =
+    Boolean(last.d120 || last.d180) &&
+    (last.d120 ? last.close > last.d120 : true) &&
+    (last.d180 ? last.close > last.d180 : true);
+  const sma20AboveSma50 = sma20 !== null && sma50 !== null && sma20 > sma50;
+  const prev15 = bars.length >= 16 ? bars[bars.length - 16] : null;
+  const ma120Rising =
+    prev15?.d120 && last.d120 ? last.d120 >= prev15.d120 : (sma50SlopePct ?? 0) > 0;
+  const above52wLow25Pct =
+    last.w52_low !== null && last.w52_low > 0 ? last.close >= last.w52_low * 1.25 : false;
+  const within20Pct52wHigh =
+    last.w52_high !== null && last.w52_high > 0
+      ? ((last.w52_high - last.close) / last.w52_high) * 100 <= 20
+      : false;
+  const positive20dRs = (rsVsNepse20d ?? -1) > 0;
+  const positiveAccumulation = upDownVolRatio20 >= 1.25;
+
+  const checks = [
+    aboveSma50,
+    aboveMa120And180,
+    sma20AboveSma50,
+    ma120Rising,
+    above52wLow25Pct,
+    within20Pct52wHigh,
+    positive20dRs,
+    positiveAccumulation,
+  ];
+  const scoreOutOf8 = checks.filter(Boolean).length;
+
+  const prior10 = bars.slice(-11, -1);
+  const maxDownVol10 = prior10
+    .filter((b) => b.diff < 0)
+    .reduce((mx, b) => Math.max(mx, b.volume), 0);
+  const volRatio = maxDownVol10 > 0 ? round2(last.volume / maxDownVol10) : 0;
+  const anchorMa = ema20 ?? sma20;
+  const nearSupport =
+    anchorMa !== null ? last.close >= anchorMa * 0.97 && last.close <= anchorMa * 1.12 : true;
+  const detected = last.diff > 0 && maxDownVol10 > 0 && last.volume > maxDownVol10 && nearSupport;
+
+  const pocketPivot: PocketPivotSignal = {
+    detected,
+    volumeRatioVsMaxDown10: volRatio,
+    maxDownVolume10: Math.round(maxDownVol10),
+    detail: detected
+      ? `Pocket Pivot confirmed: ${volRatio}x largest 10-day down-day volume near MA support.`
+      : maxDownVol10 > 0
+        ? `Today volume is ${volRatio}x max 10-day down volume (${Math.round(maxDownVol10).toLocaleString('en-US')}).`
+        : 'Insufficient down-day reference sessions in trailing 10 bars.',
+  };
+
+  return {
+    stage2: {
+      scoreOutOf8,
+      aboveSma50,
+      aboveMa120And180,
+      sma20AboveSma50,
+      ma120Rising,
+      above52wLow25Pct,
+      within20Pct52wHigh,
+      positive20dRs,
+      positiveAccumulation,
+      isProxyMa200: totalSessionsInStore < 200,
+    },
+    pocketPivot,
+  };
+}
+
+function buildSmartMoneyFootprint(
+  slice20: PriceRow[],
+  last: PriceRow,
+  upDownVolRatio20: number,
+  vwapPct: number | null
+): SmartMoneyFootprint {
+  const avgTradeSizeNpr = last.trans > 0 ? Math.round(last.turnover / last.trans) : 0;
+  const txSizes = slice20.filter((b) => b.trans > 0).map((b) => b.turnover / b.trans);
+  const baseTx = txSizes.length > 0 ? mean(txSizes) : 0;
+  const avgTradeSizeMult20 = baseTx > 0 ? round2(avgTradeSizeNpr / baseTx) : 1;
+  const closePositionPct =
+    last.high > last.low
+      ? round1(clip(((last.close - last.low) / (last.high - last.low)) * 100, 0, 100))
+      : 50;
+
+  const rawScore =
+    clip((upDownVolRatio20 / 2.2) * 40, 0, 40) +
+    clip((avgTradeSizeMult20 / 2.0) * 30, 0, 30) +
+    (closePositionPct / 100) * 20 +
+    ((vwapPct ?? 0) >= 0 ? 10 : 0);
+  const score0to100 = round1(clip(rawScore, 0, 100));
+
+  const label: SmartMoneyFootprint['label'] =
+    score0to100 >= 68 && upDownVolRatio20 >= 1.3
+      ? 'Institutional Accumulation'
+      : score0to100 >= 50
+        ? 'Constructive'
+        : upDownVolRatio20 < 0.8
+          ? 'Distribution'
+          : 'Neutral';
+
+  return {
+    score0to100,
+    upDownVolRatio20,
+    avgTradeSizeNpr,
+    avgTradeSizeMult20,
+    closePositionPct,
+    label,
+  };
+}
+
+function buildFundamentalConfluence(
+  audit: StockResearchResponse | undefined,
+  technicalScore: number,
+  stage2Score: number
+): FundamentalConfluence {
+  if (!audit) {
+    return {
+      hasAudit: false,
+      confluenceScore0to100: round1(clip(technicalScore * 0.65 + (stage2Score / 8) * 25, 0, 100)),
+      catalystTags: ['Technical Only — No Audit Yet'],
+      epsText: 'Unaudited',
+      peText: 'Unaudited',
+      roeText: 'Unaudited',
+      dividendText: 'Unaudited',
+      dataStatus: 'Unavailable',
+      summary: 'No stored fundamental audit yet. Run Refresh Catalysts to merge EPS, PE, ROE & dividend news.',
+    };
+  }
+
+  const fm = audit.financialMetrics;
+  const catalystTags: string[] = [`Audit: ${audit.recommendation}`];
+  const roeNum = fm?.roe ? parseFloat(fm.roe.replace(/[^0-9.-]/g, '')) : NaN;
+  if (!Number.isNaN(roeNum) && roeNum >= 12) catalystTags.push(`ROE ${fm?.roe}`);
+  if (fm?.dividendHistory && !/unavailable|none|nil/i.test(fm.dividendHistory)) {
+    catalystTags.push('Dividend / Bonus History');
+  }
+  if (audit.catalysts && audit.catalysts.length > 0) {
+    catalystTags.push(audit.catalysts[0].headline.slice(0, 46));
+  }
+  if (audit.opportunityCost?.beatsFixedIncome === true) {
+    catalystTags.push('Beats FD Yield');
+  }
+  if ((audit.fundamentalRedFlags?.length ?? 0) > 0) {
+    catalystTags.push(`${audit.fundamentalRedFlags.length} Red Flag(s)`);
+  }
+
+  const fundNet = clip(audit.opportunityScore - Math.max(0, (audit.riskScore - 45) * 0.5), 0, 100);
+  const confluenceScore0to100 = round1(clip(technicalScore * 0.55 + fundNet * 0.45, 0, 100));
+
+  return {
+    hasAudit: true,
+    confluenceScore0to100,
+    catalystTags: catalystTags.slice(0, 4),
+    epsText: fm?.eps || 'Unavailable',
+    peText: fm?.pe || 'Unavailable',
+    roeText: fm?.roe || 'Unavailable',
+    dividendText: fm?.dividendHistory || 'Unavailable',
+    dataStatus: audit.dataStatus,
+    summary: audit.summary || `Fundamental ${audit.recommendation} (${audit.reportingPeriod}).`,
+  };
+}
+
+function buildPyramidPlan(
+  finalQty: number,
+  plannedEntry: number,
+  stopLoss: number,
+  atr14: number,
+  ema20: number | null,
+  sma50: number | null,
+  config: QuantEngineConfig
+): PyramidPlan | null {
+  if (finalQty <= 0 || plannedEntry <= 0 || stopLoss <= 0) return null;
+  const riskPerShare = Math.max(0.5, plannedEntry - stopLoss);
+
+  let q1 = Math.max(10, Math.round(finalQty * 0.5));
+  let q2 = Math.max(0, Math.round(finalQty * 0.3));
+  let q3 = Math.max(0, finalQty - q1 - q2);
+  if (q1 > finalQty) {
+    q1 = finalQty;
+    q2 = 0;
+    q3 = 0;
+  }
+  if (config.risk.enforceTenKitta && finalQty >= 30) {
+    q1 = Math.floor(q1 / 10) * 10;
+    q2 = Math.floor(q2 / 10) * 10;
+    q3 = Math.max(0, finalQty - q1 - q2);
+  }
+
+  const p1 = round2(plannedEntry);
+  const p2 = round2(plannedEntry + riskPerShare * 1.0);
+  const p3 = round2(plannedEntry + riskPerShare * 1.5);
+
+  const c1 = calcNepseBuyCost(q1, p1, config.costs.slippagePct);
+  const c2 = calcNepseBuyCost(q2, p2, config.costs.slippagePct);
+  const c3 = calcNepseBuyCost(q3, p3, config.costs.slippagePct);
+  const totalShares = q1 + q2 + q3;
+  const totalCashNpr = round2(c1.total + c2.total + c3.total);
+  const blendedEntryPrice = totalShares > 0 ? round2((q1 * p1 + q2 * p2 + q3 * p3) / totalShares) : p1;
+  const breakevenLockPrice = round2(blendedEntryPrice * 1.012);
+
+  const stopSellPilot = calcNepseSellProceeds(q1, stopLoss, c1.total, config.costs.slippagePct, config.costs.cgtRate);
+  const initialMaxRiskNpr = round2(Math.max(0, c1.total - stopSellPilot.netReceivable));
+
+  const tranches: PyramidPlan['tranches'] = [
+    {
+      tranche: 1,
+      label: 'Pilot Entry (50%)',
+      sharePct: 50,
+      shares: q1,
+      triggerPrice: p1,
+      stopAfterFill: stopLoss,
+      cashRequiredNpr: round2(c1.total),
+      rule: `Enter ${q1} shares on confirmed trigger; hard initial stop at NPR ${stopLoss}.`,
+    },
+  ];
+  if (q2 > 0) {
+    tranches.push({
+      tranche: 2,
+      label: 'Add-On +1.0R (30%)',
+      sharePct: 30,
+      shares: q2,
+      triggerPrice: p2,
+      stopAfterFill: round2(p1 * 0.995),
+      cashRequiredNpr: round2(c2.total),
+      rule: `Add ${q2} shares only after price clears +1.0R (NPR ${p2}) on ≥1.1x avg volume; lift stop near pilot entry.`,
+    });
+  }
+  if (q3 > 0) {
+    tranches.push({
+      tranche: 3,
+      label: 'Trend Press +1.5R (20%)',
+      sharePct: 20,
+      shares: q3,
+      triggerPrice: p3,
+      stopAfterFill: breakevenLockPrice,
+      cashRequiredNpr: round2(c3.total),
+      rule: `Add final ${q3} shares on first low-volume hold near rising EMA20 above NPR ${p3}; lock full blended breakeven at NPR ${breakevenLockPrice}.`,
+    });
+  }
+
+  return {
+    tranches,
+    blendedEntryPrice,
+    totalShares,
+    totalCashNpr,
+    initialMaxRiskNpr,
+    breakevenLockPrice,
+    swingTrailRule: `Trail winners below rising 20d EMA (${ema20 ? `NPR ${ema20}` : 'N/A'}) or Peak Close - 1.8×ATR14 (NPR ${round2(plannedEntry - 1.8 * atr14)} floor).`,
+    positionalTrailRule: `Hold core Stage-2 winners until decisive weekly/daily close below rising 50d SMA (${sma50 ? `NPR ${sma50}` : 'N/A'}) on ≥1.2x volume or 2.5×ATR14 Chandelier stop.`,
   };
 }
 
@@ -1801,6 +2095,120 @@ export function runQuantBacktest(
     round2(worstDdAbs)
   );
 
+  // Winner-Trailing + Pyramid Comparison Simulation across the same triggered signals
+  const trailingReturns: number[] = [];
+  let eqTrail = config.risk.portfolioValue;
+  let peakTrail = eqTrail;
+  let maxDdTrail = 0;
+
+  for (const baseTr of allTrades) {
+    const bars = store.getSymbolHistory(baseTr.symbol, asOfDate);
+    const sigIdx = bars.findIndex((b) => b.date === baseTr.signalDate);
+    if (sigIdx < 0 || sigIdx + 1 >= bars.length) continue;
+
+    const entryBar = bars[sigIdx + 1];
+    const rawEntry = entryBar.open > 0 ? entryBar.open : entryBar.close;
+    const riskPerShare = Math.max(0.5, rawEntry - baseTr.stopLoss);
+    const pilotShares = Math.max(5, Math.round(baseTr.sharesSimulated * 0.5));
+    const addShares = Math.max(0, baseTr.sharesSimulated - pilotShares);
+    const buyPilot = calcNepseBuyCost(pilotShares, rawEntry, config.costs.slippagePct);
+
+    let totalSharesHeld = pilotShares;
+    let totalCostNpr = buyPilot.total;
+    let pyramided = false;
+    let stopNow = baseTr.stopLoss;
+    let peakClose = entryBar.close;
+    const maxHoldTrail = Math.max(30, config.backtest.holdingDays * 2);
+    const limitIdx = Math.min(bars.length - 1, sigIdx + 1 + maxHoldTrail);
+    let trailExitPrice = bars[limitIdx].close;
+
+    const closesArr = bars.slice(0, limitIdx + 1).map((x) => x.close);
+    const emaSeries = calcEmaSeries(closesArr, 20);
+    const avgVol20Entry = mean(bars.slice(Math.max(0, sigIdx - 19), sigIdx + 1).map((x) => x.volume));
+
+    for (let j = sigIdx + 1; j <= limitIdx; j++) {
+      const b = bars[j];
+      if (anomalousBarKeys.has(`${baseTr.symbol}::${b.date}`)) {
+        trailExitPrice = b.prev_close > 0 ? b.prev_close : rawEntry;
+        break;
+      }
+      peakClose = Math.max(peakClose, b.close);
+
+      if (b.low > 0 && b.low <= stopNow) {
+        trailExitPrice = b.open > 0 && b.open < stopNow ? b.open : stopNow;
+        break;
+      }
+
+      // Pyramid add-on when +1.0R cleared on healthy volume
+      if (!pyramided && addShares > 0 && b.close >= rawEntry + riskPerShare && b.volume >= avgVol20Entry) {
+        const addBuy = calcNepseBuyCost(addShares, b.close, config.costs.slippagePct);
+        totalSharesHeld += addShares;
+        totalCostNpr += addBuy.total;
+        pyramided = true;
+        stopNow = Math.max(stopNow, round2(rawEntry * 1.006));
+      }
+
+      const ema20Now = emaSeries[j] ?? rawEntry;
+      if (b.close >= rawEntry + riskPerShare * 1.3) {
+        const atrGuess = Math.max(1, riskPerShare / Math.max(1, config.backtest.stopAtrMult));
+        stopNow = Math.max(stopNow, round2(Math.max(ema20Now * 0.985, peakClose - atrGuess * 2.2)));
+      }
+
+      if (j > sigIdx + 4 && b.close >= rawEntry + riskPerShare * 1.2 && b.close < ema20Now * 0.985) {
+        trailExitPrice = b.close;
+        break;
+      }
+
+      if (j === limitIdx) {
+        trailExitPrice = b.close;
+      }
+    }
+
+    const sellTrail = calcNepseSellProceeds(
+      totalSharesHeld,
+      trailExitPrice,
+      totalCostNpr,
+      config.costs.slippagePct,
+      config.costs.cgtRate
+    );
+    const netRetTrail = totalCostNpr > 0 ? round2(((sellTrail.netReceivable - totalCostNpr) / totalCostNpr) * 100) : 0;
+    trailingReturns.push(netRetTrail);
+
+    eqTrail = eqTrail * (1 + (netRetTrail / 100) * 0.15);
+    peakTrail = Math.max(peakTrail, eqTrail);
+    const ddTrail = peakTrail > 0 ? ((peakTrail - eqTrail) / peakTrail) * 100 : 0;
+    if (ddTrail > maxDdTrail) maxDdTrail = ddTrail;
+  }
+
+  const fixedWins = allTrades.filter((t) => t.netReturnPct > 0).length;
+  const trailWins = trailingReturns.filter((r) => r > 0).length;
+  const fixedTotalRet =
+    config.risk.portfolioValue > 0 ? round2(((eq - config.risk.portfolioValue) / config.risk.portfolioValue) * 100) : 0;
+  const trailTotalRet =
+    config.risk.portfolioValue > 0
+      ? round2(((eqTrail - config.risk.portfolioValue) / config.risk.portfolioValue) * 100)
+      : 0;
+
+  const winnerLab: WinnerTrailingComparison = {
+    fixedTargetAvgNetPct: allTrades.length > 0 ? round2(mean(allTrades.map((t) => t.netReturnPct))) : 0,
+    fixedTargetWinRatePct: allTrades.length > 0 ? round1((fixedWins / allTrades.length) * 100) : 0,
+    fixedTargetMaxDdPct: round2(worstDdAbs),
+    fixedTotalReturnPct: fixedTotalRet,
+    trailingPyramidAvgNetPct: trailingReturns.length > 0 ? round2(mean(trailingReturns)) : 0,
+    trailingPyramidWinRatePct: trailingReturns.length > 0 ? round1((trailWins / trailingReturns.length) * 100) : 0,
+    trailingPyramidMaxDdPct: round2(maxDdTrail),
+    trailingPyramidTotalReturnPct: trailTotalRet,
+    outlier2RPlusCount: allTrades.filter((t) => t.rMultipleNet >= 2).length,
+    outlier3RPlusCount: allTrades.filter((t) => t.rMultipleNet >= 3).length,
+    outlier20PctCount: allTrades.filter((t) => t.netReturnPct >= 20).length,
+    rDistribution: buildRMultipleDistribution(allTrades),
+    topWinnerCases: [...allTrades]
+      .sort((a, b) => b.rMultipleNet - a.rMultipleNet || b.netReturnPct - a.netReturnPct)
+      .slice(0, 12),
+    methodologyNote:
+      'Compares the conservative T1/T2 exit model against a causal Pilot (50%) + 1.0R Pyramid (50%) strategy trailed dynamically by 20d EMA / 2.2×ATR without a hard upside cap.',
+  };
+
   return {
     backtest: {
       generatedAt: new Date().toISOString(),
@@ -1811,6 +2219,7 @@ export function runQuantBacktest(
       walkForwardFolds,
       equityCurve,
       monteCarlo,
+      winnerLab,
       recentTrades: [...allTrades].reverse().slice(0, 80),
       methodologySafeguards: [
         'No Look-Ahead Bias: Signals on day t only inspect prices/indicators <= t; entries execute on t+1 open with slippage.',
@@ -2425,6 +2834,63 @@ export function runQuantAnalysis(
         : `Historical cohort ${setupStats.reliabilityLabel} (N=${setupStats.sampleSize}); do NOT treat win rate as a forecast.`
       : 'No active setup cohort matched; technical score reflects current price/volume posture only.';
 
+    const { stage2, pocketPivot } = buildStage2AndPocketPivot(
+      bars,
+      last,
+      sma20,
+      sma50,
+      ema20,
+      sma50SlopePct,
+      rsVsNepse20d,
+      upDownVolRatio20,
+      datesUpTo.length
+    );
+    const smartMoney = buildSmartMoneyFootprint(slice20, last, upDownVolRatio20, vwapPct);
+    const fundamentalConfluence = buildFundamentalConfluence(audit, technicalScore, stage2.scoreOutOf8);
+    const pyramidPlan = isExcluded
+      ? null
+      : buildPyramidPlan(finalQty, plannedEntry, stopLoss, setupRes.atr14, ema20, sma50, config);
+
+    if (pocketPivot.detected) patternTags.push('Pocket Pivot');
+    if (stage2.scoreOutOf8 >= 6) patternTags.push(`Stage-2 (${stage2.scoreOutOf8}/8)`);
+    if (smartMoney.label === 'Institutional Accumulation') patternTags.push('Smart-Money Footprint');
+
+    const isSwingSetup =
+      (setupRes.setupType === 'VCP' ||
+        setupRes.setupType === 'Breakout' ||
+        setupRes.setupType === 'Trend Pullback' ||
+        pocketPivot.detected) &&
+      (setupRes.setupStatus === 'Confirmed' || pocketPivot.detected);
+    const isPositionalTrend =
+      stage2.scoreOutOf8 >= 6 &&
+      (last.d120 ? last.close > last.d120 : true) &&
+      (sma50 !== null && sma20 !== null ? sma20 >= sma50 * 0.99 : true);
+
+    const horizonTag: HorizonKind =
+      isSwingSetup && isPositionalTrend && stage2.scoreOutOf8 >= 7 && pocketPivot.detected
+        ? 'Both'
+        : isSwingSetup && !isPositionalTrend
+          ? 'Swing'
+          : isPositionalTrend && !isSwingSetup
+            ? 'Positional'
+            : isSwingSetup
+              ? 'Swing'
+              : isPositionalTrend
+                ? 'Positional'
+                : 'Swing';
+
+    const convictionScore = round1(
+      clip(
+        technicalScore * 0.45 +
+          (stage2.scoreOutOf8 / 8) * 20 +
+          smartMoney.score0to100 * 0.18 +
+          fundamentalConfluence.confluenceScore0to100 * 0.17 +
+          (pocketPivot.detected ? 6 : 0),
+        0,
+        100
+      )
+    );
+
     const candidate: QuantStockCandidate = {
       symbol: sym,
       name,
@@ -2433,6 +2899,13 @@ export function runQuantAnalysis(
       dataTimestamp: `${asOfDate} ShareSansar EOD`,
       dataQuality: updatedDq,
       fundamentalStatus,
+      horizonTag,
+      convictionScore,
+      stage2,
+      pocketPivot,
+      smartMoney,
+      fundamentalConfluence,
+      pyramidPlan,
       indicators,
       technicalScore,
       scoreBreakdown,
@@ -2491,7 +2964,7 @@ export function runQuantAnalysis(
     };
     const rDiff = rankOrder[a.classification] - rankOrder[b.classification];
     if (rDiff !== 0) return rDiff;
-    return b.technicalScore - a.technicalScore;
+    return (b.convictionScore ?? b.technicalScore) - (a.convictionScore ?? a.technicalScore);
   });
 
   const topOpportunities = candidates
@@ -2550,4 +3023,77 @@ export function runQuantAnalysis(
     distributionWarnings,
     backtestSummary: backtest,
   };
+}
+
+const highConvictionCache = new Map<string, { mtimeMs: number; payload: HighConvictionFeedResponse }>();
+
+export function invalidateQuantFeedCache(): void {
+  highConvictionCache.clear();
+}
+
+export function getHighConvictionFeed(
+  store: MarketStore,
+  asOf?: string,
+  equityOnly = true
+): HighConvictionFeedResponse {
+  const allDates = store.getDates();
+  const targetDate = asOf && allDates.includes(asOf) ? asOf : allDates[allDates.length - 1] || '';
+  if (!targetDate) {
+    return {
+      asOfDate: '',
+      regime: 'Neutral',
+      regimeScore: 50,
+      recommendedExposureMinPct: 25,
+      recommendedExposureMaxPct: 55,
+      auditedSymbolsCount: 0,
+      totalValidCount: 0,
+      feed: [],
+    };
+  }
+
+  let intelMtime = 0;
+  try {
+    const intelPath = path.join(store.dataDir, '.fundamental-intel.json');
+    if (fs.existsSync(intelPath)) intelMtime = fs.statSync(intelPath).mtimeMs;
+  } catch {
+    intelMtime = 0;
+  }
+
+  const cacheKey = `${targetDate}::${equityOnly}`;
+  const hit = highConvictionCache.get(cacheKey);
+  if (hit && hit.mtimeMs === intelMtime) {
+    return hit.payload;
+  }
+
+  const full = runQuantAnalysis(store, { asOf: targetDate, equityOnly });
+  const ranked = [...full.candidates]
+    .filter((c) => c.classification !== 'SELL' && c.classification !== 'REJECT' && c.classification !== 'REDUCE')
+    .sort((a, b) => {
+      const rankTier = (c: QuantStockCandidate) =>
+        c.classification === 'STRONG BUY CANDIDATE'
+          ? 0
+          : c.classification === 'BUY CANDIDATE'
+            ? 1
+            : c.classification === 'WAIT FOR CONFIRMATION'
+              ? 2
+              : 3;
+      const tDiff = rankTier(a) - rankTier(b);
+      if (tDiff !== 0) return tDiff;
+      return (b.convictionScore ?? b.technicalScore) - (a.convictionScore ?? a.technicalScore);
+    })
+    .slice(0, 45);
+
+  const payload: HighConvictionFeedResponse = {
+    asOfDate: full.asOfDate,
+    regime: full.marketRegime.regime,
+    regimeScore: full.marketRegime.regimeScore,
+    recommendedExposureMinPct: full.marketRegime.recommendedExposureMinPct,
+    recommendedExposureMaxPct: full.marketRegime.recommendedExposureMaxPct,
+    auditedSymbolsCount: full.candidates.filter((c) => c.fundamentalStatus.hasAudit).length,
+    totalValidCount: full.candidates.length,
+    feed: ranked,
+  };
+
+  highConvictionCache.set(cacheKey, { mtimeMs: intelMtime, payload });
+  return payload;
 }

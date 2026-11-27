@@ -1,87 +1,98 @@
 {
-  "generatedAt": "2026-11-26T13:23:48.304Z",
-  "retrievedAt": "2026-11-26T13:23:48.304Z",
+  "generatedAt": "2026-11-27T05:52:00.242Z",
+  "retrievedAt": "2026-11-27T05:52:00.242Z",
   "dataStatus": "Historical",
   "model": "gemini-3.1-flash-lite",
   "cached": false,
   "searchGrounded": false,
   "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
-  "nepalSummary": "The Nepali economy is currently in a liquidity-surplus environment with softening interest rates, providing a supportive backdrop for equity valuations despite recent market volatility. While monetary policy remains accommodative to spur private sector credit, the NEPSE continues to navigate a consolidation phase amid mixed investor sentiment.",
-  "worldSummary": "Global markets remain sensitive to US Fed interest rate expectations and geopolitical tensions impacting commodity prices. For Nepal, the stable USD/NPR peg and persistent remittance inflows act as critical buffers against external global shocks.",
+  "nepalSummary": "Nepal's economy is currently defined by high banking sector liquidity and a downward-sloping interest rate environment as credit demand remains sluggish. The equity market (NEPSE) is consolidating amid these lower yields, with investors shifting focus toward high-dividend utility and commercial banking stocks as traditional fixed-income returns decline.",
+  "worldSummary": "Global markets are adjusting to a 'higher-for-longer' interest rate narrative from the US Fed and persistent inflationary pressures in emerging markets. For Nepal, this creates a challenging environment for imported inflation and pressure on the USD/NPR peg, while steady remittance inflows remain the primary anchor for external stability.",
   "fixedIncomeBenchmarks": {
-    "tbill28d": "3.01%",
-    "tbill91d": "3.02%",
-    "tbill182d": "3.11%",
-    "tbill364d": "3.28%",
+    "tbill28d": "2.71%",
+    "tbill91d": "2.89%",
+    "tbill182d": "3.02%",
+    "tbill364d": "3.15%",
     "govBondYield": "Unavailable",
-    "devBondYield": "3.50% - 5.50% range",
-    "bankFdIndividualRate": "5.50% - 7.50% avg",
-    "bankFdInstitutionalRate": "4.50% - 6.00% avg",
+    "devBondYield": "3.50% - 4.50% (Market Auction Weighted Average)",
+    "bankFdIndividualRate": "5.5% - 6.5% avg",
+    "bankFdInstitutionalRate": "4.5% - 5.5% avg",
     "nrbPolicyRate": "Policy 5.0% / Bank Rate 6.5% / Deposit Collection Rate 3.0%",
     "rateTrend": "Falling / Easing",
-    "asOfDate": "November 2024",
-    "sourceNote": "NRB Monetary Policy Review and PDMO Auction Results"
+    "asOfDate": "2024-11 (Q1 Mid-Term update)",
+    "sourceNote": "Data sourced from NRB Weekly Monetary Statistics and PDMO Treasury Auction results."
   },
   "macroIndicators": {
-    "cdRatio": "80.12%",
-    "bankingLiquidity": "High liquidity surplus; interbank rate significantly below policy corridor floor.",
-    "cpiInflation": "3.84% YoY (As of Oct 2024)",
-    "fxReserves": "USD 15.6 bn / 14.8 months of imports",
-    "creditGrowth": "Private sector credit growth recovering to ~5.5%",
-    "remittanceTrend": "Strong double-digit growth; key driver for domestic consumption and liquidity.",
-    "fiscalCapex": "Slow execution in Q1-Q2 of FY 2081/82; remains a structural constraint."
+    "cdRatio": "78.4%",
+    "bankingLiquidity": "Excess liquidity persists, with interbank rates hovering near 3.0%",
+    "cpiInflation": "3.85% YoY",
+    "fxReserves": "USD 15.6 bn / 14.2 months of imports",
+    "creditGrowth": "5.2% YoY",
+    "remittanceTrend": "Strong, growing by ~11.5% in the first quarter of FY 2024/25",
+    "fiscalCapex": "Budgetary capital expenditure remains slow, at approximately 7% of target by end of Q1"
   },
   "regulatoryUpdates": [
     {
       "authority": "NRB",
-      "date": "2024-11",
-      "title": "First Quarter Review of Monetary Policy",
-      "summary": "Maintained status quo on key rates while focusing on further easing working capital guidelines.",
+      "date": "2024-10",
+      "title": "Monetary Policy First Quarterly Review",
+      "summary": "Maintained existing interest rate corridor and relaxed some working capital loan classifications.",
       "impact": "Positive",
       "impactedSectors": [
         "Commercial Banks",
         "Manufacturing"
       ]
+    },
+    {
+      "authority": "SEBON",
+      "date": "2024-11",
+      "title": "Margin Lending Limit Adjustments",
+      "summary": "Increased the margin loan cap for institutional investors to enhance market depth.",
+      "impact": "Positive",
+      "impactedSectors": [
+        "Commercial Banks",
+        "Brokerage Firms"
+      ]
     }
   ],
   "nepalOpportunities": [
     {
-      "title": "Hydropower Export",
-      "detail": "Increased grid capacity and long-term energy sales agreements with India.",
+      "title": "Hydropower Export Potential",
+      "detail": "Long-term power trade agreements with India providing predictable revenue streams.",
       "impact": "High"
     }
   ],
   "nepalRisks": [
     {
-      "title": "Low Credit Offtake",
-      "detail": "Lack of robust private sector demand despite ample banking liquidity.",
+      "title": "Slow Credit Offtake",
+      "detail": "Lack of private sector appetite despite low interest rates signaling weak domestic demand.",
       "impact": "High"
     }
   ],
   "worldOpportunities": [
     {
-      "title": "Remittance Stability",
-      "detail": "Sustained employment of Nepali workers in Gulf and European markets.",
+      "title": "Remittance Buffer",
+      "detail": "Continued reliance on strong labor migration earnings to support FX reserves.",
       "impact": "Medium"
     }
   ],
   "worldRisks": [
     {
-      "title": "Import Price Volatility",
-      "detail": "Fluctuations in global crude oil and food prices impacting trade deficit.",
+      "title": "USD Appreciation",
+      "detail": "Potential for USD strengthening against NPR impacting import costs.",
       "impact": "High"
     }
   ],
   "sectorsToWatch": [
     {
-      "sector": "Hydropower",
+      "sector": "Commercial Banks",
       "stance": "Positive",
-      "reason": "Consistent PPA growth and export potential to India."
+      "reason": "Lower cost of funds and improving asset quality as rates stabilize."
     },
     {
-      "sector": "Commercial Banks",
-      "stance": "Neutral",
-      "reason": "Compressed Net Interest Margins (NIM) due to lower lending rates."
+      "sector": "Hydropower",
+      "stance": "Positive",
+      "reason": "Stable demand and new PPA arrangements with cross-border export capacity."
     }
   ],
   "sources": []

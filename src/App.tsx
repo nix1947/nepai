@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
   AlertOctagon,
+  ArrowLeft,
   BarChart3,
   BookOpen,
   CalendarClock,
   CandlestickChart,
   Compass,
+  Crosshair,
   FileWarning,
   Gauge,
   Globe,
@@ -30,6 +32,7 @@ import { useWatchlist } from './hooks/useWatchlist';
 import type { DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
 import { formatTimeUntil } from './utils/format';
 import { AlgorithmsView } from './views/AlgorithmsView';
+import { AnalyzerView } from './views/AnalyzerView';
 import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
 import { OpportunityRadarView } from './views/OpportunityRadarView';
@@ -55,6 +58,7 @@ type NavTab =
   | 'direction'
   | 'scanners'
   | 'explorer'
+  | 'analyzer'
   | 'macro'
   | 'fundamentally-risky'
   | 'technically-risky'
@@ -76,6 +80,7 @@ const NAV_ITEMS: Array<{
   { id: 'direction', label: 'Turnover × Direction', icon: Activity },
   { id: 'scanners', label: 'Scanners', icon: Radar },
   { id: 'explorer', label: 'Stock Explorer', icon: CandlestickChart },
+  { id: 'analyzer', label: 'Auto Analyzer', icon: Crosshair },
   { id: 'macro', label: 'Macro & Risks', icon: Globe },
   { id: 'fundamentally-risky', label: 'Fundamentally Risky Stocks', icon: FileWarning },
   { id: 'technically-risky', label: 'Technically Risky Stocks', icon: ShieldAlert },
@@ -95,6 +100,9 @@ export default function App() {
   const [explorerSymbol, setExplorerSymbol] = useState<string | null>(null);
   const [quantSymbol, setQuantSymbol] = useState<string | null>(null);
   const [quantNavTick, setQuantNavTick] = useState<number>(0);
+  const [navHistory, setNavHistory] = useState<
+    Array<{ tab: NavTab; explorerSymbol: string | null; quantSymbol: string | null }>
+  >([]);
   const [loadingMeta, setLoadingMeta] = useState<boolean>(true);
   const [pulling, setPulling] = useState<boolean>(false);
   const [toast, setToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
@@ -206,16 +214,59 @@ export default function App() {
     }
   };
 
+  const navigateTo = useCallback(
+    (
+      nextTab: NavTab,
+      opts?: { explorerSymbol?: string | null; quantSymbol?: string | null; bumpQuantTick?: boolean }
+    ) => {
+      const nextExp = opts?.explorerSymbol !== undefined ? opts.explorerSymbol : explorerSymbol;
+      const nextQuant = opts?.quantSymbol !== undefined ? opts.quantSymbol : quantSymbol;
+      if (
+        nextTab === activeTab &&
+        nextExp === explorerSymbol &&
+        nextQuant === quantSymbol
+      ) {
+        return;
+      }
+      setNavHistory((prev) => [
+        ...prev.slice(-29),
+        { tab: activeTab, explorerSymbol, quantSymbol },
+      ]);
+      if (opts?.explorerSymbol !== undefined) setExplorerSymbol(opts.explorerSymbol);
+      if (opts?.quantSymbol !== undefined) setQuantSymbol(opts.quantSymbol);
+      if (opts?.bumpQuantTick) setQuantNavTick((n) => n + 1);
+      setActiveTab(nextTab);
+    },
+    [activeTab, explorerSymbol, quantSymbol]
+  );
+
+  const handleBack = useCallback(() => {
+    setNavHistory((prev) => {
+      if (prev.length === 0) return prev;
+      const target = prev[prev.length - 1];
+      setExplorerSymbol(target.explorerSymbol);
+      setQuantSymbol(target.quantSymbol);
+      setActiveTab(target.tab);
+      return prev.slice(0, -1);
+    });
+  }, []);
+
   const inspectSymbol = (symbol: string) => {
-    setExplorerSymbol(symbol);
-    setActiveTab('explorer');
+    navigateTo('explorer', { explorerSymbol: symbol });
   };
 
   const inspectInQuant = (symbol: string) => {
-    setQuantSymbol(symbol);
-    setQuantNavTick((n) => n + 1);
-    setActiveTab('scanners');
+    navigateTo('scanners', { quantSymbol: symbol, bumpQuantTick: true });
   };
+
+  const inspectInAnalyzer = (symbol: string) => {
+    navigateTo('analyzer', { explorerSymbol: symbol });
+  };
+
+  const previousNavItem =
+    navHistory.length > 0
+      ? NAV_ITEMS.find((n) => n.id === navHistory[navHistory.length - 1].tab) ?? null
+      : null;
 
   const currentNav = NAV_ITEMS.find((n) => n.id === activeTab)!;
   const needsMarketData =
@@ -252,7 +303,7 @@ export default function App() {
               key={item.id}
               type="button"
               onClick={() => {
-                setActiveTab(item.id);
+                navigateTo(item.id);
                 setMobileMenuOpen(false);
               }}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
@@ -301,7 +352,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
-                setActiveTab('settings');
+                navigateTo('settings');
                 setMobileMenuOpen(false);
               }}
               className="font-mono font-semibold text-blue-600 dark:text-blue-400 hover:underline tabular-nums"
@@ -368,6 +419,20 @@ export default function App() {
             >
               <Menu className="w-4 h-4" />
             </button>
+            {navHistory.length > 0 && (
+              <button
+                type="button"
+                onClick={handleBack}
+                title={previousNavItem ? `Back to ${previousNavItem.label}` : 'Go back'}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">
+                  {previousNavItem ? `Back · ${previousNavItem.label}` : 'Back'}
+                </span>
+                <span className="sm:hidden">Back</span>
+              </button>
+            )}
             <div className="flex items-center gap-2 text-xs sm:text-sm min-w-0">
               <span className="text-slate-400 dark:text-slate-500 hidden sm:inline whitespace-nowrap">
                 NEPSE
@@ -544,7 +609,9 @@ export default function App() {
                   daily={daily}
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}
-                  onOpenScheduler={() => setActiveTab('scheduler')}
+                  onInspectInQuant={inspectInQuant}
+                  onInspectInAnalyzer={inspectInAnalyzer}
+                  onOpenScheduler={() => navigateTo('scheduler')}
                 />
               )}
               {activeTab === 'pulse' && (
@@ -566,6 +633,7 @@ export default function App() {
                   dates={dates}
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}
+                  onInspectInQuant={inspectInQuant}
                 />
               )}
               {activeTab === 'direction' && (
@@ -590,6 +658,14 @@ export default function App() {
                   equityOnly={equityOnly}
                   initialSymbol={explorerSymbol}
                   onInspectInQuant={inspectInQuant}
+                />
+              )}
+              {activeTab === 'analyzer' && (
+                <AnalyzerView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  allSymbols={allSymbols}
+                  initialSymbol={explorerSymbol}
                 />
               )}
               {activeTab === 'macro' && (

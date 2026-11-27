@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Activity, ShieldCheck } from 'lucide-react';
+import { Activity, ShieldCheck, TrendingUp } from 'lucide-react';
 import { DataTable, type ColumnDef } from '../DataTable';
 import { QuantHelpTip } from '../QuantHelpTip';
 import type {
@@ -167,6 +167,40 @@ export const QuantBacktestTab: React.FC<QuantBacktestTabProps> = ({
     { key: 'isOutOfSample', label: 'Split', align: 'left', render: (t) => (t.isOutOfSample ? 'Out-of-Sample' : 'In-Sample') },
   ];
 
+  const winnerCaseCols: ColumnDef<SimulatedTradeRecord>[] = [
+    { key: 'symbol', label: 'Symbol', align: 'left', render: (t) => <span className="font-semibold text-blue-600 dark:text-blue-400">{t.symbol}</span> },
+    { key: 'setupType', label: 'Setup', align: 'left', render: (t) => t.setupType },
+    { key: 'regimeAtEntry', label: 'Regime', align: 'left', render: (t) => t.regimeAtEntry },
+    {
+      key: 'entryDate',
+      label: 'Window',
+      align: 'left',
+      render: (t) => <span className="font-mono text-xs">{t.entryDate} → {t.exitDate}</span>,
+    },
+    { key: 'holdingDays', label: 'Days Held', align: 'right', render: (t) => `${t.holdingDays}d` },
+    { key: 'exitReason', label: 'Exit Trigger', align: 'left', render: (t) => t.exitReason },
+    {
+      key: 'rMultipleNet',
+      label: 'R-Multiple',
+      align: 'right',
+      render: (t) => (
+        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+          +{t.rMultipleNet.toFixed(2)}R
+        </span>
+      ),
+    },
+    {
+      key: 'netReturnPct',
+      label: 'Net Return %',
+      align: 'right',
+      render: (t) => (
+        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+          +{t.netReturnPct.toFixed(2)}%
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Equity Curve + In-Sample vs Out-of-Sample */}
@@ -299,6 +333,147 @@ export const QuantBacktestTab: React.FC<QuantBacktestTabProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* High-R Outlier & Multi-Week Winner Lab */}
+      {backtest.winnerLab && (
+        <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>High-R Outlier Backtest &amp; Multi-Week Winner Lab</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-4xl">
+                {backtest.winnerLab.methodologyNote}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 text-xs font-mono tabular-nums">
+              <div>
+                <span className="font-sans text-slate-500">2R+ Outliers: </span>
+                <strong className="text-emerald-600 dark:text-emerald-400">{backtest.winnerLab.outlier2RPlusCount}</strong>
+              </div>
+              <div>
+                <span className="font-sans text-slate-500">3R+ Monsters: </span>
+                <strong className="text-emerald-600 dark:text-emerald-400">{backtest.winnerLab.outlier3RPlusCount}</strong>
+              </div>
+              <div>
+                <span className="font-sans text-slate-500">+20% Runs: </span>
+                <strong className="text-blue-600 dark:text-blue-400">{backtest.winnerLab.outlier20PctCount}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            {/* Fixed Target vs Pyramid Winner-Trailing Comparison */}
+            <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-md p-3.5 space-y-2">
+                <div className="font-semibold text-slate-800 dark:text-slate-200">
+                  Baseline: Fixed T1/T2 Exit
+                </div>
+                <div className="space-y-1 font-mono tabular-nums">
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Avg Net / Trade</span>
+                    <span className={backtest.winnerLab.fixedTargetAvgNetPct >= 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-red-600 dark:text-red-400 font-semibold'}>
+                      {backtest.winnerLab.fixedTargetAvgNetPct >= 0 ? '+' : ''}{backtest.winnerLab.fixedTargetAvgNetPct}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Win Rate</span>
+                    <span>{backtest.winnerLab.fixedTargetWinRatePct}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Compounded Return</span>
+                    <span className="font-semibold">{backtest.winnerLab.fixedTotalReturnPct >= 0 ? '+' : ''}{backtest.winnerLab.fixedTotalReturnPct}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Max Drawdown</span>
+                    <span className="text-red-600 dark:text-red-400">-{backtest.winnerLab.fixedTargetMaxDdPct}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-md p-3.5 space-y-2">
+                <div className="font-semibold text-blue-700 dark:text-blue-400">
+                  Pyramid + 20d EMA Winner Trail
+                </div>
+                <div className="space-y-1 font-mono tabular-nums">
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Avg Net / Trade</span>
+                    <span className={backtest.winnerLab.trailingPyramidAvgNetPct >= 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-red-600 dark:text-red-400 font-semibold'}>
+                      {backtest.winnerLab.trailingPyramidAvgNetPct >= 0 ? '+' : ''}{backtest.winnerLab.trailingPyramidAvgNetPct}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Win Rate</span>
+                    <span>{backtest.winnerLab.trailingPyramidWinRatePct}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Compounded Return</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      {backtest.winnerLab.trailingPyramidTotalReturnPct >= 0 ? '+' : ''}{backtest.winnerLab.trailingPyramidTotalReturnPct}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-sans text-slate-500">Max Drawdown</span>
+                    <span className="text-red-600 dark:text-red-400">-{backtest.winnerLab.trailingPyramidMaxDdPct}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* R-Multiple Distribution Bar Histogram */}
+            <div className="lg:col-span-6 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  Net R-Multiple Distribution (Tail Payoff Skew)
+                </span>
+                <span className="text-[11px] font-mono text-slate-500">Count &amp; Avg Net %</span>
+              </div>
+              {(() => {
+                const buckets = backtest.winnerLab.rDistribution;
+                const maxCount = Math.max(1, ...buckets.map((b) => b.count));
+                return (
+                  <div className="space-y-1.5 text-xs">
+                    {buckets.map((b) => {
+                      const isPositive = b.label.startsWith('+') || b.label.includes('1R to') || b.label.includes('2R') || b.label.includes('>= 3R') || b.label.startsWith('0R');
+                      return (
+                        <div key={b.label} className="grid grid-cols-12 items-center gap-2 font-mono tabular-nums">
+                          <span className="col-span-3 text-[11px] text-slate-600 dark:text-slate-300 truncate">
+                            {b.label}
+                          </span>
+                          <div className="col-span-6 h-2.5 bg-slate-100 dark:bg-slate-800 rounded overflow-hidden">
+                            <div
+                              className={`h-full ${isPositive ? 'bg-emerald-500' : 'bg-red-500'}`}
+                              style={{ width: `${Math.max(2, (b.count / maxCount) * 100)}%` }}
+                            />
+                          </div>
+                          <span className="col-span-3 text-right text-[11px] text-slate-700 dark:text-slate-300">
+                            {b.count} ({b.avgNetReturnPct >= 0 ? '+' : ''}{b.avgNetReturnPct}%)
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {backtest.winnerLab.topWinnerCases.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                Top Historical Multi-Week Winner Case Studies (Causal Trailing Simulation)
+              </div>
+              <DataTable
+                rows={backtest.winnerLab.topWinnerCases}
+                columns={winnerCaseCols}
+                rowKey={(t) => `winner-${t.id}`}
+                maxHeightClass="max-h-[250px]"
+              />
+            </div>
+          )}
         </div>
       )}
 

@@ -51,6 +51,8 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
   const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
   const [classFilter, setClassFilter] = useState<'all' | 'actionable' | 'wait' | 'hold_watch' | 'risk_reject'>('all');
   const [setupFilter, setSetupFilter] = useState<'All' | 'Breakout' | 'VCP' | 'Trend Pullback'>('All');
+  const [horizonFilter, setHorizonFilter] = useState<'All' | 'Swing' | 'Positional'>('All');
+  const [stage2OrPivotOnly, setStage2OrPivotOnly] = useState(false);
   const [sectorFilter, setSectorFilter] = useState<string>('All');
   const [minScore, setMinScore] = useState<number>(0);
   const [includeExcludedInTable, setIncludeExcludedInTable] = useState(false);
@@ -70,6 +72,9 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
       if (c.technicalScore < minScore) return false;
       if (sectorFilter !== 'All' && c.sector !== sectorFilter) return false;
       if (setupFilter !== 'All' && c.setupType !== setupFilter) return false;
+      if (horizonFilter === 'Swing' && c.horizonTag !== 'Swing' && c.horizonTag !== 'Both') return false;
+      if (horizonFilter === 'Positional' && c.horizonTag !== 'Positional' && c.horizonTag !== 'Both') return false;
+      if (stage2OrPivotOnly && !c.pocketPivot?.detected && (c.stage2?.scoreOutOf8 ?? 0) < 6) return false;
       if (classFilter === 'actionable') {
         return c.classification === 'STRONG BUY CANDIDATE' || c.classification === 'BUY CANDIDATE';
       }
@@ -80,7 +85,7 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
       }
       return true;
     });
-  }, [candidates, excludedStocks, includeExcludedInTable, minScore, sectorFilter, setupFilter, classFilter]);
+  }, [candidates, excludedStocks, includeExcludedInTable, minScore, sectorFilter, setupFilter, horizonFilter, stage2OrPivotOnly, classFilter]);
 
   const activeCandidate = useMemo(() => {
     const pool = [...candidates, ...excludedStocks];
@@ -180,6 +185,21 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
           <span className="text-xs font-mono text-slate-700 dark:text-slate-300">
             {c.setupType === 'None' ? '–' : `${c.setupType}${c.entryPlan.setupStatus === 'Confirmed' ? ' ✓' : ' (watch)'}`}
           </span>
+        ),
+      },
+      {
+        key: 'stage2',
+        label: 'Horizon · S2',
+        align: 'left',
+        sortValue: (c) => c.convictionScore ?? c.technicalScore,
+        render: (c) => (
+          <div className="text-xs whitespace-nowrap">
+            <span className="text-slate-700 dark:text-slate-300">{c.horizonTag ?? 'Swing'}</span>
+            <span className="font-mono text-slate-500"> · {c.stage2?.scoreOutOf8 ?? 0}/8</span>
+            {c.pocketPivot?.detected && (
+              <span className="ml-1 font-mono font-semibold text-blue-600 dark:text-blue-400">PP</span>
+            )}
+          </div>
         ),
       },
       {
@@ -300,6 +320,17 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
             </select>
 
             <select
+              value={horizonFilter}
+              onChange={(e) => setHorizonFilter(e.target.value as typeof horizonFilter)}
+              aria-label="Filter by holding horizon"
+              className="px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200"
+            >
+              <option value="All">All Horizons</option>
+              <option value="Swing">Swing (5–30d)</option>
+              <option value="Positional">Positional (2–6m)</option>
+            </select>
+
+            <select
               value={sectorFilter}
               onChange={(e) => setSectorFilter(e.target.value)}
               aria-label="Filter by sector"
@@ -311,6 +342,16 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
                 </option>
               ))}
             </select>
+
+            <label className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={stage2OrPivotOnly}
+                onChange={(e) => setStage2OrPivotOnly(e.target.checked)}
+                className="rounded border-slate-300 text-blue-600"
+              />
+              <span>Stage-2 ≥ 6/8 or Pocket Pivot</span>
+            </label>
 
             <label className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-300">
               <span>Min Score: {minScore}</span>
@@ -605,6 +646,96 @@ export const QuantScannerAndCandidateTab: React.FC<QuantScannerAndCandidateTabPr
               </div>
             </div>
           </div>
+
+          {/* Stage-2 Trend Template, Pocket Pivot, Smart-Money & Catalyst Confluence */}
+          {(activeCandidate.stage2 || activeCandidate.smartMoney || activeCandidate.fundamentalConfluence) && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              {activeCandidate.stage2 && (
+                <div className="bg-slate-50 dark:bg-slate-950 rounded-md p-3.5 space-y-2">
+                  <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-slate-100">
+                    <span>Minervini Stage-2 Trend Template</span>
+                    <span className="font-mono text-blue-600 dark:text-blue-400">
+                      {activeCandidate.stage2.scoreOutOf8}/8
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    {[
+                      ['Close > SMA50', activeCandidate.stage2.aboveSma50],
+                      ['Close > MA120/180', activeCandidate.stage2.aboveMa120And180],
+                      ['SMA20 > SMA50', activeCandidate.stage2.sma20AboveSma50],
+                      ['MA120 Rising', activeCandidate.stage2.ma120Rising],
+                      ['≥25% off 52w Low', activeCandidate.stage2.above52wLow25Pct],
+                      ['Within 20% 52w High', activeCandidate.stage2.within20Pct52wHigh],
+                      ['20d RS > 0%', activeCandidate.stage2.positive20dRs],
+                      ['Vol Accumulation', activeCandidate.stage2.positiveAccumulation],
+                    ].map(([lbl, ok]) => (
+                      <div key={String(lbl)} className="flex items-center gap-1.5">
+                        {ok ? (
+                          <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                        ) : (
+                          <X className="w-3 h-3 text-slate-400 shrink-0" />
+                        )}
+                        <span className={ok ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400'}>
+                          {lbl}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {activeCandidate.stage2.isProxyMa200 && (
+                    <div className="text-[10px] text-slate-400">
+                      Uses ShareSansar exchange MA120/MA180 baseline (&lt;200 daily CSV sessions loaded).
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-md p-3.5 space-y-2">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-slate-100">
+                  <span>Pocket Pivot &amp; Smart-Money Footprint</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-300">
+                    {activeCandidate.smartMoney?.score0to100 ?? '–'}/100
+                  </span>
+                </div>
+                {activeCandidate.pocketPivot && (
+                  <div className={`text-[11px] font-medium ${activeCandidate.pocketPivot.detected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                    {activeCandidate.pocketPivot.detected ? 'Pocket Pivot Confirmed ✓ · ' : 'No Pocket Pivot · '}
+                    {activeCandidate.pocketPivot.detail}
+                  </div>
+                )}
+                {activeCandidate.smartMoney && (
+                  <div className="space-y-1 font-mono tabular-nums text-[11px] text-slate-600 dark:text-slate-300">
+                    <div>Classification: <span className="font-sans font-semibold text-slate-800 dark:text-slate-200">{activeCandidate.smartMoney.label}</span></div>
+                    <div>Avg Rs/Tx: Rs {Math.round(activeCandidate.smartMoney.avgTradeSizeNpr).toLocaleString('en-US')} ({activeCandidate.smartMoney.avgTradeSizeMult20.toFixed(2)}x 20d)</div>
+                    <div>20d Up/Dn Vol: {activeCandidate.smartMoney.upDownVolRatio20.toFixed(2)}x · Close Pos: {activeCandidate.smartMoney.closePositionPct.toFixed(0)}%</div>
+                  </div>
+                )}
+              </div>
+
+              {activeCandidate.fundamentalConfluence && (
+                <div className="bg-slate-50 dark:bg-slate-950 rounded-md p-3.5 space-y-2">
+                  <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-slate-100">
+                    <span>Fundamental Catalyst Confluence</span>
+                    <span className="font-mono text-blue-600 dark:text-blue-400">
+                      {activeCandidate.fundamentalConfluence.hasAudit
+                        ? `${activeCandidate.fundamentalConfluence.confluenceScore0to100}/100`
+                        : 'No Audit'}
+                    </span>
+                  </div>
+                  <div className="font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                    EPS {activeCandidate.fundamentalConfluence.epsText} · P/E {activeCandidate.fundamentalConfluence.peText} · ROE {activeCandidate.fundamentalConfluence.roeText}
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    {activeCandidate.fundamentalConfluence.summary}
+                  </p>
+                  {activeCandidate.fundamentalConfluence.catalystTags.length > 0 && (
+                    <div className="text-[11px] text-emerald-700 dark:text-emerald-400">
+                      Catalysts: {activeCandidate.fundamentalConfluence.catalystTags.join(' · ')}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Candlestick Chart + S/R/Stop/Target Overlays */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">

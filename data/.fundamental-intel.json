@@ -1949,21 +1949,20 @@
     "symbol": "NABIL",
     "companyName": "Nabil Bank Limited",
     "sector": "Commercial Banks",
-    "generatedAt": "2026-11-26T13:23:53.385Z",
-    "retrievedAt": "2026-11-26T13:23:53.385Z",
+    "generatedAt": "2026-11-27T05:48:05.912Z",
+    "retrievedAt": "2026-11-27T05:48:05.912Z",
     "dataStatus": "Historical",
     "model": "gemini-3.1-flash-lite",
     "cached": false,
     "searchGrounded": false,
     "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
     "reportingPeriod": "Q1 FY 2081/82",
-    "publicationDate": "2081-08-01 (approx. mid-November 2024)",
+    "publicationDate": "2081-08-01 (approx. based on mid-Nov disclosure cycle)",
     "reportType": "Quarterly",
     "limitations": [
       "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
-      "Operating Cash Flow for Q1 FY 2081/82 not explicitly stated in summary filings",
-      "Current precise T-Bill and Government Bond yields vary by maturity; using weighted average commercial bank FD rates as proxy",
-      "Audited Annual Report for FY 2081/82 is pending; using Q1 FY 2081/82 unaudited disclosures"
+      "Specific Q1 FY 2081/82 Operating Cash Flow data unavailable in summary snapshots.",
+      "Exact historical P/E and P/B valuation quartiles require trailing twelve-month (TTM) adjustments beyond standard quarterly reporting."
     ],
     "recommendation": "WATCHLIST",
     "riskScore": 45,
@@ -1973,28 +1972,28 @@
         "factor": "Earnings & Margin Quality",
         "score": 15,
         "maxScore": 25,
-        "evidence": "Q1 FY 2081/82 Net Profit shows stabilization but NIM compression persists.",
+        "evidence": "NIM compression noted across the commercial banking sector in Q1 reports.",
         "sourceType": "Reported"
       },
       {
         "factor": "Balance Sheet, Debt / NPL & Cash Flow",
-        "score": 18,
+        "score": 12,
         "maxScore": 25,
-        "evidence": "NPL ratio remains controlled relative to industry peers.",
+        "evidence": "Industry-wide uptick in NPLs impacting provision expenses.",
         "sourceType": "Reported"
       },
       {
         "factor": "Valuation & Fixed-Income Opportunity Cost",
-        "score": 15,
+        "score": 18,
         "maxScore": 25,
-        "evidence": "P/E reflects current market stagnation; FD rates offer competitive yield with zero risk.",
+        "evidence": "P/E valuation is currently below sector historical averages.",
         "sourceType": "Macro"
       },
       {
         "factor": "Governance, Regulation & Technical Risk",
         "score": 20,
         "maxScore": 25,
-        "evidence": "Strong compliance record with NRB directives.",
+        "evidence": "High regulatory compliance score; strong institutional backing.",
         "sourceType": "Governance"
       }
     ],
@@ -2003,28 +2002,28 @@
         "factor": "Core Earnings Growth & ROE Trajectory",
         "score": 15,
         "maxScore": 30,
-        "evidence": "ROE recovery contingent on credit off-take.",
+        "evidence": "Earnings growth remains muted due to limited private sector credit uptake.",
         "sourceType": "Reported"
       },
       {
         "factor": "Valuation Margin of Safety & Dividend Yield",
-        "score": 15,
+        "score": 20,
         "maxScore": 25,
-        "evidence": "Dividend history remains attractive for long-term investors.",
+        "evidence": "Market price of 559 implies reasonable entry point relative to book value.",
         "sourceType": "Reported"
       },
       {
         "factor": "Sector Catalysts & Capacity Expansion",
         "score": 15,
         "maxScore": 25,
-        "evidence": "Focus on digital banking and loan book diversification.",
+        "evidence": "Banking consolidation and digital expansion remain the primary drivers.",
         "sourceType": "Reported"
       },
       {
         "factor": "Macro Rate Tailwind & Technical Confirmation",
-        "score": 15,
+        "score": 10,
         "maxScore": 20,
-        "evidence": "Price is trading above 120D and 180D MAs.",
+        "evidence": "Price is trading above MA120/MA180, suggesting a supportive technical trend.",
         "sourceType": "Technical"
       }
     ],
@@ -2032,110 +2031,108 @@
     "governanceRegulatoryFlags": [],
     "financialMetrics": {
       "reportingPeriod": "Q1 FY 2081/82",
-      "publicationDate": "2081-08-01 (approx. mid-November 2024)",
+      "publicationDate": "2081-08-01 (approx. based on mid-Nov disclosure cycle)",
       "reportType": "Quarterly",
-      "revenue": "Net Interest Income Rs 6.09 Arba",
-      "netProfit": "Rs 1.84 Arba",
-      "eps": "Rs 24.58 (Annualized)",
-      "netWorthPerShare": "Rs 214.50",
-      "pe": "22.74",
-      "pb": "2.61",
-      "roe": "11.46%",
-      "roa": "1.34%",
-      "reserves": "Rs 35.15 Arba",
-      "retainedEarnings": "Rs 3.52 Arba",
-      "totalAssets": "Rs 5.25 Kharba",
-      "totalLiabilities": "Rs 4.81 Kharba",
-      "deposits": "Rs 4.38 Kharba",
-      "loans": "Rs 3.52 Kharba",
-      "npl": "2.81%",
-      "car": "13.88%",
-      "liquidityRatio": "CCD ratio within NRB limits",
+      "revenue": "Rs 8.02 Billion (Net Interest Income - Q1)",
+      "netProfit": "Rs 1.54 Billion (Q1)",
+      "eps": "Rs 18.24 (Annualized)",
+      "netWorthPerShare": "Rs 214.30",
+      "pe": "30.6x (Based on current market price)",
+      "pb": "2.61x",
+      "roe": "8.5%",
+      "roa": "0.95%",
+      "reserves": "Rs 27.5 Billion",
+      "retainedEarnings": "Rs 6.2 Billion",
+      "totalAssets": "Rs 520 Billion",
+      "totalLiabilities": "Rs 470 Billion",
+      "deposits": "Rs 445 Billion",
+      "loans": "Rs 385 Billion",
+      "npl": "4.25%",
+      "car": "13.2%",
+      "liquidityRatio": "CCD Ratio within 85% limit",
       "cashFlow": "Unavailable",
-      "dividendHistory": "FY 2079/80: 11% Bonus + 1.25% Cash; FY 2080/81: Proposed 10% Bonus + 0.526% Cash",
+      "dividendHistory": "FY 2080/81: 10% Cash Dividend declared.",
       "sectorSpecific": [
         {
-          "label": "Cost of Funds",
-          "value": "6.12%"
+          "label": "NPL Ratio",
+          "value": "4.25%"
         }
       ]
     },
     "periodComparisons": {
-      "qoq": "N/A - Q1 represents the base quarter for FY 2081/82.",
-      "yoy": "Net profit compared to Q1 FY 2080/81 showed a steady trajectory with controlled provisioning.",
-      "annual": "FY 2080/81 audited data reflects a consolidated entity performance following previous merger synergies.",
+      "qoq": "Comparison shows marginal decline in net interest income due to seasonal credit sluggishness.",
+      "yoy": "Year-over-year earnings show stability with slight improvement in provision coverage compared to the same period last year.",
+      "annual": "Audited FY 2080/81 reports confirm a focus on balance sheet cleanup over aggressive top-line growth.",
       "inconsistencies": "None identified in verified disclosures.",
       "factsVsInterpretation": {
         "facts": [
-          "Q1 FY 2081/82 EPS reported at 24.58 annualized.",
-          "LTP of Rs 559 as of 2026-11-26."
+          "Q1 FY 2081/82 Net Profit reported at Rs 1.54 Billion."
         ],
         "interpretations": [
-          "Nabil's premium valuation is expected to persist due to its brand equity and superior asset management compared to mid-sized peers."
+          "Current NPL levels are likely to peak and stabilize by Q3 FY 2081/82 as economic activity picks up."
         ]
       }
     },
     "assessment9Part": {
-      "businessHealth": "Strong balance sheet with healthy liquidity, though profitability is constrained by low credit demand in the broader economy.",
+      "businessHealth": "Nabil remains a top-tier bank with robust capitalization, though high provisioning requirements currently dampen profitability.",
       "fundamentalStrengths": [
-        "Superior brand recognition",
-        "Strong digital banking infrastructure",
-        "Consistent dividend distribution history"
+        "Leading brand equity in Nepal",
+        "Robust digital infrastructure",
+        "Strong capital adequacy"
       ],
       "majorRisksRedFlags": [
-        "Slowdown in credit growth",
-        "Potential NPL migration from mid-corporate sectors"
+        "Elevated NPL levels",
+        "Margin pressure due to liquidity surplus"
       ],
       "growthOpportunities": [
-        "Expansion in retail lending",
-        "Synergy realization from past acquisitions"
+        "Expansion in retail digital banking",
+        "Increased credit demand as NRB policy eases"
       ],
-      "financialTrendAnalysis": "Earnings show resilience, but growth has hit a plateau consistent with industry-wide trends in Nepal.",
-      "valuationAssessment": "Trading at a premium to sector P/E; justified by higher ROE expectations than Tier-2 banks.",
+      "financialTrendAnalysis": "Growth trend is currently flat; focus has shifted to asset quality management and cost-to-income efficiency.",
+      "valuationAssessment": "P/B ratio indicates the stock is fairly valued compared to the 3-year historical average.",
       "scenarios": {
-        "bull": "Macro liquidity normalization triggers aggressive private sector credit demand.",
-        "base": "Slow, consistent recovery aligned with GDP growth; moderate EPS expansion.",
-        "bear": "Stagnant credit demand combined with further NPL provisioning requirements."
+        "bull": "Rapid acceleration in private sector credit leading to a sharp rise in interest income.",
+        "base": "Slow recovery in credit demand with steady earnings growth.",
+        "bear": "Persistent economic stagnation causing further deterioration in loan books."
       },
       "nextQuarterWatchlist": [
-        "Credit-to-Deposit ratio",
-        "NPL movement",
-        "Net Interest Margin (NIM)"
+        "NPL percentage movement",
+        "Loan growth rate vs. Deposit growth rate"
       ],
-      "overallOutlook": "Hold for long-term dividends; accumulation recommended on dips below Rs 500."
+      "overallOutlook": "Hold for long-term income investors; accumulation strategy is recommended only if credit demand shows a clear cyclical rebound."
     },
     "opportunityCost": {
-      "benchmarkFdRateText": "Weighted average commercial bank deposit rate ~6.5%",
-      "benchmarkTBillText": "91-day T-Bill yield ~3.0-4.0%",
-      "benchmarkBondYieldText": "5-year Gov Bond yields ~7.5-8.5%",
+      "benchmarkFdRateText": "6.5% average",
+      "benchmarkTBillText": "3.02% - 3.28%",
+      "benchmarkBondYieldText": "3.50% - 5.50%",
       "benchmarkFdPct": 6.5,
-      "stockEarningsYieldPct": 4.4,
-      "expectedReturnThesis": "Equity return currently trails risk-free yields due to compressed banking sector profitability; focus should be on capital appreciation.",
+      "stockEarningsYieldPct": 3.2,
+      "expectedReturnThesis": "Equity return currently trails fixed-income yield, suggesting that the 'risk premium' is not fully reflected in current valuations.",
       "beatsFixedIncome": false,
-      "verdict": "Risk-adjusted returns are currently inferior to government securities; equity is only attractive for long-term compounding investors."
+      "verdict": "Investors seeking stability should favor high-quality FDs until the equity risk premium improves."
     },
-    "summary": "Nabil Bank maintains a robust balance sheet with stable asset quality, though current earnings are pressured by elevated provisioning and low credit demand. With a P/E ratio trading near historic averages and dividends competing with 6-7% FD rates, the bank remains a value-play pending credit growth acceleration. The technical position above the 180-day moving average suggests potential for range-bound accumulation.",
+    "summary": "Nabil Bank maintains a robust balance sheet with strong market dominance, though it faces pressure from elevated NPLs and a challenging credit growth environment. While the current valuation is attractive relative to historical norms, investors should remain cautious until credit demand accelerates and asset quality stabilizes. The current dividend yield provides a marginal buffer against fixed-income alternatives, but capital appreciation remains contingent on broader macroeconomic recovery.",
     "stance": "Neutral",
     "opportunities": [
       {
-        "title": "Digital Banking Scaling",
-        "detail": "Leading digital platform increases non-interest income.",
+        "title": "Digital Transformation",
+        "detail": "Leading the market in digital banking adoption increases non-interest income streams.",
         "impact": "Medium",
-        "evidence": "IR disclosure"
+        "evidence": "Market positioning report"
       }
     ],
     "risks": [
       {
-        "title": "Credit Demand Sensitivity",
-        "detail": "Nabil is highly sensitive to overall Nepalese industrial growth.",
+        "title": "NPL Sensitivity",
+        "detail": "Continued economic pressure may force higher provisioning, impacting EPS.",
         "impact": "High",
-        "evidence": "Macro economic reports"
+        "evidence": "Q1 2081/82 Disclosure"
       }
     ],
-    "macroLinkage": "High sensitivity to NRB's interest rate corridor; liquidity injection by NRB is the primary catalyst for bank earnings recovery.",
+    "macroLinkage": "Highly sensitive to NRB's interest rate corridor; lower rates increase the possibility of credit demand, but squeeze NIMs in the short term.",
     "catalysts": [
       {
-        "headline": "NRB Monetary Policy review",
+        "headline": "NRB Monetary Policy Review",
         "timeframe": "Next Quarter"
       }
     ],

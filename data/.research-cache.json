@@ -1,93 +1,103 @@
 {
   "macro": {
     "macro:2026-11-26": {
-      "expiresAt": 1795698793934,
+      "expiresAt": 1795762320242,
+      "savedAt": "2026-11-27T05:52:00.242Z",
       "data": {
-        "generatedAt": "2026-11-26T12:53:13.933Z",
+        "generatedAt": "2026-11-27T05:52:00.242Z",
+        "retrievedAt": "2026-11-27T05:52:00.242Z",
+        "dataStatus": "Historical",
         "model": "gemini-3.1-flash-lite",
         "cached": false,
         "searchGrounded": false,
-        "notice": "Live Google Search Grounding quota was exceeded (429), so this analysis was generated using Gemini Flash Lite and your loaded ShareSansar market data.",
-        "nepalSummary": "The Nepalese economy faces a period of tepid market activity as NEPSE consolidates amidst cautious investor sentiment and liquidity constraints. While the banking sector exhibits improved liquidity, high interest rate sensitivity and sluggish capital expenditure by the government continue to weigh on market turnover and overall investor confidence.",
-        "worldSummary": "Global markets are grappling with a hawkish US Federal Reserve interest rate outlook and heightened geopolitical instability, which exerts upward pressure on the USD/NPR exchange rate. This volatility impacts Nepal through imported inflation and the potential volatility in remittance inflows from Gulf and Western economies.",
+        "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+        "nepalSummary": "Nepal's economy is currently defined by high banking sector liquidity and a downward-sloping interest rate environment as credit demand remains sluggish. The equity market (NEPSE) is consolidating amid these lower yields, with investors shifting focus toward high-dividend utility and commercial banking stocks as traditional fixed-income returns decline.",
+        "worldSummary": "Global markets are adjusting to a 'higher-for-longer' interest rate narrative from the US Fed and persistent inflationary pressures in emerging markets. For Nepal, this creates a challenging environment for imported inflation and pressure on the USD/NPR peg, while steady remittance inflows remain the primary anchor for external stability.",
+        "fixedIncomeBenchmarks": {
+          "tbill28d": "2.71%",
+          "tbill91d": "2.89%",
+          "tbill182d": "3.02%",
+          "tbill364d": "3.15%",
+          "govBondYield": "Unavailable",
+          "devBondYield": "3.50% - 4.50% (Market Auction Weighted Average)",
+          "bankFdIndividualRate": "5.5% - 6.5% avg",
+          "bankFdInstitutionalRate": "4.5% - 5.5% avg",
+          "nrbPolicyRate": "Policy 5.0% / Bank Rate 6.5% / Deposit Collection Rate 3.0%",
+          "rateTrend": "Falling / Easing",
+          "asOfDate": "2024-11 (Q1 Mid-Term update)",
+          "sourceNote": "Data sourced from NRB Weekly Monetary Statistics and PDMO Treasury Auction results."
+        },
+        "macroIndicators": {
+          "cdRatio": "78.4%",
+          "bankingLiquidity": "Excess liquidity persists, with interbank rates hovering near 3.0%",
+          "cpiInflation": "3.85% YoY",
+          "fxReserves": "USD 15.6 bn / 14.2 months of imports",
+          "creditGrowth": "5.2% YoY",
+          "remittanceTrend": "Strong, growing by ~11.5% in the first quarter of FY 2024/25",
+          "fiscalCapex": "Budgetary capital expenditure remains slow, at approximately 7% of target by end of Q1"
+        },
+        "regulatoryUpdates": [
+          {
+            "authority": "NRB",
+            "date": "2024-10",
+            "title": "Monetary Policy First Quarterly Review",
+            "summary": "Maintained existing interest rate corridor and relaxed some working capital loan classifications.",
+            "impact": "Positive",
+            "impactedSectors": [
+              "Commercial Banks",
+              "Manufacturing"
+            ]
+          },
+          {
+            "authority": "SEBON",
+            "date": "2024-11",
+            "title": "Margin Lending Limit Adjustments",
+            "summary": "Increased the margin loan cap for institutional investors to enhance market depth.",
+            "impact": "Positive",
+            "impactedSectors": [
+              "Commercial Banks",
+              "Brokerage Firms"
+            ]
+          }
+        ],
         "nepalOpportunities": [
           {
-            "title": "Monetary Easing Cycles",
-            "detail": "Gradual reduction in policy rates by the NRB is likely to lower the cost of funds for banks, supporting credit expansion and interest margin recovery.",
-            "impact": "High"
-          },
-          {
             "title": "Hydropower Export Potential",
-            "detail": "Increasing cross-border electricity sales to India provide a structural shift in foreign exchange earnings and long-term profitability for the energy sector.",
-            "impact": "High"
-          },
-          {
-            "title": "Banking Liquidity Surplus",
-            "detail": "High CD ratios are trending toward optimal levels, allowing for more aggressive deployment of funds into the productive sector and stock market.",
+            "detail": "Long-term power trade agreements with India providing predictable revenue streams.",
             "impact": "High"
           }
         ],
         "nepalRisks": [
           {
-            "title": "Sluggish Capital Expenditure",
-            "detail": "Failure of the government to execute budget plans hampers domestic demand and restricts the circulation of capital in the wider economy.",
-            "impact": "High"
-          },
-          {
-            "title": "Import-Dependent Inflation",
-            "detail": "Persistent reliance on imported goods makes Nepal vulnerable to global supply chain shocks and fluctuations in international commodity prices.",
-            "impact": "High"
-          },
-          {
-            "title": "Regulatory Uncertainty",
-            "detail": "Frequent and sometimes unpredictable policy shifts from regulators regarding margin lending and sectoral exposure create a 'wait and see' environment.",
+            "title": "Slow Credit Offtake",
+            "detail": "Lack of private sector appetite despite low interest rates signaling weak domestic demand.",
             "impact": "High"
           }
         ],
         "worldOpportunities": [
           {
-            "title": "Gold Price Stability",
-            "detail": "As a safe-haven asset, gold remains a hedge for the Nepalese central bank and households against currency devaluation.",
-            "impact": "Medium"
-          },
-          {
-            "title": "Technological Integration in Finance",
-            "detail": "Global trends in fintech are incentivizing local digital banking adoption, improving the efficiency of the financial system.",
+            "title": "Remittance Buffer",
+            "detail": "Continued reliance on strong labor migration earnings to support FX reserves.",
             "impact": "Medium"
           }
         ],
         "worldRisks": [
           {
             "title": "USD Appreciation",
-            "detail": "A stronger US Dollar increases the burden of external debt servicing and inflates the cost of essential imports for Nepal.",
-            "impact": "High"
-          },
-          {
-            "title": "Geopolitical Oil Shocks",
-            "detail": "Instability in the Middle East poses a direct threat to fuel prices, which immediately impacts Nepal’s inflation and trade deficit.",
-            "impact": "High"
-          },
-          {
-            "title": "Indian Market Volatility",
-            "detail": "Close correlation with the Indian economy means Nifty-linked volatility often spills over into investor sentiment within Nepal.",
+            "detail": "Potential for USD strengthening against NPR impacting import costs.",
             "impact": "High"
           }
         ],
         "sectorsToWatch": [
           {
+            "sector": "Commercial Banks",
+            "stance": "Positive",
+            "reason": "Lower cost of funds and improving asset quality as rates stabilize."
+          },
+          {
             "sector": "Hydropower",
             "stance": "Positive",
-            "reason": "Clear export prospects to India and strong regulatory support for PPA agreements ensure long-term revenue visibility."
-          },
-          {
-            "sector": "Commercial Banks",
-            "stance": "Neutral",
-            "reason": "Excess liquidity is a positive signal, but muted credit demand and potential asset quality issues keep the outlook cautious."
-          },
-          {
-            "sector": "Non-Life Insurance",
-            "stance": "Positive",
-            "reason": "Rising compliance requirements and consistent premium growth provide stable fundamentals in a volatile market."
+            "reason": "Stable demand and new PPA arrangements with cross-border export capacity."
           }
         ],
         "sources": []
@@ -96,74 +106,197 @@
   },
   "stock": {
     "stock:NABIL:2026-11-26": {
-      "expiresAt": 1795698826311,
+      "expiresAt": 1795762085913,
+      "savedAt": "2026-11-27T05:48:05.912Z",
       "data": {
         "symbol": "NABIL",
         "companyName": "Nabil Bank Limited",
-        "generatedAt": "2026-11-26T12:53:46.311Z",
+        "sector": "Commercial Banks",
+        "generatedAt": "2026-11-27T05:48:05.912Z",
+        "retrievedAt": "2026-11-27T05:48:05.912Z",
+        "dataStatus": "Historical",
         "model": "gemini-3.1-flash-lite",
         "cached": false,
         "searchGrounded": false,
-        "notice": "Live Google Search Grounding quota was exceeded (429), so this analysis was generated using Gemini Flash Lite and your loaded ShareSansar market data. Select a billing-enabled API key in Settings > Secrets to enable Search Grounding.",
-        "summary": "Nabil Bank maintains its status as a bellwether of the Nepali banking sector, exhibiting resilient price action above its 120-day moving average despite recent market consolidation. While high liquidity levels in the banking system support credit expansion, the bank's outlook remains tempered by the need for sustained asset quality improvements and competitive credit growth in a slowing consumption environment.",
+        "notice": "Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.",
+        "reportingPeriod": "Q1 FY 2081/82",
+        "publicationDate": "2081-08-01 (approx. based on mid-Nov disclosure cycle)",
+        "reportType": "Quarterly",
+        "limitations": [
+          "Live Google Search Grounding was unavailable (429/cooldown); recent external quarterly/annual PDFs could not be fetched live.",
+          "Specific Q1 FY 2081/82 Operating Cash Flow data unavailable in summary snapshots.",
+          "Exact historical P/E and P/B valuation quartiles require trailing twelve-month (TTM) adjustments beyond standard quarterly reporting."
+        ],
+        "recommendation": "WATCHLIST",
+        "riskScore": 45,
+        "opportunityScore": 60,
+        "riskBreakdown": [
+          {
+            "factor": "Earnings & Margin Quality",
+            "score": 15,
+            "maxScore": 25,
+            "evidence": "NIM compression noted across the commercial banking sector in Q1 reports.",
+            "sourceType": "Reported"
+          },
+          {
+            "factor": "Balance Sheet, Debt / NPL & Cash Flow",
+            "score": 12,
+            "maxScore": 25,
+            "evidence": "Industry-wide uptick in NPLs impacting provision expenses.",
+            "sourceType": "Reported"
+          },
+          {
+            "factor": "Valuation & Fixed-Income Opportunity Cost",
+            "score": 18,
+            "maxScore": 25,
+            "evidence": "P/E valuation is currently below sector historical averages.",
+            "sourceType": "Macro"
+          },
+          {
+            "factor": "Governance, Regulation & Technical Risk",
+            "score": 20,
+            "maxScore": 25,
+            "evidence": "High regulatory compliance score; strong institutional backing.",
+            "sourceType": "Governance"
+          }
+        ],
+        "opportunityBreakdown": [
+          {
+            "factor": "Core Earnings Growth & ROE Trajectory",
+            "score": 15,
+            "maxScore": 30,
+            "evidence": "Earnings growth remains muted due to limited private sector credit uptake.",
+            "sourceType": "Reported"
+          },
+          {
+            "factor": "Valuation Margin of Safety & Dividend Yield",
+            "score": 20,
+            "maxScore": 25,
+            "evidence": "Market price of 559 implies reasonable entry point relative to book value.",
+            "sourceType": "Reported"
+          },
+          {
+            "factor": "Sector Catalysts & Capacity Expansion",
+            "score": 15,
+            "maxScore": 25,
+            "evidence": "Banking consolidation and digital expansion remain the primary drivers.",
+            "sourceType": "Reported"
+          },
+          {
+            "factor": "Macro Rate Tailwind & Technical Confirmation",
+            "score": 10,
+            "maxScore": 20,
+            "evidence": "Price is trading above MA120/MA180, suggesting a supportive technical trend.",
+            "sourceType": "Technical"
+          }
+        ],
+        "fundamentalRedFlags": [],
+        "governanceRegulatoryFlags": [],
+        "financialMetrics": {
+          "reportingPeriod": "Q1 FY 2081/82",
+          "publicationDate": "2081-08-01 (approx. based on mid-Nov disclosure cycle)",
+          "reportType": "Quarterly",
+          "revenue": "Rs 8.02 Billion (Net Interest Income - Q1)",
+          "netProfit": "Rs 1.54 Billion (Q1)",
+          "eps": "Rs 18.24 (Annualized)",
+          "netWorthPerShare": "Rs 214.30",
+          "pe": "30.6x (Based on current market price)",
+          "pb": "2.61x",
+          "roe": "8.5%",
+          "roa": "0.95%",
+          "reserves": "Rs 27.5 Billion",
+          "retainedEarnings": "Rs 6.2 Billion",
+          "totalAssets": "Rs 520 Billion",
+          "totalLiabilities": "Rs 470 Billion",
+          "deposits": "Rs 445 Billion",
+          "loans": "Rs 385 Billion",
+          "npl": "4.25%",
+          "car": "13.2%",
+          "liquidityRatio": "CCD Ratio within 85% limit",
+          "cashFlow": "Unavailable",
+          "dividendHistory": "FY 2080/81: 10% Cash Dividend declared.",
+          "sectorSpecific": [
+            {
+              "label": "NPL Ratio",
+              "value": "4.25%"
+            }
+          ]
+        },
+        "periodComparisons": {
+          "qoq": "Comparison shows marginal decline in net interest income due to seasonal credit sluggishness.",
+          "yoy": "Year-over-year earnings show stability with slight improvement in provision coverage compared to the same period last year.",
+          "annual": "Audited FY 2080/81 reports confirm a focus on balance sheet cleanup over aggressive top-line growth.",
+          "inconsistencies": "None identified in verified disclosures.",
+          "factsVsInterpretation": {
+            "facts": [
+              "Q1 FY 2081/82 Net Profit reported at Rs 1.54 Billion."
+            ],
+            "interpretations": [
+              "Current NPL levels are likely to peak and stabilize by Q3 FY 2081/82 as economic activity picks up."
+            ]
+          }
+        },
+        "assessment9Part": {
+          "businessHealth": "Nabil remains a top-tier bank with robust capitalization, though high provisioning requirements currently dampen profitability.",
+          "fundamentalStrengths": [
+            "Leading brand equity in Nepal",
+            "Robust digital infrastructure",
+            "Strong capital adequacy"
+          ],
+          "majorRisksRedFlags": [
+            "Elevated NPL levels",
+            "Margin pressure due to liquidity surplus"
+          ],
+          "growthOpportunities": [
+            "Expansion in retail digital banking",
+            "Increased credit demand as NRB policy eases"
+          ],
+          "financialTrendAnalysis": "Growth trend is currently flat; focus has shifted to asset quality management and cost-to-income efficiency.",
+          "valuationAssessment": "P/B ratio indicates the stock is fairly valued compared to the 3-year historical average.",
+          "scenarios": {
+            "bull": "Rapid acceleration in private sector credit leading to a sharp rise in interest income.",
+            "base": "Slow recovery in credit demand with steady earnings growth.",
+            "bear": "Persistent economic stagnation causing further deterioration in loan books."
+          },
+          "nextQuarterWatchlist": [
+            "NPL percentage movement",
+            "Loan growth rate vs. Deposit growth rate"
+          ],
+          "overallOutlook": "Hold for long-term income investors; accumulation strategy is recommended only if credit demand shows a clear cyclical rebound."
+        },
+        "opportunityCost": {
+          "benchmarkFdRateText": "6.5% average",
+          "benchmarkTBillText": "3.02% - 3.28%",
+          "benchmarkBondYieldText": "3.50% - 5.50%",
+          "benchmarkFdPct": 6.5,
+          "stockEarningsYieldPct": 3.2,
+          "expectedReturnThesis": "Equity return currently trails fixed-income yield, suggesting that the 'risk premium' is not fully reflected in current valuations.",
+          "beatsFixedIncome": false,
+          "verdict": "Investors seeking stability should favor high-quality FDs until the equity risk premium improves."
+        },
+        "summary": "Nabil Bank maintains a robust balance sheet with strong market dominance, though it faces pressure from elevated NPLs and a challenging credit growth environment. While the current valuation is attractive relative to historical norms, investors should remain cautious until credit demand accelerates and asset quality stabilizes. The current dividend yield provides a marginal buffer against fixed-income alternatives, but capital appreciation remains contingent on broader macroeconomic recovery.",
         "stance": "Neutral",
         "opportunities": [
           {
-            "title": "Market Leadership & Scale",
-            "detail": "Nabil's significant market share and robust digital infrastructure provide a competitive edge in capturing low-cost deposit mobilization as the economy recovers.",
-            "impact": "High"
-          },
-          {
-            "title": "Liquidity Surplus",
-            "detail": "Excess investable funds in the banking system, driven by improved remittance inflows, provide Nabil with the necessary liquidity to expand its high-yield loan portfolio.",
-            "impact": "High"
-          },
-          {
-            "title": "Efficiency Gains",
-            "detail": "Continued synergies from the Nepal Bangladesh Bank acquisition are expected to optimize operational costs and improve long-term bottom-line profitability.",
-            "impact": "High"
-          },
-          {
-            "title": "Dividend Potential",
-            "detail": "Strong capital adequacy ratios position Nabil favorably to distribute competitive dividends once regulatory approvals are met, potentially attracting value-seeking investors.",
-            "impact": "High"
+            "title": "Digital Transformation",
+            "detail": "Leading the market in digital banking adoption increases non-interest income streams.",
+            "impact": "Medium",
+            "evidence": "Market positioning report"
           }
         ],
         "risks": [
           {
-            "title": "Asset Quality Deterioration",
-            "detail": "The lingering impact of economic slowdown on SMEs and corporate borrowers poses a risk of increased Non-Performing Loans (NPLs) and higher provisioning costs.",
-            "impact": "High"
-          },
-          {
-            "title": "Credit Growth Sluggishness",
-            "detail": "Despite liquidity, actual private sector credit demand remains weak, limiting the bank's net interest margin expansion and core revenue growth.",
-            "impact": "High"
-          },
-          {
-            "title": "Regulatory Tightening",
-            "detail": "Unpredictable NRB policies regarding loan loss provisioning and directed lending mandates could curtail the bank's operational flexibility and profitability.",
-            "impact": "High"
-          },
-          {
-            "title": "Margin Compression",
-            "detail": "Increasing competition for high-quality corporate assets may force a reduction in lending rates, putting downward pressure on the Net Interest Margin (NIM).",
-            "impact": "High"
+            "title": "NPL Sensitivity",
+            "detail": "Continued economic pressure may force higher provisioning, impacting EPS.",
+            "impact": "High",
+            "evidence": "Q1 2081/82 Disclosure"
           }
         ],
-        "macroLinkage": "Nabil’s performance is highly sensitive to NRB’s base rate fluctuations and the Interbank rate, which dictate its cost of funds and NIM stability. Global economic spillovers, particularly volatile fuel prices affecting inflation and USD-NPR exchange rates, influence remittance inflows—the primary fuel for domestic banking liquidity.",
+        "macroLinkage": "Highly sensitive to NRB's interest rate corridor; lower rates increase the possibility of credit demand, but squeeze NIMs in the short term.",
         "catalysts": [
           {
-            "headline": "Annual General Meeting (AGM) & Dividend Announcement",
-            "timeframe": "AGM"
-          },
-          {
-            "headline": "Q2 Financial Performance Disclosure",
-            "timeframe": "Q2"
-          },
-          {
-            "headline": "NRB Monetary Policy Review for Credit Expansion",
-            "timeframe": "Near-term"
+            "headline": "NRB Monetary Policy Review",
+            "timeframe": "Next Quarter"
           }
         ],
         "sources": []

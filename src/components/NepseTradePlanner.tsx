@@ -9,6 +9,7 @@ import {
 interface NepseTradePlannerProps {
   symbol: string;
   lastClose: number;
+  suggestedEntry?: number | null;
   suggestedStop?: number | null;
   suggestedTarget?: number | null;
 }
@@ -25,13 +26,19 @@ function formatNpr(val: number, decimals = 2): string {
 export const NepseTradePlanner: React.FC<NepseTradePlannerProps> = ({
   symbol,
   lastClose,
+  suggestedEntry,
   suggestedStop,
   suggestedTarget,
 }) => {
   // Open by default with predefined valid parameters
   const [open, setOpen] = useState(true);
 
-  const safeLastClose = lastClose > 0 ? Number(lastClose.toFixed(2)) : 500;
+  const safeEntryBase =
+    suggestedEntry && suggestedEntry > 0
+      ? Number(suggestedEntry.toFixed(2))
+      : lastClose > 0
+        ? Number(lastClose.toFixed(2))
+        : 500;
   const computeDefaultStop = (refPrice: number, sug?: number | null) =>
     sug && sug > 0 && sug < refPrice
       ? Number(sug.toFixed(2))
@@ -44,19 +51,24 @@ export const NepseTradePlanner: React.FC<NepseTradePlannerProps> = ({
   const [capital, setCapital] = useState<number>(200_000);
   const [riskPct, setRiskPct] = useState<number>(1.5);
   const [maxRiskNpr, setMaxRiskNpr] = useState<number>(3_000);
-  const [entry, setEntry] = useState<number>(safeLastClose);
-  const [stop, setStop] = useState<number>(() => computeDefaultStop(safeLastClose, suggestedStop));
+  const [entry, setEntry] = useState<number>(safeEntryBase);
+  const [stop, setStop] = useState<number>(() => computeDefaultStop(safeEntryBase, suggestedStop));
   const [target, setTarget] = useState<number>(() =>
-    computeDefaultTarget(safeLastClose, suggestedTarget)
+    computeDefaultTarget(safeEntryBase, suggestedTarget)
   );
   const [cgtRate, setCgtRate] = useState<number>(0.075);
 
   useEffect(() => {
-    const nextEntry = lastClose > 0 ? Number(lastClose.toFixed(2)) : 500;
+    const nextEntry =
+      suggestedEntry && suggestedEntry > 0
+        ? Number(suggestedEntry.toFixed(2))
+        : lastClose > 0
+          ? Number(lastClose.toFixed(2))
+          : 500;
     setEntry(nextEntry);
     setStop(computeDefaultStop(nextEntry, suggestedStop));
     setTarget(computeDefaultTarget(nextEntry, suggestedTarget));
-  }, [symbol, lastClose, suggestedStop, suggestedTarget]);
+  }, [symbol, lastClose, suggestedEntry, suggestedStop, suggestedTarget]);
 
   // Event-driven bidirectional updates prevent circular dependency loops completely
   const handleCapitalChange = (raw: string) => {

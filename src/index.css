@@ -20,4 +20,16 @@
   .font-mono, .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  label:has(input[type="checkbox"]:not(:disabled)),
+  label:has(input[type="radio"]:not(:disabled)),
+  summary {
+    cursor: pointer;
+  }
 }

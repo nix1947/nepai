@@ -23,6 +23,7 @@ import {
   mergeFinancialSnapshots,
   type CompanyFinancialSnapshot,
 } from '../server/financialScraper.ts';
+import { evaluateLatestHtml } from '../server/scraper.ts';
 
 test('Nepal BS fiscal quarter parsing & quarter-end + 15-day trigger window', () => {
   const parsedQ1 = parseNepalPeriodLabel('1st Quarter 2083/2084');
@@ -453,5 +454,48 @@ test('mergeFinancialSnapshots + buildFinancialCsv + writeConsolidatedQuarterlyCs
     assert.ok(masterCsv.includes('Q4 FY 2082/83'));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('evaluateLatestHtml handles market holidays and zero-data days without throwing', () => {
+  const noRecordHtml = `
+    <html><body>
+      <h5>As of 2026-11-30</h5>
+      <table id="headFixed"><thead><tr><th>Symbol</th><th>Close</th></tr></thead>
+      <tbody><tr><td colspan="2">No Record Found</td></tr></tbody></table>
+    </body></html>
+  `;
+  const noRec = evaluateLatestHtml(noRecordHtml);
+  assert.equal(noRec.status, 'no_data');
+  assert.equal(noRec.date, '2026-11-30');
+
+  const zeroVolHtml = `
+    <html><body>
+      <h5>As of 2026-11-30</h5>
+      <table id="headFixed">
+        <thead><tr><th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>LTP</th><th>Vol</th><th>Prev Close</th><th>Turnover</th><th>Trans</th></tr></thead>
+        <tbody><tr><td>NABIL</td><td>500</td><td>500</td><td>500</td><td>500</td><td>500</td><td>0</td><td>500</td><td>0</td><td>0</td></tr></tbody>
+      </table>
+    </body></html>
+  `;
+  const zeroVol = evaluateLatestHtml(zeroVolHtml);
+  assert.equal(zeroVol.status, 'no_data');
+  assert.match(zeroVol.reason, /Zero volume/i);
+
+  const activeHtml = `
+    <html><body>
+      <h5>As of 2026-11-27</h5>
+      <table id="headFixed">
+        <thead><tr><th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>LTP</th><th>Vol</th><th>Prev Close</th><th>Turnover</th><th>Trans</th></tr></thead>
+        <tbody><tr><td><a title="Nabil Bank">NABIL</a></td><td>510</td><td>515</td><td>505</td><td>512</td><td>512</td><td>12500</td><td>508</td><td>6400000</td><td>142</td></tr></tbody>
+      </table>
+    </body></html>
+  `;
+  const active = evaluateLatestHtml(activeHtml);
+  assert.equal(active.status, 'ok');
+  if (active.status === 'ok') {
+    assert.equal(active.date, '2026-11-27');
+    assert.equal(active.rows.length, 1);
+    assert.equal(active.rows[0].symbol, 'NABIL');
   }
 });

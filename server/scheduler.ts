@@ -465,27 +465,45 @@ export class DailyScheduler {
 
       // 2. ShareSansar pull (when sourceMode is 'sharesansar' or 'both')
       if (this.config.sourceMode === 'sharesansar' || this.config.sourceMode === 'both') {
-        const { date, rows } = await this.scraper.fetchLatest();
+        const feed = await this.scraper.fetchLatestOrHoliday();
         const todayInTz = getDatePartsInTz(new Date(), this.config.timezone).dateStr;
+
+        if (feed.status === 'no_data') {
+          return this.appendLog({
+            trigger,
+            status: totalRows > 0 ? 'success' : 'skipped',
+            tradingDate: latestDate || feed.date,
+            rowsSaved: totalRows,
+            durationMs: Date.now() - started,
+            message: `${notes.length ? `${notes.join('. ')}. ` : ''}Holiday / no trading data: ${feed.reason}.`,
+          });
+        }
+
+        const { date, rows } = feed;
         const alreadyLoaded = this.store.hasDate(date);
 
-        if (
-          trigger === 'scheduled' &&
-          date < todayInTz &&
-          alreadyLoaded &&
-          this.config.retryIfNotUpdated &&
-          !isRetry
-        ) {
-          this.retryTimer = setTimeout(() => {
-            void this.pullLatest('scheduled', true);
-          }, this.config.retryDelayMinutes * 60 * 1000);
+        if (date < todayInTz && alreadyLoaded) {
+          if (trigger === 'scheduled' && this.config.retryIfNotUpdated && !isRetry) {
+            this.retryTimer = setTimeout(() => {
+              void this.pullLatest('scheduled', true);
+            }, this.config.retryDelayMinutes * 60 * 1000);
+            return this.appendLog({
+              trigger,
+              status: totalRows > 0 ? 'success' : 'skipped',
+              tradingDate: latestDate || date,
+              rowsSaved: totalRows,
+              durationMs: Date.now() - started,
+              message: `${notes.length ? `${notes.join('. ')}. ` : ''}Market feed still shows ${date} (before ${todayInTz}). Retrying in ${this.config.retryDelayMinutes} min.`,
+            });
+          }
+
           return this.appendLog({
             trigger,
             status: totalRows > 0 ? 'success' : 'skipped',
             tradingDate: latestDate || date,
             rowsSaved: totalRows,
             durationMs: Date.now() - started,
-            message: `${notes.length ? `${notes.join('. ')}. ` : ''}Market feed still shows ${date} (before ${todayInTz}). Retrying in ${this.config.retryDelayMinutes} min.`,
+            message: `${notes.length ? `${notes.join('. ')}. ` : ''}Market closed / holiday on ${todayInTz}; latest feed remains ${date}.`,
           });
         }
 

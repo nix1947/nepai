@@ -1,14 +1,14 @@
-name: Daily ShareSansar Data Pull (Sun-Fri)
+name: Daily ShareSansar Data Pull (Mon-Fri)
 
 on:
   schedule:
-    # Off-peak minutes (avoiding :00, :15, :30, :45) Sunday-Friday after 3:00 PM NPT close
+    # Off-peak minutes (avoiding :00, :15, :30, :45) Monday-Friday (Sunday is off) after 3:00 PM NPT close
     # 3:22 PM NPT (15:22 NPT = 09:37 UTC) - early post-close capture
-    - cron: '37 9 * * 0-5'
+    - cron: '37 9 * * 1-5'
     # 3:52 PM NPT (15:52 NPT = 10:07 UTC) - catches ShareSansar final closing adjustments
-    - cron: '7 10 * * 0-5'
+    - cron: '7 10 * * 1-5'
     # 4:37 PM NPT (16:37 NPT = 10:52 UTC) - final late-settlement fallback
-    - cron: '52 10 * * 0-5'
+    - cron: '52 10 * * 1-5'
   workflow_dispatch:
 
 permissions:

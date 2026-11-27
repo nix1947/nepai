@@ -176,6 +176,67 @@ function parsePriceTable(html: string, dateStr: string): PriceRow[] {
   return rows;
 }
 
+export type LatestFeedResult =
+  | { status: 'ok'; date: string; rows: PriceRow[] }
+  | { status: 'no_data'; date: string | null; rows: []; reason: string };
+
+export function evaluateLatestHtml(html: string): LatestFeedResult {
+  const $ = cheerio.load(html);
+  const dateStr = extractDateFromHtml(html);
+  const hasPriceTable = $('#headFixed').length > 0 || $('table').length > 0;
+  const bodyText = $('body').text() || html;
+  const holidayBannerMatch = bodyText.match(
+    /\b(no record found|no trading|public holiday|market closed|market is closed)\b/i
+  );
+
+  if (!dateStr) {
+    if (hasPriceTable || holidayBannerMatch) {
+      return {
+        status: 'no_data',
+        date: null,
+        rows: [],
+        reason: holidayBannerMatch
+          ? `ShareSansar reported "${holidayBannerMatch[0]}"`
+          : 'No trading date published on market feed page (holiday or closed)',
+      };
+    }
+    throw new Error('Could not determine the trading date from market feed page.');
+  }
+
+  if (holidayBannerMatch && !$('#headFixed tbody tr').length) {
+    return {
+      status: 'no_data',
+      date: dateStr,
+      rows: [],
+      reason: `ShareSansar reported "${holidayBannerMatch[0]}" for ${dateStr}`,
+    };
+  }
+
+  const rows = parsePriceTable(html, dateStr);
+  if (rows.length === 0) {
+    return {
+      status: 'no_data',
+      date: dateStr,
+      rows: [],
+      reason: `Market feed returned 0 rows for ${dateStr} (holiday or no trading data)`,
+    };
+  }
+
+  const hasAnyTradingActivity = rows.some(
+    (r) => r.volume > 0 || r.turnover > 0 || r.trans > 0
+  );
+  if (!hasAnyTradingActivity) {
+    return {
+      status: 'no_data',
+      date: dateStr,
+      rows: [],
+      reason: `Zero volume and turnover across all ${rows.length} symbols for ${dateStr} (holiday or closed)`,
+    };
+  }
+
+  return { status: 'ok', date: dateStr, rows };
+}
+
 export class ShareSansarClient {
   private async initSession(): Promise<SessionContext> {
     const controller = new AbortController();
@@ -206,17 +267,17 @@ export class ShareSansarClient {
     }
   }
 
-  public async fetchLatest(): Promise<{ date: string; rows: PriceRow[] }> {
+  public async fetchLatestOrHoliday(): Promise<LatestFeedResult> {
     const session = await this.initSession();
-    const dateStr = extractDateFromHtml(session.latestHtml);
-    if (!dateStr) {
-      throw new Error('Could not determine the trading date from market feed page.');
+    return evaluateLatestHtml(session.latestHtml);
+  }
+
+  public async fetchLatest(): Promise<{ date: string; rows: PriceRow[] }> {
+    const res = await this.fetchLatestOrHoliday();
+    if (res.status !== 'ok') {
+      throw new Error(res.reason);
     }
-    const rows = parsePriceTable(session.latestHtml, dateStr);
-    if (rows.length === 0) {
-      throw new Error(`Market feed returned 0 rows for ${dateStr}.`);
-    }
-    return { date: dateStr, rows };
+    return { date: res.date, rows: res.rows };
   }
 
   public async fetchByDate(

@@ -29,6 +29,10 @@ import type {
 } from '../types/fundamental';
 import { ValuationHealthScoreCard } from '../components/valuation/ValuationHealthScoreCard';
 import { AnnualReportDissectorPanel } from '../components/valuation/AnnualReportDissectorPanel';
+import {
+  FundamentalMenuBar,
+  type FundamentalMenuId,
+} from '../components/FundamentalMenuBar';
 
 interface ValuationViewProps {
   equityOnly: boolean;
@@ -37,6 +41,7 @@ interface ValuationViewProps {
   onInspectInAnalyzer: (symbol: string) => void;
   onInspectInScreener?: (symbol: string) => void;
   onSymbolChange?: (symbol: string) => void;
+  onSelectFundamentalMenu?: (target: FundamentalMenuId, symbol?: string | null) => void;
 }
 
 function fmtRs(v: number | null | undefined, digits = 1): string {
@@ -90,6 +95,7 @@ export const ValuationView: React.FC<ValuationViewProps> = ({
   onInspectInAnalyzer,
   onInspectInScreener,
   onSymbolChange,
+  onSelectFundamentalMenu,
 }) => {
   const [annualWeightPct, setAnnualWeightPct] = useState<number>(70);
   const [universe, setUniverse] = useState<ValuationUniverseResponse | null>(null);
@@ -289,6 +295,14 @@ export const ValuationView: React.FC<ValuationViewProps> = ({
 
   return (
     <div className="space-y-5">
+      {onSelectFundamentalMenu && (
+        <FundamentalMenuBar
+          active="valuation"
+          activeSymbol={selectedSymbol || null}
+          onSelect={onSelectFundamentalMenu}
+        />
+      )}
+
       {/* Header & Weighting Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>

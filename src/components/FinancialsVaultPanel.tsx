@@ -49,16 +49,18 @@ interface FinancialsVaultPanelProps {
   availableSymbols: string[];
   selectedSymbolExternal?: string | null;
   onInspectChart?: (symbol: string) => void;
+  onSymbolChange?: (symbol: string) => void;
 }
 
 export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
   availableSymbols,
   selectedSymbolExternal,
   onInspectChart,
+  onSymbolChange,
 }) => {
   const [savedIndex, setSavedIndex] = useState<SavedFinancialIndexItem[]>([]);
-  const [symbolInput, setSymbolInput] = useState<string>('NABIL');
-  const [activeSymbol, setActiveSymbol] = useState<string>('NABIL');
+  const [symbolInput, setSymbolInput] = useState<string>(selectedSymbolExternal?.toUpperCase() || 'NABIL');
+  const [activeSymbol, setActiveSymbol] = useState<string>(selectedSymbolExternal?.toUpperCase() || 'NABIL');
   const [snapshot, setSnapshot] = useState<CompanyFinancialSnapshot | null>(null);
   const [activeTabKey, setActiveTabKey] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -84,6 +86,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
       setActiveSymbol(clean);
       setSymbolInput(clean);
       setStatusMsg(null);
+      onSymbolChange?.(clean);
 
       if (!forceScrape) {
         setLoading(true);
@@ -131,7 +134,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
         setScraping(false);
       }
     },
-    [loadSavedIndex]
+    [loadSavedIndex, onSymbolChange]
   );
 
   useEffect(() => {
@@ -145,6 +148,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
   }, [selectedSymbolExternal, loadOrScrapeSymbol]);
 
   useEffect(() => {
+    if (selectedSymbolExternal) return;
     // Load initial cached NABIL if present, without forcing scrape on page load
     fetch('/api/financials/NABIL')
       .then((r) => (r.ok ? r.json() : null))
@@ -155,7 +159,7 @@ export const FinancialsVaultPanel: React.FC<FinancialsVaultPanelProps> = ({
         }
       })
       .catch(() => null);
-  }, []);
+  }, [selectedSymbolExternal]);
 
   const handleBatchScrapeTop10 = async () => {
     setBatchScraping(true);

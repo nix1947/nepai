@@ -23,6 +23,10 @@ import {
   Upload,
 } from 'lucide-react';
 import { AnnualTrendCharts } from '../components/annual/AnnualTrendCharts';
+import {
+  FundamentalMenuBar,
+  type FundamentalMenuId,
+} from '../components/FundamentalMenuBar';
 import type {
   AnnualReportIngestResponse,
   AnnualReportIntelligenceResponse,
@@ -41,6 +45,7 @@ interface AnnualReportViewProps {
   onSymbolChange?: (symbol: string) => void;
   onOpenValuation?: (symbol: string) => void;
   onInspectInScreener?: (symbol: string) => void;
+  onSelectFundamentalMenu?: (target: FundamentalMenuId, symbol?: string | null) => void;
 }
 
 const PILLAR_ORDER: AnnualReportPillarId[] = [
@@ -121,6 +126,7 @@ export const AnnualReportView: React.FC<AnnualReportViewProps> = ({
   onSymbolChange,
   onOpenValuation,
   onInspectInScreener,
+  onSelectFundamentalMenu,
 }) => {
   const [universe, setUniverse] = useState<AnnualReportUniverseResponse | null>(null);
   const [selectedSymbol, setSelectedSymbol] = useState<string>(initialSymbol || '');
@@ -422,6 +428,14 @@ export const AnnualReportView: React.FC<AnnualReportViewProps> = ({
 
   return (
     <div className="space-y-6">
+      {onSelectFundamentalMenu && (
+        <FundamentalMenuBar
+          active="annual-reports"
+          activeSymbol={selectedSymbol || null}
+          onSelect={onSelectFundamentalMenu}
+        />
+      )}
+
       {/* Universe Overview Header */}
       <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="space-y-1.5">

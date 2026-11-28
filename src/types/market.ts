@@ -846,6 +846,31 @@ export interface HomepageWowInsight {
   tone: 'emerald' | 'blue' | 'amber' | 'red';
 }
 
+export interface HomepageSmartMoneyFootprint {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  diffPct: number;
+  turnover: number;
+  volume: number;
+  avgTradeSize: number;
+  avgTradeSizeMult: number;
+  upDownVolRatio: number;
+  turnoverMultN: number;
+  volumeMultN: number;
+  closePosPct: number;
+  vwapPct: number | null;
+  pocketPivot: boolean;
+  smartMoneyScore: number;
+  footprintTag:
+    | 'Pocket Pivot'
+    | 'Block Accumulation'
+    | 'Silent Absorption'
+    | 'Institutional Buying'
+    | 'Big-Ticket Exit';
+}
+
 export interface HomepagePulseResponse {
   summary: {
     date: string;
@@ -887,11 +912,15 @@ export interface HomepagePulseResponse {
     lowerCircuitCount: number;
     medianAvgTradeSize: number;
     top5ConcentrationPct: number;
+    ticketDistribution: MarketPulseSummary['ticketDistribution'];
+    smartMoneyAccumCount: number;
+    smartMoneyExitCount: number;
   };
   historyStrip: HomepageHistoryPoint[];
   blowoutScripts: HomepageScriptSpotlight[];
   shortScripts: HomepageScriptSpotlight[];
   unusualActivity: HomepageUnusualStockRow[];
+  smartMoneyFootprints: HomepageSmartMoneyFootprint[];
   topTurnoverUp: HomepageTopTurnoverRow[];
   topTurnoverDown: HomepageTopTurnoverRow[];
   sectorHeatmap: HomepageSectorHeatmapRow[];

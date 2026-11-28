@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Compass,
   Crosshair,
+  Database,
   FileText,
   FileWarning,
   Gauge,
@@ -40,6 +41,7 @@ import {
   type PaletteNavTarget,
 } from './components/CommandPaletteModal';
 import { CompareStocksDrawer } from './components/CompareStocksDrawer';
+import { type FundamentalMenuId } from './components/FundamentalMenuBar';
 import { InfoTip } from './components/InfoTip';
 import {
   OnboardingGuideModal,
@@ -58,6 +60,7 @@ import { evaluateWatchlistAlerts } from './utils/plainEnglish';
 import { AlgorithmsView } from './views/AlgorithmsView';
 import { AnalyzerView } from './views/AnalyzerView';
 import { AnnualReportView } from './views/AnnualReportView';
+import { FinancialsVaultView } from './views/FinancialsVaultView';
 import { FundamentalScreenerView } from './views/FundamentalScreenerView';
 import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
@@ -86,6 +89,7 @@ type NavTab =
   | 'portfolio'
   | 'screener'
   | 'annual-reports'
+  | 'financials-vault'
   | 'valuation'
   | 'overview'
   | 'pulse'
@@ -133,6 +137,7 @@ const NAV_GROUPS: NavGroupConfig[] = [
       { id: 'valuation', label: 'Pricing & Valuation', icon: Scale },
       { id: 'screener', label: 'Fundamental Screener', icon: Award },
       { id: 'annual-reports', label: 'Annual Reports', icon: FileText },
+      { id: 'financials-vault', label: 'Quarterly Financials Vault', icon: Database },
       { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
     ],
   },
@@ -194,7 +199,12 @@ export default function App() {
   const [explorerSymbol, setExplorerSymbol] = useState<string | null>(null);
   const [valuationSymbol, setValuationSymbol] = useState<string | null>(null);
   const [annualReportSymbol, setAnnualReportSymbol] = useState<string | null>(null);
+  const [vaultSymbol, setVaultSymbol] = useState<string | null>(null);
   const [screenerTarget, setScreenerTarget] = useState<{ symbol: string; tick: number } | null>(null);
+  const [screenerSubViewTarget, setScreenerSubViewTarget] = useState<{
+    view: 'screener' | 'gems' | 'monitor';
+    tick: number;
+  } | null>(null);
   const [quantSymbol, setQuantSymbol] = useState<string | null>(null);
   const [quantNavTick, setQuantNavTick] = useState<number>(0);
   const [activeTicker, setActiveTicker] = useState<string | null>(null);
@@ -422,11 +432,37 @@ export default function App() {
     navigateTo('annual-reports');
   };
 
+  const inspectInFinancialsVault = (symbol?: string) => {
+    if (symbol) {
+      const clean = symbol.toUpperCase();
+      setActiveTicker(clean);
+      setVaultSymbol(clean);
+    }
+    navigateTo('financials-vault');
+  };
+
+  const handleSelectFundamentalMenu = (target: FundamentalMenuId, symbol?: string | null) => {
+    const clean = symbol ? symbol.toUpperCase() : undefined;
+    if (target === 'valuation') {
+      inspectInValuation(clean);
+    } else if (target === 'annual-reports') {
+      inspectInAnnualReports(clean);
+    } else if (target === 'financials-vault') {
+      inspectInFinancialsVault(clean);
+    } else {
+      if (clean) setActiveTicker(clean);
+      setScreenerTarget(null);
+      setScreenerSubViewTarget({ view: target, tick: Date.now() });
+      navigateTo('screener');
+    }
+  };
+
   const handleStock360Switch = (view: Stock360Tab, sym: string) => {
     const clean = sym.toUpperCase();
     if (view === 'valuation') inspectInValuation(clean);
     else if (view === 'screener') inspectInScreener(clean);
     else if (view === 'annual-reports') inspectInAnnualReports(clean);
+    else if (view === 'financials-vault') inspectInFinancialsVault(clean);
     else if (view === 'explorer') inspectSymbol(clean);
     else inspectInAnalyzer(clean);
   };
@@ -473,6 +509,7 @@ export default function App() {
     activeTab !== 'portfolio' &&
     activeTab !== 'screener' &&
     activeTab !== 'annual-reports' &&
+    activeTab !== 'financials-vault' &&
     activeTab !== 'valuation' &&
     activeTab !== 'settings';
 
@@ -480,6 +517,7 @@ export default function App() {
     activeTab === 'valuation' ||
     activeTab === 'screener' ||
     activeTab === 'annual-reports' ||
+    activeTab === 'financials-vault' ||
     activeTab === 'explorer' ||
     activeTab === 'analyzer'
       ? activeTab
@@ -489,6 +527,7 @@ export default function App() {
     activeTicker ||
     (activeTab === 'valuation' ? valuationSymbol : null) ||
     (activeTab === 'annual-reports' ? annualReportSymbol : null) ||
+    (activeTab === 'financials-vault' ? vaultSymbol : null) ||
     (activeTab === 'explorer' || activeTab === 'analyzer' ? explorerSymbol : null);
 
   const sidebarContent = (
@@ -907,10 +946,12 @@ export default function App() {
                 <FundamentalScreenerView
                   equityOnly={equityOnly}
                   initialTarget={screenerTarget}
+                  initialSubView={screenerSubViewTarget}
                   onInspectSymbol={inspectSymbol}
                   onInspectInAnalyzer={inspectInAnalyzer}
                   onOpenValuation={inspectInValuation}
                   onSymbolChange={(sym) => setActiveTicker(sym)}
+                  onSelectFundamentalMenu={handleSelectFundamentalMenu}
                 />
               )}
               {activeTab === 'annual-reports' && (
@@ -923,6 +964,19 @@ export default function App() {
                   }}
                   onOpenValuation={inspectInValuation}
                   onInspectInScreener={inspectInScreener}
+                  onSelectFundamentalMenu={handleSelectFundamentalMenu}
+                />
+              )}
+              {activeTab === 'financials-vault' && (
+                <FinancialsVaultView
+                  allSymbols={allSymbols}
+                  initialSymbol={vaultSymbol || activeTicker || valuationSymbol || annualReportSymbol || explorerSymbol}
+                  onSymbolChange={(sym) => {
+                    setActiveTicker(sym);
+                    setVaultSymbol(sym);
+                  }}
+                  onInspectChart={inspectSymbol}
+                  onSelectFundamentalMenu={handleSelectFundamentalMenu}
                 />
               )}
               {activeTab === 'valuation' && (
@@ -936,6 +990,7 @@ export default function App() {
                     setActiveTicker(sym);
                     setValuationSymbol(sym);
                   }}
+                  onSelectFundamentalMenu={handleSelectFundamentalMenu}
                 />
               )}
               {activeTab === 'pulse' && (

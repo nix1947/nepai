@@ -1218,6 +1218,8 @@ test('MarketStore.getHomepageCommand computes volume/turnover comparisons, blowo
     assert.ok(cmd.sectorHeatmap.length >= 2);
     assert.equal(cmd.stockHeatmap.length, 3);
     assert.ok(cmd.wowInsights.length >= 2);
+    assert.ok(Array.isArray(cmd.smartMoneyFootprints));
+    assert.ok(cmd.summary.ticketDistribution !== undefined);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }

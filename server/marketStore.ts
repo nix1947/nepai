@@ -8,6 +8,7 @@ import type {
   HomepagePulseResponse,
   HomepageScriptSpotlight,
   HomepageSectorHeatmapRow,
+  HomepageSmartMoneyFootprint,
   HomepageTopTurnoverRow,
   HomepageUnusualStockRow,
   HomepageWowInsight,
@@ -2483,6 +2484,111 @@ export class MarketStore {
       .slice(0, 15)
       .map((x) => x.item);
 
+    // Smart Money Footprints (Ticket surge, Up/Down Vol ratio, Pocket Pivots, Silent Absorption, Big-Ticket Exits)
+    const footprintCandidates: HomepageSmartMoneyFootprint[] = [];
+    for (const r of stockCandidatePool) {
+      if (r.turnover < minUnusualTurn * 0.6) continue;
+      const stats = getActiveStats(r);
+      if (stats.activeDays < 4) continue;
+      const fullHist = (this.bySymbol.get(r.symbol) || []).filter((h) => h.date <= targetDay);
+      const windowSlice = fullHist.slice(-cleanN);
+      const priorWindow = windowSlice.slice(0, -1);
+      const avgTx = r.avg_trade_size;
+      const priorTxList = priorWindow.filter((h) => h.trans > 0).map((h) => h.turnover / h.trans);
+      const baseAvgTx = priorTxList.length > 0 ? Math.max(1, mean(priorTxList)) : Math.max(1, avgTx);
+      const avgTradeSizeMult = round2(avgTx / baseAvgTx);
+
+      const upVol = windowSlice.filter((h) => h.diff > 0).reduce((s, h) => s + h.volume, 0);
+      const dnVol = windowSlice.filter((h) => h.diff < 0).reduce((s, h) => s + h.volume, 0);
+      const upDownVolRatio = round2(upVol / Math.max(dnVol, 1));
+
+      const prior10 = fullHist.slice(-11, -1);
+      const maxDownVol10 = prior10
+        .filter((h) => h.diff < 0)
+        .reduce((mx, h) => Math.max(mx, h.volume), 0);
+      const sma20 = mean(fullHist.slice(-20).map((h) => h.close));
+      const pocketPivot =
+        (r.diff_pct ?? 0) > 0 &&
+        maxDownVol10 > 0 &&
+        r.volume > maxDownVol10 &&
+        sma20 > 0 &&
+        r.close >= sma20 * 0.97 &&
+        r.close <= sma20 * 1.12;
+
+      const chg = r.diff_pct ?? 0;
+      const isBigTicketExit = chg <= -1.0 && avgTradeSizeMult >= 1.25 && r.close_pos_pct <= 40;
+      const isSilentAbsorb =
+        Math.abs(chg) <= 1.2 && stats.turnMult >= 1.4 && r.close_pos_pct >= 50 && avgTradeSizeMult >= 1.15;
+      const isBlockAccum =
+        avgTradeSizeMult >= 1.4 && upDownVolRatio >= 1.2 && r.close_pos_pct >= 55;
+      const isInstBuying =
+        avgTx >= 200_000 && chg >= 0 && r.close_pos_pct >= 55 && upDownVolRatio >= 1.1;
+
+      const smartMoneyScore = round1(
+        clip(
+          clip((upDownVolRatio / 2.2) * 38, 0, 38) +
+            clip((avgTradeSizeMult / 2.0) * 30, 0, 30) +
+            (r.close_pos_pct / 100) * 18 +
+            (pocketPivot ? 14 : 0),
+          0,
+          100
+        )
+      );
+
+      if (
+        pocketPivot ||
+        isBigTicketExit ||
+        isSilentAbsorb ||
+        isBlockAccum ||
+        isInstBuying ||
+        smartMoneyScore >= 58
+      ) {
+        let footprintTag: HomepageSmartMoneyFootprint['footprintTag'] = 'Institutional Buying';
+        if (isBigTicketExit) footprintTag = 'Big-Ticket Exit';
+        else if (pocketPivot) footprintTag = 'Pocket Pivot';
+        else if (isSilentAbsorb) footprintTag = 'Silent Absorption';
+        else if (isBlockAccum) footprintTag = 'Block Accumulation';
+
+        footprintCandidates.push({
+          symbol: r.symbol,
+          name: r.name,
+          sector: r.sector,
+          ltp: r.ltp || r.close,
+          diffPct: chg,
+          turnover: r.turnover,
+          volume: r.volume,
+          avgTradeSize: avgTx,
+          avgTradeSizeMult,
+          upDownVolRatio,
+          turnoverMultN: stats.turnMult,
+          volumeMultN: stats.volMult,
+          closePosPct: r.close_pos_pct,
+          vwapPct: r.vwap_pct,
+          pocketPivot,
+          smartMoneyScore,
+          footprintTag,
+        });
+      }
+    }
+
+    const smartMoneyExitCount = footprintCandidates.filter(
+      (f) => f.footprintTag === 'Big-Ticket Exit'
+    ).length;
+    const smartMoneyAccumCount = footprintCandidates.length - smartMoneyExitCount;
+    const smartMoneyFootprints = [...footprintCandidates]
+      .sort((a, b) => {
+        const aRank =
+          a.smartMoneyScore +
+          (a.avgTradeSizeMult >= 1.35 ? 10 : 0) +
+          (a.footprintTag === 'Big-Ticket Exit' ? 5 : 0);
+        const bRank =
+          b.smartMoneyScore +
+          (b.avgTradeSizeMult >= 1.35 ? 10 : 0) +
+          (b.footprintTag === 'Big-Ticket Exit' ? 5 : 0);
+        return bRank - aRank;
+      })
+      .slice(0, 14);
+
     // Top Turnover Up & Top Turnover Down
     const mapTopTurnover = (list: MarketPulseRow[]): HomepageTopTurnoverRow[] =>
       list.slice(0, 8).map((r, i) => {
@@ -2673,11 +2779,15 @@ export class MarketStore {
         lowerCircuitCount: pulse.summary.lowerCircuitCount,
         medianAvgTradeSize: pulse.summary.medianAvgTradeSize,
         top5ConcentrationPct: pulse.summary.top5ConcentrationPct,
+        ticketDistribution: pulse.summary.ticketDistribution,
+        smartMoneyAccumCount,
+        smartMoneyExitCount,
       },
       historyStrip,
       blowoutScripts,
       shortScripts,
       unusualActivity,
+      smartMoneyFootprints,
       topTurnoverUp,
       topTurnoverDown,
       sectorHeatmap,

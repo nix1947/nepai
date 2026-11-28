@@ -15,7 +15,10 @@ import {
   SlidersHorizontal,
   Star,
 } from 'lucide-react';
-import { HomepageMarketCommand } from '../components/home/HomepageMarketCommand';
+import {
+  HomepageMarketCommand,
+  type HomepageFocusSection,
+} from '../components/home/HomepageMarketCommand';
 import { InfoTip } from '../components/InfoTip';
 import { useTradingSettings } from '../hooks/useTradingSettings';
 import { useCompareList, useWatchlist } from '../hooks/useWatchlist';
@@ -104,6 +107,7 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
   const [wizardSector, setWizardSector] = useState<string>('ALL');
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null);
+  const [focusSection, setFocusSection] = useState<HomepageFocusSection>('all');
   const [homepagePulse, setHomepagePulse] = useState<HomepagePulseResponse | null>(null);
   const [loadingPulse, setLoadingPulse] = useState<boolean>(false);
 
@@ -267,13 +271,13 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Daily Pulse Header Strip */}
-      <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span>NEPSE Guided Research Briefing</span>
+    <div className="space-y-5">
+      {/* Unified Daily Command Header */}
+      <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="space-y-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>NEPSE Daily Command</span>
             {masterData?.marketDate && (
               <>
                 <span aria-hidden="true">·</span>
@@ -281,16 +285,15 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
               </>
             )}
             <span aria-hidden="true">·</span>
-            <span>70% Annual / 30% Quarterly Basis</span>
+            <span>70% Annual / 30% Quarterly</span>
           </div>
           <h2 className="font-display text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Find undervalued NEPSE leaders, verify annual health, and time clean entries
+            Turnover, volume spikes &amp; smart money footprints
           </h2>
           {latestDaily && (
             <p className="text-xs text-slate-600 dark:text-slate-300 font-mono tabular-nums">
-              Market Breadth: {latestDaily.advancers} Advancers · {latestDaily.decliners} Decliners ·{' '}
-              Turnover Rs {(latestDaily.turnover / 1e7).toFixed(1)} Cr ·{' '}
-              {masterData?.totalSymbols ?? 0} scripts ranked
+              {latestDaily.advancers} Advancers · {latestDaily.decliners} Decliners · Turnover Rs{' '}
+              {(latestDaily.turnover / 1e7).toFixed(1)} Cr · {masterData?.totalSymbols ?? 0} scripts ranked
             </p>
           )}
         </div>
@@ -299,7 +302,7 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
           <button
             type="button"
             onClick={onOpenWatchlistDrawer}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
           >
             <Bell className="w-3.5 h-3.5 text-amber-500" />
             <span>
@@ -317,7 +320,7 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
             <button
               type="button"
               onClick={onOpenCompareDrawer}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
             >
               <GitCompare className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <span>Compare ({compareSymbols.length})</span>
@@ -327,7 +330,7 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
           <button
             type="button"
             onClick={onOpenMasterScreener}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap shrink-0"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Open Master Screener</span>
@@ -337,7 +340,7 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
 
       {/* Watchlist Active Alerts Bar (only shown if user has active watchlist hits) */}
       {watchlistAlertSummary.items.length > 0 && (
-        <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
             <span className="font-semibold text-slate-900 dark:text-slate-100">
               Watchlist Alerts Today:
@@ -369,19 +372,59 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
           <button
             type="button"
             onClick={onOpenWatchlistDrawer}
-            className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap"
+            className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap shrink-0"
           >
             Manage Alerts →
           </button>
         </div>
       )}
 
-      {/* Market Summary, Blow-Out/Short Scripts, Heat Map, Top Turnover Up/Down & Unusual Activity */}
+      {/* Quick Focus Mode Bar: scan everything at once or isolate one lens */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex flex-wrap items-center gap-1 p-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          {(
+            [
+              { id: 'all', label: 'All Desk' },
+              {
+                id: 'smart-spikes',
+                label: homepagePulse
+                  ? `Smart Money & Spikes (${homepagePulse.smartMoneyFootprints.length} / ${homepagePulse.unusualActivity.length})`
+                  : 'Smart Money & Spikes',
+              },
+              { id: 'blowout-short', label: 'Blow-Out & Short' },
+              { id: 'turnover-heatmap', label: 'Top Turnover & Heat Map' },
+              { id: 'picker', label: 'Stock Finder & Leaders' },
+            ] as Array<{ id: HomepageFocusSection; label: string }>
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setFocusSection(tab.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 ${
+                focusSection === tab.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+          {focusSection === 'all'
+            ? 'Showing complete NEPSE daily workspace'
+            : 'Filtered focus · click All Desk to restore full feed'}
+        </span>
+      </div>
+
+      {/* Market Summary, Smart Money Footprints, Spikes, Blow-Out/Short, Heat Map & Top Turnover Up/Down */}
       <HomepageMarketCommand
         data={homepagePulse}
         loading={loadingPulse}
         selectedDate={selectedSessionDate}
         latestDate={latestDaily?.date ?? null}
+        focusSection={focusSection}
         onSelectDate={setSelectedSessionDate}
         onOpenValuation={onOpenValuation}
         onInspectSymbol={onInspectSymbol}
@@ -389,8 +432,10 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
         onOpenAnnualReports={onOpenAnnualReports}
       />
 
-      {/* Guided 3-Step Workflow Wizard: Find -> Verify -> Time */}
-      <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 overflow-hidden">
+      {/* Guided 3-Step Workflow Wizard + 3 Curated Columns */}
+      {(focusSection === 'all' || focusSection === 'picker') && (
+        <>
+          <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 overflow-hidden">
         <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="font-display text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -874,6 +919,8 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
           </div>
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 };

@@ -2,16 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Award,
   BarChart2,
-  CalendarClock,
   CheckSquare,
   Download,
   FileSpreadsheet,
   Filter,
-  Gem,
   GitCompare,
   RefreshCw,
   RotateCcw,
-  Scale,
   Search,
   ShieldCheck,
   Sliders,
@@ -25,6 +22,10 @@ import {
   DataTable,
 } from '../components/DataTable';
 import { CompanyFundamentalDetail } from '../components/screener/CompanyFundamentalDetail';
+import {
+  FundamentalMenuBar,
+  type FundamentalMenuId,
+} from '../components/FundamentalMenuBar';
 import {
   CompositeGrowthTrendCell,
   MetricTrendCell,
@@ -51,10 +52,12 @@ import type {
 interface FundamentalScreenerViewProps {
   equityOnly: boolean;
   initialTarget?: { symbol: string; tick: number } | null;
+  initialSubView?: { view: 'screener' | 'gems' | 'monitor'; tick: number } | null;
   onInspectSymbol: (symbol: string) => void;
   onInspectInAnalyzer: (symbol: string) => void;
   onOpenValuation?: (symbol?: string) => void;
   onSymbolChange?: (symbol: string) => void;
+  onSelectFundamentalMenu?: (target: FundamentalMenuId, symbol?: string | null) => void;
 }
 
 type TableLens = 'overview' | 'growth' | 'valuation' | 'investors' | 'outlook';
@@ -262,12 +265,16 @@ function renderInvestorCell(score: number, hasData: boolean): React.ReactNode {
 export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = ({
   equityOnly,
   initialTarget,
+  initialSubView,
   onInspectSymbol,
   onInspectInAnalyzer,
   onOpenValuation,
   onSymbolChange,
+  onSelectFundamentalMenu,
 }) => {
-  const [subView, setSubView] = useState<'screener' | 'gems' | 'monitor'>('screener');
+  const [subView, setSubView] = useState<'screener' | 'gems' | 'monitor'>(
+    initialSubView?.view ?? 'screener'
+  );
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   useEffect(() => {
@@ -275,6 +282,13 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
       setSelectedSymbol(initialTarget.symbol);
     }
   }, [initialTarget?.symbol, initialTarget?.tick]);
+
+  useEffect(() => {
+    if (initialSubView?.view) {
+      setSelectedSymbol(null);
+      setSubView(initialSubView.view);
+    }
+  }, [initialSubView?.view, initialSubView?.tick]);
 
   useEffect(() => {
     if (selectedSymbol) onSymbolChange?.(selectedSymbol);
@@ -1410,22 +1424,46 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
     toggleSymbol,
   ]);
 
+  const handleFundamentalMenuSelect = (target: FundamentalMenuId, symbol?: string | null) => {
+    if (target === 'screener' || target === 'gems' || target === 'monitor') {
+      setSelectedSymbol(null);
+      setSubView(target);
+      return;
+    }
+    onSelectFundamentalMenu?.(target, symbol ?? selectedSymbol);
+  };
+
   if (selectedSymbol) {
     return (
-      <CompanyFundamentalDetail
-        symbol={selectedSymbol}
-        equityOnly={equityOnly}
-        onBack={() => setSelectedSymbol(null)}
-        onInspectSymbol={onInspectSymbol}
-        onInspectInAnalyzer={onInspectInAnalyzer}
-        onOpenValuation={onOpenValuation}
-        onDataUpdated={() => void loadOverview()}
-      />
+      <div className="space-y-4">
+        <FundamentalMenuBar
+          active="screener"
+          activeSymbol={selectedSymbol}
+          pendingQuarterCount={overview?.universeStats.pendingActiveQuarter ?? null}
+          onSelect={handleFundamentalMenuSelect}
+        />
+        <CompanyFundamentalDetail
+          symbol={selectedSymbol}
+          equityOnly={equityOnly}
+          onBack={() => setSelectedSymbol(null)}
+          onInspectSymbol={onInspectSymbol}
+          onInspectInAnalyzer={onInspectInAnalyzer}
+          onOpenValuation={onOpenValuation}
+          onDataUpdated={() => void loadOverview()}
+        />
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <FundamentalMenuBar
+        active={subView}
+        activeSymbol={null}
+        pendingQuarterCount={overview?.universeStats.pendingActiveQuarter ?? null}
+        onSelect={handleFundamentalMenuSelect}
+      />
+
       {/* Header & Sub-View Navigation */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -1441,57 +1479,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setSubView('screener')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-medium whitespace-nowrap ${
-                subView === 'screener'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <Filter className="w-3.5 h-3.5" />
-              <span>Screener Dashboard</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSubView('gems')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-medium whitespace-nowrap ${
-                subView === 'gems'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <Gem className="w-3.5 h-3.5" />
-              <span>Hidden Gems &amp; Regulatory KB</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSubView('monitor')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-medium whitespace-nowrap ${
-                subView === 'monitor'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <CalendarClock className="w-3.5 h-3.5" />
-              <span>Quarterly Monitor ({overview?.universeStats.pendingActiveQuarter ?? 0} pending)</span>
-            </button>
-          </div>
-
-          {onOpenValuation && (
-            <button
-              type="button"
-              onClick={() => onOpenValuation()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 whitespace-nowrap"
-            >
-              <Scale className="w-3.5 h-3.5" />
-              <span>Pricing &amp; Valuation</span>
-            </button>
-          )}
-
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <a
             href={`/api/screener/export?format=csv&equityOnly=${equityOnly}&annualWeightPct=${annualWeightPct}`}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap"

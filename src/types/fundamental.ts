@@ -336,6 +336,40 @@ export interface StockRecommendationExplanation {
   missingOrUnverified: string[];
 }
 
+export type ComingQuarterDirection =
+  | 'Blow Up'
+  | 'Moderate Upside'
+  | 'Balanced'
+  | 'Downside Risk'
+  | 'Blow Down'
+  | 'Insufficient Data';
+
+export interface ComingQuarterReference {
+  label: string;
+  source: string;
+  period: string | null;
+  url: string | null;
+}
+
+export interface ComingQuarterOutlook {
+  direction: ComingQuarterDirection;
+  score: number; // -100 to +100
+  signalStrength: number; // 0 to 100
+  confidence: 'High' | 'Moderate' | 'Low';
+  isCurrentFyQuarter: boolean;
+  currentFy: string | null;
+  currentQuarter: QuarterCode | null;
+  currentPeriodLabel: string;
+  comingQuarter: QuarterCode | null;
+  comingFiscalYear: string | null;
+  comingQuarterLabel: string;
+  headline: string;
+  reasons: string[];
+  catalysts: string[];
+  risks: string[];
+  references: ComingQuarterReference[];
+}
+
 export interface ScreenedCompanyRow {
   symbol: string;
   companyName: string;
@@ -425,6 +459,7 @@ export interface ScreenedCompanyRow {
   greenblatt: GreenblattRankInfo;
   reportWeighting: ReportWeightingInfo;
   recommendation: StockRecommendationExplanation;
+  comingQuarterOutlook: ComingQuarterOutlook;
 }
 
 export type ReportWeightingBasis =
@@ -1144,7 +1179,9 @@ export type MasterScreenerPreset =
   | 'fundamental_titans'
   | 'earnings_accelerators'
   | 'technical_breakouts'
-  | 'future_10x';
+  | 'future_10x'
+  | 'coming_qtr_blowup'
+  | 'coming_qtr_blowdown';
 
 export type MasterTechnicalTrend =
   | 'Strong Uptrend'
@@ -1257,6 +1294,7 @@ export interface MasterScreenerRow {
     archetypes: HiddenGemArchetype[];
     whyGem: string[];
   };
+  comingQuarterOutlook: ComingQuarterOutlook;
   actionTags: string[];
 }
 
@@ -1271,4 +1309,280 @@ export interface MasterScreenerResponse {
   sectorGroups: SectorGroup[];
   rows: MasterScreenerRow[];
 }
+
+export type AnnualReportPillarId =
+  | 'managementQuality'
+  | 'growth'
+  | 'businessOpportunities'
+  | 'risks'
+  | 'weaknesses'
+  | 'uncertainties'
+  | 'upcomingBusinessPlans'
+  | 'businessDirection';
+
+export type AnnualReportPillarStatus = 'Strong' | 'Solid' | 'Watch' | 'Fragile';
+
+export interface AnnualReportPillarAssessment {
+  id: AnnualReportPillarId;
+  title: string;
+  subtitle: string;
+  status: AnnualReportPillarStatus;
+  summary: string;
+  findings: string[];
+  keyMetrics: Array<{ label: string; value: string; note?: string }>;
+}
+
+export interface AnnualReportAiFyDistillation {
+  symbol: string;
+  fiscalYear: string;
+  generatedAt: string;
+  model: string;
+  cached: boolean;
+  reportBasisLabel: string;
+  executiveSummary: string;
+  managementQualityNotes: string[];
+  growthHighlights: string[];
+  businessOpportunities: string[];
+  keyRisks: string[];
+  weaknesses: string[];
+  uncertainties: string[];
+  upcomingBusinessPlans: string[];
+  businessDirection: string;
+  strategicComparisonVsPriorFy: string[];
+  auditorAndGovernanceNotes: string[];
+  dividendAndBonusDeclared: string[];
+  citations: Array<{ title: string; uri: string }>;
+}
+
+export interface FiscalYearMetricSnapshot {
+  revenueCr: number | null;
+  netProfitCr: number | null;
+  operatingProfitCr: number | null;
+  eps: number | null;
+  bvps: number | null;
+  netWorthCr: number | null;
+  reservesCr: number | null;
+  retainedEarningsCr: number | null;
+  shareCapitalCr: number | null;
+  totalAssetsCr: number | null;
+  totalLiabilitiesCr: number | null;
+  totalDebtCr: number | null;
+  cashCr: number | null;
+  debtToEquity: number | null;
+  operatingCashFlowCr: number | null;
+  freeCashFlowCr: number | null;
+  roePct: number | null;
+  roaPct: number | null;
+  roicPct: number | null;
+  netMarginPct: number | null;
+  reportedPe: number | null;
+  reportedPb: number | null;
+  dividendYieldPct: number | null;
+  payoutRatioPct: number | null;
+  depositsCr: number | null;
+  loansCr: number | null;
+  nplPct: number | null;
+  carPct: number | null;
+  cdRatioPct: number | null;
+  costOfFundsPct: number | null;
+  netPremiumCr: number | null;
+  claimRatioPct: number | null;
+  solvencyRatio: number | null;
+  installedCapacityMw: number | null;
+}
+
+export interface FiscalYearYoYDeltas {
+  priorFiscalYear: string | null;
+  revenueYoYPct: number | null;
+  netProfitYoYPct: number | null;
+  epsYoYPct: number | null;
+  bvpsYoYPct: number | null;
+  netWorthYoYPct: number | null;
+  assetsYoYPct: number | null;
+  roeDeltaPp: number | null;
+  roaDeltaPp: number | null;
+  netMarginDeltaPp: number | null;
+  nplDeltaPp: number | null;
+  carDeltaPp: number | null;
+  debtToEquityDelta: number | null;
+}
+
+export interface FiscalYearReportAnalysis {
+  fiscalYear: string;
+  sortYear: number;
+  isLatest: boolean;
+  basis: 'Audited Annual' | 'Q4 Full-Year Unaudited' | 'Interim Quarterly';
+  quarter: QuarterCode;
+  periodLabel: string;
+  publicationDate: string | null;
+  collectionDate: string;
+  dataSource: string;
+  sourceUrl: string | null;
+  validationStatus: ValidationStatus;
+  validationNotes: string[];
+  dataQualityFlags: DataQualityFlag[];
+  metrics: FiscalYearMetricSnapshot;
+  yoyDeltas: FiscalYearYoYDeltas;
+  executiveSummary: string;
+  pillars: Record<AnnualReportPillarId, AnnualReportPillarAssessment>;
+  lineItemHighlights: Array<{ section: string; particulars: string; rawValue: string }>;
+  quarterHistoryInFy: Array<{
+    periodLabel: string;
+    quarter: QuarterCode;
+    eps: number | null;
+    netProfitCr: number | null;
+    revenueCr: number | null;
+    roePct: number | null;
+    bvps: number | null;
+  }>;
+  aiDistillation: AnnualReportAiFyDistillation | null;
+}
+
+export interface ComparisonMetricDeltaRow {
+  key: string;
+  label: string;
+  unit: string;
+  latestVal: number | null;
+  priorVal: number | null;
+  absDelta: number | null;
+  pctDelta: number | null;
+  direction: 'improved' | 'deteriorated' | 'neutral' | 'unavailable';
+  interpretation: string;
+}
+
+export interface FiscalYearComparisonMatrix {
+  latestFy: string;
+  priorFy: string | null;
+  hasMultiYearComparison: boolean;
+  headlineSummary: string;
+  metricDeltas: ComparisonMetricDeltaRow[];
+  managementPerformanceShift: {
+    status: 'Improving' | 'Stable' | 'Deteriorating' | 'Single-FY Only';
+    summary: string;
+    points: string[];
+  };
+  strategyAndDirectionShifts: string[];
+  progressAgainstPriorPlans: string[];
+  emergingOpportunities: string[];
+  emergingRisksAndWeaknesses: string[];
+  efficiencyAndCapitalTrend: string[];
+}
+
+export interface AnnualTrendPoint {
+  fiscalYear: string;
+  sortYear: number;
+  basis: FiscalYearReportAnalysis['basis'];
+  periodLabel: string;
+  revenueCr: number | null;
+  netProfitCr: number | null;
+  revenueYoYPct: number | null;
+  netProfitYoYPct: number | null;
+  eps: number | null;
+  bvps: number | null;
+  netWorthCr: number | null;
+  reservesCr: number | null;
+  totalAssetsCr: number | null;
+  totalDebtCr: number | null;
+  debtToEquity: number | null;
+  roePct: number | null;
+  roaPct: number | null;
+  netMarginPct: number | null;
+  roicPct: number | null;
+  depositsCr: number | null;
+  loansCr: number | null;
+  carPct: number | null;
+  nplPct: number | null;
+  netPremiumCr: number | null;
+  claimRatioPct: number | null;
+  solvencyRatio: number | null;
+}
+
+export interface NepalFiscalYearContext {
+  asOfDate: string;
+  currentFy: string;
+  currentStartBs: number;
+  latestCompletedFy: string;
+  previousCompletedFy: string;
+  poushEndApproxDate: string;
+  poushEndPassed: boolean;
+  daysUntilPoushEnd: number;
+  ruleSummary: string;
+}
+
+export interface AnnualReportIntelligenceResponse {
+  generatedAt: string;
+  marketDate: string | null;
+  symbol: string;
+  companyName: string;
+  sector: string;
+  sectorGroup: SectorGroup;
+  ltp: number | null;
+  changePct: number | null;
+  compositeFairValue: number | null;
+  marginOfSafetyPct: number | null;
+  pricingVerdict: CompanyValuationDossierResponse['pricingVerdict'];
+  valuationHealthScore: ValuationHealthScore | null;
+  kbEntry: CompanyKnowledgeBaseEntry | null;
+  fiscalContext: NepalFiscalYearContext;
+  recommendedAnnualFy: string | null;
+  aiDistillTargetFy: string;
+  currentInterimFy: string | null;
+  fallbackUsed: boolean;
+  fallbackReason: string | null;
+  hasAuditedAnnual: boolean;
+  auditedFyCount: number;
+  totalFyCount: number;
+  latestFy: string | null;
+  fiscalYears: FiscalYearReportAnalysis[];
+  comparison: FiscalYearComparisonMatrix | null;
+  trendSeries: AnnualTrendPoint[];
+  legacyDeepDive: AnnualReportAiDeepDive | null;
+}
+
+export interface AnnualReportUniverseCandidate {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  sectorGroup: SectorGroup;
+  ltp: number | null;
+  latestFy: string | null;
+  aiDistillTargetFy: string;
+  currentInterimFy: string | null;
+  fallbackUsed: boolean;
+  latestBasis: FiscalYearReportAnalysis['basis'] | null;
+  totalFyCount: number;
+  auditedFyCount: number;
+  aiDistilledFyCount: number;
+  eps: number | null;
+  roePct: number | null;
+  netProfitCr: number | null;
+  revenueCr: number | null;
+  creditRatingLabel: string | null;
+  regulatoryStanding: RegulatoryStanding;
+  healthScore: number | null;
+}
+
+export interface AnnualReportUniverseResponse {
+  generatedAt: string;
+  fiscalContext: NepalFiscalYearContext;
+  totalCompanies: number;
+  multiFyCount: number;
+  auditedAnnualCount: number;
+  aiDistilledCount: number;
+  sectors: string[];
+  candidates: AnnualReportUniverseCandidate[];
+}
+
+export interface AnnualReportIngestResponse {
+  symbol: string;
+  fiscalYear: string;
+  sourceType: 'url' | 'upload';
+  sourceUrl: string | null;
+  savedFilePath: string;
+  kbUpdated: boolean;
+  aiDistilled: boolean;
+  message: string;
+  distillation: AnnualReportAiFyDistillation;
+}
+
 

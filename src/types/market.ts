@@ -730,3 +730,172 @@ export interface CohortAuditResponse {
     error?: string;
   }>;
 }
+
+export interface HomepageHistoryPoint {
+  date: string;
+  turnover: number;
+  volume: number;
+  advancers: number;
+  decliners: number;
+  unchanged: number;
+  turnoverVsPrevPct: number | null;
+  volumeVsPrevPct: number | null;
+}
+
+export interface HomepageScriptSpotlight {
+  symbol: string;
+  name: string;
+  sector: string;
+  bias: 'blowout' | 'short';
+  setupLabel: string;
+  ltp: number;
+  diffPct: number;
+  turnover: number;
+  volume: number;
+  prevTurnover: number | null;
+  prevVolume: number | null;
+  turnoverVsPrevPct: number | null;
+  volumeVsPrevPct: number | null;
+  turnoverMultN: number;
+  volumeMultN: number;
+  closePosPct: number;
+  rangePct: number;
+  vwapPct: number | null;
+  avgTradeSize: number;
+  score: number;
+  headline: string;
+  triggers: string[];
+}
+
+export interface HomepageUnusualStockRow {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  diffPct: number;
+  turnover: number;
+  volume: number;
+  trans: number;
+  prevTurnover: number | null;
+  prevVolume: number | null;
+  turnoverVsPrevPct: number | null;
+  volumeVsPrevPct: number | null;
+  turnoverMultN: number;
+  volumeMultN: number;
+  closePosPct: number;
+  vwapPct: number | null;
+  avgTradeSize: number;
+  activityTag:
+    | 'Breakout Spike'
+    | 'Accumulation Surge'
+    | 'Silent Absorption'
+    | 'Heavy Distribution'
+    | 'Wick Churn / Trap';
+}
+
+export interface HomepageTopTurnoverRow {
+  rank: number;
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  diffPct: number;
+  turnover: number;
+  marketSharePct: number;
+  volume: number;
+  trans: number;
+  prevTurnover: number | null;
+  turnoverVsPrevPct: number | null;
+  turnoverMultN: number;
+  volumeMultN: number;
+  closePosPct: number;
+  vwapPct: number | null;
+  avgTradeSize: number;
+}
+
+export interface HomepageSectorHeatmapRow extends SectorPulseMetric {
+  volume: number;
+  prevTurnover: number | null;
+  prevVolume: number | null;
+  turnoverVsPrevPct: number | null;
+  volumeVsPrevPct: number | null;
+}
+
+export interface HomepageHeatmapStock {
+  symbol: string;
+  name: string;
+  sector: string;
+  ltp: number;
+  diffPct: number;
+  turnover: number;
+  turnoverSharePct: number;
+  volume: number;
+  turnoverMultN: number;
+  volumeMultN: number;
+  turnoverVsPrevPct: number | null;
+  closePosPct: number;
+  vwapPct: number | null;
+}
+
+export interface HomepageWowInsight {
+  id: string;
+  category: string;
+  title: string;
+  detail: string;
+  symbol?: string;
+  tone: 'emerald' | 'blue' | 'amber' | 'red';
+}
+
+export interface HomepagePulseResponse {
+  summary: {
+    date: string;
+    prevDate: string | null;
+    nDays: number;
+    totalStocks: number;
+    advancers: number;
+    decliners: number;
+    unchanged: number;
+    adRatio: number;
+    todayTurnover: number;
+    prevTurnover: number | null;
+    avg5dTurnover: number;
+    avgNdTurnover: number;
+    turnoverVsPrevPct: number | null;
+    turnoverVs5dPct: number | null;
+    turnoverVsNdPct: number | null;
+    todayVolume: number;
+    prevVolume: number | null;
+    avg5dVolume: number;
+    avgNdVolume: number;
+    volumeVsPrevPct: number | null;
+    volumeVs5dPct: number | null;
+    volumeVsNdPct: number | null;
+    todayTrades: number;
+    prevTrades: number | null;
+    tradesVsPrevPct: number | null;
+    upTurnover: number;
+    downTurnover: number;
+    flatTurnover: number;
+    netFlowTiltPct: number;
+    sentimentScore: number;
+    sentimentLabel: MarketPulseSummary['sentimentLabel'];
+    aboveVwap: number;
+    vwapEligible: number;
+    aboveMa120: number;
+    ma120Eligible: number;
+    upperCircuitCount: number;
+    lowerCircuitCount: number;
+    medianAvgTradeSize: number;
+    top5ConcentrationPct: number;
+  };
+  historyStrip: HomepageHistoryPoint[];
+  blowoutScripts: HomepageScriptSpotlight[];
+  shortScripts: HomepageScriptSpotlight[];
+  unusualActivity: HomepageUnusualStockRow[];
+  topTurnoverUp: HomepageTopTurnoverRow[];
+  topTurnoverDown: HomepageTopTurnoverRow[];
+  sectorHeatmap: HomepageSectorHeatmapRow[];
+  stockHeatmap: HomepageHeatmapStock[];
+  wowInsights: HomepageWowInsight[];
+}
+

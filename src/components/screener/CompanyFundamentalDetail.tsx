@@ -543,6 +543,107 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
         </div>
       </div>
 
+      {/* Coming Quarter Potential Blow-Up / Blow-Down Outlook (With Reasons & References) */}
+      <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+              Coming Quarter Potential Blow-Up / Blow-Down Outlook ({summary.comingQuarterOutlook.comingQuarterLabel})
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Projected from current-FY {summary.comingQuarterOutlook.currentPeriodLabel} · Confidence{' '}
+              {summary.comingQuarterOutlook.confidence}
+            </p>
+          </div>
+          <div className="text-right font-mono tabular-nums">
+            <span
+              className={`text-sm font-bold ${
+                summary.comingQuarterOutlook.direction === 'Blow Up' ||
+                summary.comingQuarterOutlook.direction === 'Moderate Upside'
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : summary.comingQuarterOutlook.direction === 'Blow Down' ||
+                      summary.comingQuarterOutlook.direction === 'Downside Risk'
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              {summary.comingQuarterOutlook.direction}
+            </span>
+            <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+              ({summary.comingQuarterOutlook.score >= 0 ? '+' : ''}
+              {summary.comingQuarterOutlook.score})
+            </span>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+          {summary.comingQuarterOutlook.headline}
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="space-y-1.5">
+            <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+              Upside Blow-Up Catalysts ({summary.comingQuarterOutlook.catalysts.length})
+            </div>
+            {summary.comingQuarterOutlook.catalysts.length === 0 ? (
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                No dominant sequential or regulatory upside catalyst triggered in the current quarter.
+              </p>
+            ) : (
+              <ol className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300 list-decimal list-inside">
+                {summary.comingQuarterOutlook.catalysts.map((c, idx) => (
+                  <li key={idx} className="leading-relaxed">
+                    {c}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="text-[11px] font-semibold text-red-600 dark:text-red-400">
+              Downside Blow-Down Risks ({summary.comingQuarterOutlook.risks.length})
+            </div>
+            {summary.comingQuarterOutlook.risks.length === 0 ? (
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                No severe quarterly contraction or regulatory overhang flagged in current disclosures.
+              </p>
+            ) : (
+              <ol className="space-y-1.5 text-[11px] text-slate-700 dark:text-slate-300 list-decimal list-inside">
+                {summary.comingQuarterOutlook.risks.map((rk, idx) => (
+                  <li key={idx} className="leading-relaxed">
+                    {rk}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
+
+        {summary.comingQuarterOutlook.references.length > 0 && (
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="font-semibold text-slate-700 dark:text-slate-300">References:</span>
+            {summary.comingQuarterOutlook.references.map((ref, idx) =>
+              ref.url ? (
+                <a
+                  key={idx}
+                  href={ref.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 dark:text-blue-400 hover:underline font-mono"
+                >
+                  {ref.label} ({ref.period})
+                </a>
+              ) : (
+                <span key={idx} className="font-mono">
+                  {ref.label} · {ref.source} ({ref.period})
+                </span>
+              )
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Valuation & Intrinsic Value Breakdown */}
       <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

@@ -98,17 +98,33 @@ jobs:
           echo "Running: $CMD"
           $CMD
 
-      - name: Commit and push updated financial statements & vault ledgers
+      - name: Crawl & update NEPSE Regulatory Knowledge Base (ICRA, CARE, NRB, NIA, SEBON, NEPSE, CDSC)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          SYMBOL="${{ github.event.inputs.symbol || '' }}"
+          FORCE="${{ github.event.inputs.force || 'false' }}"
+          KB_CMD="npx tsx scripts/harvest-knowledge-base.ts --agencies=ALL --enrich-limit=12"
+          if [ -n "$SYMBOL" ]; then
+            KB_CMD="${KB_CMD} --symbol=${SYMBOL}"
+          fi
+          if [ "$FORCE" = "true" ]; then
+            KB_CMD="${KB_CMD} --force"
+          fi
+          echo "Running: $KB_CMD"
+          $KB_CMD
+
+      - name: Commit and push updated financial statements, vault ledgers & Regulatory KB
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git status --porcelain -- 'data/financial/*.json' 'data/financial/*.csv' 'data/financial/vault/ledgers/*.json' 'data/financial/vault/quarterly_metrics.csv' | grep -q .; then
+          if git status --porcelain -- 'data/financial/*.json' 'data/financial/*.csv' 'data/financial/vault/ledgers/*.json' 'data/financial/vault/quarterly_metrics.csv' 'data/financial/vault/regulatory-kb.json' | grep -q .; then
             git add data/financial
-            git commit -m "chore(fundamentals): quarterly ShareSansar financial reports"
+            git commit -m "chore(fundamentals): quarterly financial reports & regulatory knowledge base"
             git pull --rebase origin ${{ github.event.repository.default_branch }} || true
             git push origin HEAD:${{ github.event.repository.default_branch }}
           else
             git checkout -- data/financial/vault/monitor-state.json 2>/dev/null || true
-            echo "No new quarterly financial statement updates to commit."
+            echo "No new quarterly financial statement or KB updates to commit."
           fi

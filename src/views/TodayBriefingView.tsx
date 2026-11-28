@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Award,
@@ -15,14 +15,17 @@ import {
   SlidersHorizontal,
   Star,
 } from 'lucide-react';
+import { HomepageMarketCommand } from '../components/home/HomepageMarketCommand';
 import { InfoTip } from '../components/InfoTip';
+import { useTradingSettings } from '../hooks/useTradingSettings';
 import { useCompareList, useWatchlist } from '../hooks/useWatchlist';
 import type { MasterScreenerResponse, MasterScreenerRow } from '../types/fundamental';
-import type { DailyAggregate } from '../types/market';
+import type { DailyAggregate, HomepagePulseResponse } from '../types/market';
 import { buildPlainEnglishVerdict, evaluateWatchlistAlerts } from '../utils/plainEnglish';
 
 interface TodayBriefingViewProps {
   daily: DailyAggregate[];
+  equityOnly?: boolean;
   masterData: MasterScreenerResponse | null;
   loadingMaster: boolean;
   onOpenMasterScreener: () => void;
@@ -30,6 +33,7 @@ interface TodayBriefingViewProps {
   onInspectSymbol: (symbol: string) => void;
   onInspectInAnalyzer: (symbol: string) => void;
   onInspectInScreener: (symbol: string) => void;
+  onOpenAnnualReports?: (symbol: string) => void;
   onOpenWatchlistDrawer: () => void;
   onOpenCompareDrawer: () => void;
 }
@@ -80,6 +84,7 @@ function fmtPct(v: number | null | undefined, digits = 1): string {
 
 export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
   daily,
+  equityOnly = true,
   masterData,
   loadingMaster,
   onOpenMasterScreener,
@@ -87,18 +92,53 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
   onInspectSymbol,
   onInspectInAnalyzer,
   onInspectInScreener,
+  onOpenAnnualReports,
   onOpenWatchlistDrawer,
   onOpenCompareDrawer,
 }) => {
   const { watchlist, hasSymbol, toggleSymbol, alertRules } = useWatchlist();
   const { compareSymbols, hasCompare, toggleCompare } = useCompareList();
+  const { settings } = useTradingSettings();
 
   const [wizardGoal, setWizardGoal] = useState<WizardGoal>('value_compounder');
   const [wizardSector, setWizardSector] = useState<string>('ALL');
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [selectedSessionDate, setSelectedSessionDate] = useState<string | null>(null);
+  const [homepagePulse, setHomepagePulse] = useState<HomepagePulseResponse | null>(null);
+  const [loadingPulse, setLoadingPulse] = useState<boolean>(false);
 
   const latestDaily = daily.length > 0 ? daily[daily.length - 1] : null;
   const rows = masterData?.rows ?? [];
+
+  useEffect(() => {
+    if (daily.length === 0) return;
+    let cancelled = false;
+    setLoadingPulse(true);
+    const params = new URLSearchParams({
+      equityOnly: String(equityOnly),
+      nDays: String(settings.lookbackDays),
+    });
+    if (selectedSessionDate) params.set('day', selectedSessionDate);
+
+    fetch(`/api/homepage-pulse?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json() as Promise<HomepagePulseResponse>;
+      })
+      .then((payload) => {
+        if (!cancelled) setHomepagePulse(payload);
+      })
+      .catch(() => {
+        if (!cancelled) setHomepagePulse(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingPulse(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [daily.length, latestDaily?.date, equityOnly, settings.lookbackDays, selectedSessionDate]);
 
   const wizardCandidates = useMemo(() => {
     const base = rows.filter((r) => {
@@ -335,6 +375,19 @@ export const TodayBriefingView: React.FC<TodayBriefingViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Market Summary, Blow-Out/Short Scripts, Heat Map, Top Turnover Up/Down & Unusual Activity */}
+      <HomepageMarketCommand
+        data={homepagePulse}
+        loading={loadingPulse}
+        selectedDate={selectedSessionDate}
+        latestDate={latestDaily?.date ?? null}
+        onSelectDate={setSelectedSessionDate}
+        onOpenValuation={onOpenValuation}
+        onInspectSymbol={onInspectSymbol}
+        onInspectInAnalyzer={onInspectInAnalyzer}
+        onOpenAnnualReports={onOpenAnnualReports}
+      />
 
       {/* Guided 3-Step Workflow Wizard: Find -> Verify -> Time */}
       <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 overflow-hidden">

@@ -55,7 +55,8 @@ type SortKey =
   | 'epsGrowth'
   | 'hiddenGemScore'
   | 'tenXScore'
-  | 'bull5yMultiple';
+  | 'bull5yMultiple'
+  | 'comingQuarterScore';
 
 const PRESET_MENUS: Array<{
   id: MasterScreenerPreset;
@@ -119,6 +120,20 @@ const PRESET_MENUS: Array<{
     subtitle: 'Small/mid-cap runway, ROE compounding, earnings inflection & 5Y Bull upside',
     defaultSort: 'tenXScore',
     icon: Rocket,
+  },
+  {
+    id: 'coming_qtr_blowup',
+    label: 'Next Qtr Blow-Up',
+    subtitle: 'Current-FY quarter signals upside earnings/valuation blow-up with cited refs',
+    defaultSort: 'comingQuarterScore',
+    icon: TrendingUp,
+  },
+  {
+    id: 'coming_qtr_blowdown',
+    label: 'Next Qtr Blow-Down',
+    subtitle: 'Current-FY quarter signals margin, NPL, or regulatory downside risk with cited refs',
+    defaultSort: 'comingQuarterScore',
+    icon: Flame,
   },
 ];
 
@@ -397,6 +412,20 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
         }
       } else if (preset === 'future_10x') {
         if (r.tenX.tenXScore < 55) return false;
+      } else if (preset === 'coming_qtr_blowup') {
+        if (
+          r.comingQuarterOutlook.direction !== 'Blow Up' &&
+          r.comingQuarterOutlook.direction !== 'Moderate Upside'
+        ) {
+          return false;
+        }
+      } else if (preset === 'coming_qtr_blowdown') {
+        if (
+          r.comingQuarterOutlook.direction !== 'Blow Down' &&
+          r.comingQuarterOutlook.direction !== 'Downside Risk'
+        ) {
+          return false;
+        }
       }
 
       // Search & Sector
@@ -509,6 +538,10 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
           return r.tenX.tenXScore;
         case 'bull5yMultiple':
           return r.tenX.bull5yMultiple;
+        case 'comingQuarterScore':
+          return r.comingQuarterOutlook.direction === 'Insufficient Data'
+            ? null
+            : r.comingQuarterOutlook.score;
       }
     };
 
@@ -560,7 +593,7 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
       setSortAsc((prev) => !prev);
     } else {
       setSortKey(key);
-      setSortAsc(key === 'pe');
+      setSortAsc(key === 'pe' || preset === 'coming_qtr_blowdown');
     }
   };
 
@@ -592,6 +625,11 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
       'TenXScore',
       'Bull5YMultiple',
       'AnnualReport',
+      'NextQtrTarget',
+      'NextQtrDirection',
+      'NextQtrScore',
+      'NextQtrReasons',
+      'NextQtrReferences',
     ];
     const csvRows = [
       headers.join(','),
@@ -622,6 +660,14 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
           r.tenX.tenXScore,
           r.tenX.bull5yMultiple ?? '',
           r.hasAnnualReport ? 'Yes' : 'No',
+          `"${r.comingQuarterOutlook.comingQuarterLabel.replace(/"/g, '""')}"`,
+          `"${r.comingQuarterOutlook.direction}"`,
+          r.comingQuarterOutlook.score,
+          `"${r.comingQuarterOutlook.reasons.join(' | ').replace(/"/g, '""')}"`,
+          `"${r.comingQuarterOutlook.references
+            .map((ref) => (ref.url ? `${ref.label} (${ref.url})` : ref.label))
+            .join(' | ')
+            .replace(/"/g, '""')}"`,
         ].join(',')
       ),
     ];
@@ -710,9 +756,9 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
         </div>
       )}
 
-      {/* 8 Strategy Menu Lenses */}
+      {/* 10 Strategy Menu Lenses */}
       {data && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 xl:grid-cols-5 gap-2">
           {PRESET_MENUS.map((m) => {
             const Icon = m.icon;
             const active = preset === m.id;
@@ -1257,6 +1303,16 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
                         <InfoTip glossaryKey="tenXScore" align="right" />
                       </span>
                     </th>
+                    <th className="px-2.5 py-2 text-right font-medium">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('comingQuarterScore')}
+                        className="inline-flex items-center gap-0.5 hover:text-slate-900 dark:hover:text-white whitespace-nowrap"
+                      >
+                        <span>Next Qtr</span>
+                        <ArrowUpDown className="w-3 h-3" />
+                      </button>
+                    </th>
                     <th className="px-3 py-2 text-right font-medium">Details</th>
                   </tr>
                 </thead>
@@ -1434,6 +1490,29 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
                             </div>
                           </td>
 
+                          <td className="px-2.5 py-2 text-right whitespace-nowrap">
+                            <div
+                              className={`font-semibold ${
+                                r.comingQuarterOutlook.direction === 'Blow Up' ||
+                                r.comingQuarterOutlook.direction === 'Moderate Upside'
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : r.comingQuarterOutlook.direction === 'Blow Down' ||
+                                      r.comingQuarterOutlook.direction === 'Downside Risk'
+                                    ? 'text-red-600 dark:text-red-400'
+                                    : 'text-slate-500 dark:text-slate-400'
+                              }`}
+                            >
+                              {r.comingQuarterOutlook.direction === 'Insufficient Data'
+                                ? '—'
+                                : r.comingQuarterOutlook.direction}
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              {r.comingQuarterOutlook.direction === 'Insufficient Data'
+                                ? 'No Qtr'
+                                : `${r.comingQuarterOutlook.score >= 0 ? '+' : ''}${r.comingQuarterOutlook.score} · ${r.comingQuarterOutlook.comingQuarterLabel.split(' ')[0]}`}
+                            </div>
+                          </td>
+
                           <td
                             className="px-3 py-2 text-right font-sans whitespace-nowrap"
                             onClick={(e) => e.stopPropagation()}
@@ -1487,10 +1566,10 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
                           </td>
                         </tr>
 
-                        {/* Expandable 4-Pillar Quick Dossier Drawer */}
+                        {/* Expandable 4-Pillar + Next Qtr Quick Dossier Drawer */}
                         {expanded && (
                           <tr className="bg-slate-50/70 dark:bg-slate-950/60 font-sans">
-                            <td colSpan={12} className="px-4 py-3.5 border-b border-slate-200 dark:border-slate-800">
+                            <td colSpan={13} className="px-4 py-3.5 border-b border-slate-200 dark:border-slate-800 space-y-3">
                               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-xs">
                                 <div className="space-y-1">
                                   <div className="font-semibold text-slate-800 dark:text-slate-200">
@@ -1582,6 +1661,59 @@ export const MasterScreenerView: React.FC<MasterScreenerViewProps> = ({
                                     </button>
                                   </div>
                                 </div>
+                              </div>
+
+                              <div className="pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                                    Coming Quarter Outlook ({r.comingQuarterOutlook.comingQuarterLabel} from {r.comingQuarterOutlook.currentPeriodLabel}):{' '}
+                                    <span
+                                      className={`font-mono ${
+                                        r.comingQuarterOutlook.direction === 'Blow Up' ||
+                                        r.comingQuarterOutlook.direction === 'Moderate Upside'
+                                          ? 'text-emerald-600 dark:text-emerald-400'
+                                          : r.comingQuarterOutlook.direction === 'Blow Down' ||
+                                              r.comingQuarterOutlook.direction === 'Downside Risk'
+                                            ? 'text-red-600 dark:text-red-400'
+                                            : 'text-slate-600 dark:text-slate-300'
+                                      }`}
+                                    >
+                                      {r.comingQuarterOutlook.direction} ({r.comingQuarterOutlook.score >= 0 ? '+' : ''}
+                                      {r.comingQuarterOutlook.score})
+                                    </span>
+                                  </div>
+                                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                    Confidence: {r.comingQuarterOutlook.confidence}
+                                  </span>
+                                </div>
+                                <ul className="space-y-1 text-[11px] text-slate-600 dark:text-slate-300 list-disc list-inside">
+                                  {r.comingQuarterOutlook.reasons.slice(0, 4).map((reason, idx) => (
+                                    <li key={idx}>{reason}</li>
+                                  ))}
+                                </ul>
+                                {r.comingQuarterOutlook.references.length > 0 && (
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                                    <span>Refs:</span>
+                                    {r.comingQuarterOutlook.references.map((ref, idx) =>
+                                      ref.url ? (
+                                        <a
+                                          key={idx}
+                                          href={ref.url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-blue-600 dark:text-blue-400 hover:underline"
+                                        >
+                                          {ref.label} ({ref.period})
+                                        </a>
+                                      ) : (
+                                        <span key={idx}>
+                                          {ref.label} ({ref.period})
+                                        </span>
+                                      )
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </td>
                           </tr>

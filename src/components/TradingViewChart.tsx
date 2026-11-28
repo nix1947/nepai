@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import {
   AreaSeries,
   BarSeries,
@@ -116,8 +116,13 @@ import {
   type BarPoint,
   type ChartTimeframe,
 } from '../utils/chartIndicators';
+import { composeChartPngWithSvg, triggerPngDownload } from '../utils/chartExport';
 import { formatCrore, formatInt, formatNum, formatPct } from '../utils/format';
 import { InfoTip } from './InfoTip';
+
+export interface TradingViewChartHandle {
+  exportPng: () => Promise<void>;
+}
 
 export interface ChartLevel {
   label: string;
@@ -421,7 +426,7 @@ function snapPriceToBar(bar: BarPoint | undefined, rawPrice: number): number {
   return Number(best.toFixed(2));
 }
 
-export const TradingViewChart: React.FC<TradingViewChartProps> = ({
+export const TradingViewChart = forwardRef<TradingViewChartHandle, TradingViewChartProps>(({
   symbol,
   history,
   lookbackDays,
@@ -433,9 +438,10 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   watchlist = [],
   isStarred = false,
   onToggleStar,
-}) => {
+}, ref) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartWrapRef = useRef<HTMLDivElement | null>(null);
+  const svgOverlayRef = useRef<SVGSVGElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<ISeriesApi<SeriesType, Time> | null>(null);
 
@@ -1997,20 +2003,57 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     onSelectSymbol(symbols[nextIdx].symbol);
   };
 
-  const handleDownloadSnapshot = () => {
+  const handleDownloadSnapshot = useCallback(async () => {
     const chart = chartRef.current;
     if (!chart) return;
     try {
-      const canvas = chart.takeScreenshot();
-      const url = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${symbol}-${timeframe}-chart.png`;
-      a.click();
+      const baseCanvas = chart.takeScreenshot();
+      const bar = latestBar ?? activeBar;
+      const activeStudyLabels = activeIndicatorList.slice(0, 6).map((i) => i.shortLabel).join(', ');
+      const headerTitle = `${symbol} · ${timeframe}${compareSymbol ? ` vs ${compareSymbol}` : ''} · ${bar?.time ?? 'Latest'} · Technical: ${technicalConsensus.verdict} (${technicalConsensus.bull}B/${technicalConsensus.bear}S)`;
+      const headerMeta = bar
+        ? `O ${formatNum(bar.open)} · H ${formatNum(bar.high)} · L ${formatNum(bar.low)} · C ${formatNum(bar.close)} (${formatPct(bar.diff_pct)}) · Vol ${formatInt(bar.volume)}${activeStudyLabels ? ` · Studies: ${activeStudyLabels}` : ''}`
+        : undefined;
+      const footerText =
+        drawings.length > 0 && !hideDrawings
+          ? `Includes ${drawings.length} chart annotation${drawings.length === 1 ? '' : 's'}${levels.length > 0 && showSR ? ` · ${levels.map((l) => `${l.label} ${formatNum(l.value)}`).join(' · ')}` : ''}`
+          : levels.length > 0 && showSR
+            ? `S/R Levels: ${levels.map((l) => `${l.label} ${formatNum(l.value)}`).join(' · ')}`
+            : undefined;
+      const dataUrl = await composeChartPngWithSvg({
+        baseCanvas,
+        svgOverlay: hideDrawings ? null : svgOverlayRef.current,
+        headerTitle,
+        headerMeta,
+        footerText,
+        dark: isDark,
+      });
+      triggerPngDownload(dataUrl, `${symbol}_${timeframe}_${bar?.time ?? 'chart'}.png`);
     } catch {
       // ignore snapshot failure
     }
-  };
+  }, [
+    symbol,
+    timeframe,
+    compareSymbol,
+    latestBar,
+    activeBar,
+    activeIndicatorList,
+    technicalConsensus,
+    drawings.length,
+    hideDrawings,
+    levels,
+    showSR,
+    isDark,
+  ]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      exportPng: handleDownloadSnapshot,
+    }),
+    [handleDownloadSnapshot]
+  );
 
   const handleFitScale = () => {
     chartRef.current?.timeScale().fitContent();
@@ -2338,12 +2381,12 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
           <button
             type="button"
-            onClick={handleDownloadSnapshot}
-            title="Save chart snapshot PNG"
-            className="inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
+            onClick={() => void handleDownloadSnapshot()}
+            title="Export chart & drawings as PNG"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium whitespace-nowrap shrink-0 transition-colors"
           >
-            <Camera className="w-3 h-3" />
-            <span className="hidden xl:inline">PNG</span>
+            <Camera className="w-3.5 h-3.5" />
+            <span>Export PNG</span>
           </button>
 
           <button
@@ -2698,7 +2741,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
             {/* SVG Vector Drawings Overlay */}
             {projectedOverlays.items.length > 0 && (
-              <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+              <svg ref={svgOverlayRef} className="absolute inset-0 w-full h-full pointer-events-none z-10">
                 {projectedOverlays.items.map(({ drawing, c1, c2 }) => {
                   if (drawing.kind === 'vline') {
                     return (
@@ -3506,4 +3549,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       )}
     </div>
   );
-};
+});
+
+TradingViewChart.displayName = 'TradingViewChart';
+

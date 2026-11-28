@@ -1,5 +1,6 @@
 import type {
   CompanyFundamentalDetailResponse,
+  CompanyKnowledgeBaseEntry,
   CompositeScores,
   ConsensusMatch,
   ConsensusTag,
@@ -23,6 +24,7 @@ import type {
   ValuationBreakdown,
 } from '../../src/types/fundamental.ts';
 import type { MarketStore } from '../marketStore.ts';
+import { computeComingQuarterOutlook, emptyComingQuarterOutlook } from './comingQuarterOutlook.ts';
 import { computeFreshnessDays, classifySectorGroup, extractStartBsYear } from './nepalCalendar.ts';
 import { computeGrowthComparisons, FundamentalVault, type CompanyLedgerFile } from './fundamentalVault.ts';
 import { computeSectorValuation, getSectorThresholds, type SectorThresholds } from './sectorMethodology.ts';
@@ -1463,6 +1465,8 @@ export function evaluateScreenerUniverse(
     monitorStatusMap?: Map<string, ReportMonitorStatus>;
     benchmarkFdRatePct?: number;
     annualWeightPct?: number;
+    kbMap?: Map<string, CompanyKnowledgeBaseEntry>;
+    now?: Date;
   } = {}
 ): EvaluatedUniverseResult {
   vault.initIfNeeded();
@@ -1865,6 +1869,7 @@ export function evaluateScreenerUniverse(
           hasAnnualReport: false,
         },
         recommendation: rec,
+        comingQuarterOutlook: emptyComingQuarterOutlook(options.now),
       };
       rows.push(row);
       continue;
@@ -2282,6 +2287,17 @@ export function evaluateScreenerUniverse(
       },
       reportWeighting,
       recommendation,
+      comingQuarterOutlook: computeComingQuarterOutlook({
+        sectorGroup: item.sectorGroup,
+        ledger: item.ledger,
+        activeRecord: effectiveRecord,
+        growth: item.growth,
+        valuation: effectiveValuation,
+        market: item.market,
+        kbEntry: options.kbMap?.get(item.symbol) ?? null,
+        benchmarkFdRatePct,
+        now: options.now,
+      }),
     };
 
     rows.push(row);

@@ -1,11 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Search, Star } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, Camera, Search, Star } from 'lucide-react';
 import { DataTable, type ColumnDef } from '../components/DataTable';
 import { InfoTip } from '../components/InfoTip';
 import { NepseTradePlanner } from '../components/NepseTradePlanner';
 import { StockRiskOpportunitiesPanel } from '../components/StockRiskOpportunitiesPanel';
 import { StockVisualAlerts } from '../components/StockVisualAlerts';
-import { TradingViewChart, type ChartLevel } from '../components/TradingViewChart';
+import {
+  TradingViewChart,
+  type ChartLevel,
+  type TradingViewChartHandle,
+} from '../components/TradingViewChart';
 import { LOOKBACK_PRESETS, useTradingSettings } from '../hooks/useTradingSettings';
 import { useWatchlist } from '../hooks/useWatchlist';
 import type { PriceRow, SymbolInfo } from '../types/market';
@@ -34,6 +38,7 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
   const [history, setHistory] = useState<PriceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
+  const chartRef = useRef<TradingViewChartHandle | null>(null);
 
   useEffect(() => {
     if (initialSymbol) setSelectedSymbol(initialSymbol);
@@ -230,10 +235,21 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
                   <button
                     type="button"
                     onClick={() => onInspectInQuant(selectedSymbol)}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors whitespace-nowrap shrink-0"
                   >
                     <span>Quant Decision Gate</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {!loading && history.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void chartRef.current?.exportPng()}
+                    title="Export Stock Explorer chart & annotations as PNG"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Export PNG</span>
                   </button>
                 )}
               </>
@@ -452,6 +468,7 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
         <div className="h-[470px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-lg" />
       ) : (
         <TradingViewChart
+          ref={chartRef}
           symbol={selectedSymbol}
           history={history}
           lookbackDays={nDays}

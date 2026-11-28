@@ -1,4 +1,8 @@
-import type { QuarterCode, SectorGroup } from '../../src/types/fundamental.ts';
+import type {
+  NepalFiscalYearContext,
+  QuarterCode,
+  SectorGroup,
+} from '../../src/types/fundamental.ts';
 import { getNepseSector, type NepseSector } from '../sectors.ts';
 
 export interface ActiveFiscalQuarterInfo {
@@ -33,6 +37,11 @@ export function normalizeFiscalYear(raw: string): string {
 export function extractStartBsYear(fiscalYear: string): number | null {
   const m = fiscalYear.match(/(20\d{2})/);
   return m ? Number(m[1]) : null;
+}
+
+export function formatFiscalYearFromBs(startBsYear: number): string {
+  const nextShort = String((startBsYear + 1) % 100).padStart(2, '0');
+  return `${startBsYear}/${nextShort}`;
 }
 
 export function quarterOrderValue(q: QuarterCode): number {
@@ -140,6 +149,60 @@ export function getApproxQuarterEndGregorian(fiscalYear: string, quarter: Quarte
 
 export function addDaysUtc(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 86_400_000);
+}
+
+/**
+ * Computes Nepal BS fiscal year context and Poush-end AGM deadline status.
+ * Example: When today is in FY 2083/84 (Jul 17, 2026 - Jul 16, 2027):
+ * - currentFy = "2083/84" (active interim year)
+ * - latestCompletedFy = "2082/83" (latest closed FY whose Annual Report AGM deadline is Poush end ~Jan 14, 2027)
+ * - previousCompletedFy = "2081/82" (fallback Annual Report FY if 2082/83 Annual Report is not yet available before Poush end)
+ */
+export function getNepalFiscalYearCalendarContext(
+  now: Date = new Date()
+): NepalFiscalYearContext {
+  const todayUtc = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
+  const approxStartBs = todayUtc.getUTCFullYear() + 57;
+
+  let currentStartBs = approxStartBs;
+  for (let bs = approxStartBs - 2; bs <= approxStartBs + 2; bs++) {
+    const fy = formatFiscalYearFromBs(bs);
+    const fyEnd = getApproxQuarterEndGregorian(fy, 'Q4').getTime();
+    const prevFyEnd = getApproxQuarterEndGregorian(formatFiscalYearFromBs(bs - 1), 'Q4').getTime();
+    if (todayUtc.getTime() > prevFyEnd && todayUtc.getTime() <= fyEnd) {
+      currentStartBs = bs;
+      break;
+    }
+  }
+
+  const currentFy = formatFiscalYearFromBs(currentStartBs);
+  const latestCompletedFy = formatFiscalYearFromBs(currentStartBs - 1);
+  const previousCompletedFy = formatFiscalYearFromBs(currentStartBs - 2);
+  const poushEndDate = getApproxQuarterEndGregorian(currentFy, 'Q2');
+  const poushEndApproxDate = poushEndDate.toISOString().slice(0, 10);
+  const poushEndPassed = todayUtc.getTime() >= poushEndDate.getTime();
+  const daysUntilPoushEnd = poushEndPassed
+    ? 0
+    : Math.max(0, Math.ceil((poushEndDate.getTime() - todayUtc.getTime()) / 86_400_000));
+
+  const asOfDate = todayUtc.toISOString().slice(0, 10);
+  const ruleSummary = poushEndPassed
+    ? `Current FY is ${currentFy} and Poush end (${poushEndApproxDate}) has passed; FY ${latestCompletedFy} Annual Reports are expected to be published.`
+    : `Current FY is ${currentFy} (Poush end ~${poushEndApproxDate}, ${daysUntilPoushEnd}d remaining). FY ${latestCompletedFy} Annual Reports are often pending before Poush-end AGMs, so companies lacking an audited FY ${latestCompletedFy} Annual Report fall back to prior FY ${previousCompletedFy}.`;
+
+  return {
+    asOfDate,
+    currentFy,
+    currentStartBs,
+    latestCompletedFy,
+    previousCompletedFy,
+    poushEndApproxDate,
+    poushEndPassed,
+    daysUntilPoushEnd,
+    ruleSummary,
+  };
 }
 
 /**

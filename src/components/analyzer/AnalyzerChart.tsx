@@ -25,12 +25,14 @@ import {
   type SeriesMarker,
   type Time,
 } from 'lightweight-charts';
+import { Camera } from 'lucide-react';
 import type {
   AnalyzerBar,
   AnalyzerResponse,
   AnalyzerSetup,
   OverlayToggleState,
 } from '../../types/analyzer';
+import { composeChartPngSync, triggerPngDownload } from '../../utils/chartExport';
 import { formatNum } from '../../utils/format';
 
 export interface AnalyzerChartHandle {
@@ -697,18 +699,38 @@ export const AnalyzerChart = forwardRef<AnalyzerChartHandle, AnalyzerChartProps>
       return () => obs.disconnect();
     }, []);
 
+    const buildPngDataUrl = (): string | null => {
+      if (!chartRef.current) return null;
+      const baseCanvas = chartRef.current.takeScreenshot();
+      const latestBar = data.bars[data.bars.length - 1];
+      const tp = selectedSetup?.tradePlan;
+      const headerTitle = `${data.symbol} (${data.tf}) · As-Of ${data.asOfDate} · ${data.trendState} · ${data.premiumDiscount.zoneLabel}`;
+      const headerMeta = latestBar
+        ? `O ${formatNum(latestBar.open)} · H ${formatNum(latestBar.high)} · L ${formatNum(latestBar.low)} · C ${formatNum(latestBar.close)} · Vol ${latestBar.volume.toLocaleString('en-US')} · ATR14 ${formatNum(latestBar.atr14)}`
+        : undefined;
+      const footerText =
+        selectedSetup && tp?.valid
+          ? `Setup ${selectedSetup.grade} (${selectedSetup.score}): ${selectedSetup.name} | Entry ${formatNum(tp.entryMid)} · SL ${formatNum(tp.stopLoss)} · T1 ${formatNum(tp.target1)} (${tp.rrT1.toFixed(1)}R) · T2 ${formatNum(tp.target2)} (${tp.rrT2.toFixed(1)}R)`
+          : `Auto Analyzer (${data.strategy}) · ${data.setups.length} active setup${data.setups.length === 1 ? '' : 's'}`;
+      return composeChartPngSync({
+        baseCanvas,
+        headerTitle,
+        headerMeta,
+        footerText,
+        dark: isDark,
+      });
+    };
+
     useImperativeHandle(
       ref,
       () => ({
-        exportPng: () => {
-          if (!chartRef.current) return null;
-          return chartRef.current.takeScreenshot().toDataURL('image/png');
-        },
+        exportPng: () => buildPngDataUrl(),
         fitContent: () => {
           chartRef.current?.timeScale().fitContent();
         },
       }),
-      []
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [data, selectedSetup, isDark]
     );
 
     useEffect(() => {
@@ -875,7 +897,7 @@ export const AnalyzerChart = forwardRef<AnalyzerChartHandle, AnalyzerChartProps>
               <span>Vol {displayBar.volume.toLocaleString('en-US')}</span>
               <span>ATR14 {formatNum(displayBar.atr14)}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {displayBar.isUpperCircuit && (
                 <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                   +10% Circuit Lock
@@ -891,6 +913,18 @@ export const AnalyzerChart = forwardRef<AnalyzerChartHandle, AnalyzerChartProps>
                   Corp-Action Gap Flagged
                 </span>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  const url = buildPngDataUrl();
+                  if (url) triggerPngDownload(url, `${data.symbol}_${data.tf}_${data.asOfDate}.png`);
+                }}
+                title="Export annotated Auto Analyze chart as PNG"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-sans text-[11px] font-medium whitespace-nowrap shrink-0 transition-colors"
+              >
+                <Camera className="w-3 h-3" />
+                <span>Export PNG</span>
+              </button>
             </div>
           </div>
         )}

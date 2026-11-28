@@ -445,11 +445,13 @@ export function computeMasterScreener(
     )
   );
 
+  const kbMap = kb.getAllCompanyEntries();
   const evaluated = evaluateScreenerUniverse(store, vault, {
     equityOnly,
     benchmarkFdRatePct,
     annualWeightPct,
     monitorStatusMap: opts.monitorStatusMap,
+    kbMap,
   });
 
   const valUniverse = getValuationUniverseSummary(store, vault, kb, {
@@ -468,7 +470,6 @@ export function computeMasterScreener(
   });
   const gemMap = new Map(gemsResp.gems.map((g) => [g.symbol, g]));
 
-  const kbMap = kb.getAllCompanyEntries();
   const marketDate = evaluated.marketDate;
 
   const turnoverRanked = [...evaluated.rows]
@@ -567,6 +568,8 @@ export function computeMasterScreener(
     );
 
     const actionTags: string[] = [];
+    if (row.comingQuarterOutlook.direction === 'Blow Up') actionTags.push('Next Qtr Blow-Up');
+    else if (row.comingQuarterOutlook.direction === 'Blow Down') actionTags.push('Next Qtr Blow-Down');
     if (liquidity.playerTier === 'Institutional / HNI Flow') actionTags.push('High Player Flow');
     if (inBuyZone) actionTags.push('In Buy Zone');
     if (row.reportWeighting.hasAnnualReport) actionTags.push('Annual Verified');
@@ -639,6 +642,7 @@ export function computeMasterScreener(
         archetypes: gemCand?.archetypes ?? [],
         whyGem: gemCand?.whyHiddenGem ?? [],
       },
+      comingQuarterOutlook: row.comingQuarterOutlook,
       actionTags: actionTags.slice(0, 5),
     });
   }
@@ -678,6 +682,18 @@ export function computeMasterScreener(
         r.technical.trendState === 'Uptrend'
     ).length,
     future_10x: rows.filter((r) => r.tenX.tenXScore >= 55).length,
+    coming_qtr_blowup: rows.filter(
+      (r) =>
+        r.hasFundamentalData &&
+        (r.comingQuarterOutlook.direction === 'Blow Up' ||
+          r.comingQuarterOutlook.direction === 'Moderate Upside')
+    ).length,
+    coming_qtr_blowdown: rows.filter(
+      (r) =>
+        r.hasFundamentalData &&
+        (r.comingQuarterOutlook.direction === 'Blow Down' ||
+          r.comingQuarterOutlook.direction === 'Downside Risk')
+    ).length,
   };
 
   return {

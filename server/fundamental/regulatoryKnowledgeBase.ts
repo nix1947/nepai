@@ -35,7 +35,11 @@ const AGENCY_DIRECT_URLS: Record<RegulatoryAgency, string[]> = {
   NRB: ['https://www.nrb.org.np/category/notices/', 'https://www.nrb.org.np/category/circulars/'],
   NIA: ['https://nia.gov.np/', 'https://nia.gov.np/category/notice/'],
   SEBON: ['https://www.sebon.gov.np/notices', 'https://www.sebon.gov.np/'],
-  NEPSE: ['https://www.nepalstock.com/news', 'https://www.nepalstock.com/'],
+  NEPSE: [
+    'https://www.sharesansar.com/category/latest',
+    'https://www.sharesansar.com/announcement',
+    'https://www.nepalstock.com/news',
+  ],
   CDSC: ['https://cdsc.com.np/', 'https://cdsc.com.np/notice'],
 };
 
@@ -633,32 +637,45 @@ export class RegulatoryKnowledgeBase {
         }
         const html = await res.text();
         const $ = cheerio.load(html);
+        $('nav, header, footer, script, style, noscript').remove();
         const candidates: Array<{ title: string; href: string | null; date: string }> = [];
 
-        $('a').each((_i, el) => {
+        $('main a, article a, .news a, .post a, table a, h2 a, h3 a, a').each((_i, el) => {
           const text = $(el).text().replace(/\s+/g, ' ').trim();
-          const hrefRaw = $(el).attr('href');
+          const hrefRaw = ($(el).attr('href') || '').trim();
           if (text.length < 18 || text.length > 220) return;
+          if (
+            !hrefRaw ||
+            hrefRaw.startsWith('#') ||
+            hrefRaw.startsWith('javascript:') ||
+            hrefRaw.startsWith('mailto:') ||
+            hrefRaw.startsWith('tel:')
+          ) {
+            return;
+          }
           const lower = text.toLowerCase();
           if (
             lower.includes('skip to') ||
             lower.includes('read more') ||
-            lower.includes('home') ||
+            lower === 'home' ||
             lower.includes('contact us') ||
-            lower.includes('privacy policy')
+            lower.includes('privacy policy') ||
+            lower.includes('about us') ||
+            lower.includes('login') ||
+            lower.includes('sitemap')
           ) {
             return;
           }
           let resolved: string | null = null;
-          if (hrefRaw) {
-            try {
-              resolved = safeHttpUrl(new URL(hrefRaw, targetUrl).toString());
-            } catch {
-              resolved = null;
-            }
+          try {
+            resolved = safeHttpUrl(new URL(hrefRaw, targetUrl).toString());
+          } catch {
+            resolved = null;
           }
           const parentText = $(el).parent().text().replace(/\s+/g, ' ').trim();
-          const dateMatch = parentText.match(/\b(20\d{2}[-/]\d{2}[-/]\d{2}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+20\d{2})\b/i);
+          const dateMatch = parentText.match(
+            /\b(20\d{2}[-/]\d{2}[-/]\d{2}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+20\d{2})\b/i
+          );
           candidates.push({
             title: text,
             href: resolved,
@@ -672,7 +689,7 @@ export class RegulatoryKnowledgeBase {
           if (!unique.has(key)) unique.set(key, c);
         }
 
-        const picked = Array.from(unique.values()).slice(0, 12);
+        const picked = Array.from(unique.values()).slice(0, 15);
         for (const item of picked) {
           const syms = this.matchSymbolsInText(item.title, universe);
           const rating = extractRatingFromText(item.title);
@@ -770,11 +787,25 @@ Return ONLY valid JSON matching this schema:
 }`;
 
     try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-4-hydrogen',
-        contents: prompt,
-        config: { tools: [{ googleSearch: {} }] },
-      });
+      let response: GenerateContentResponse;
+      try {
+        response = await ai.models.generateContent({
+          model: 'gemini-4-hydrogen',
+          contents: prompt,
+          config: { tools: [{ googleSearch: {} }] },
+        });
+      } catch (innerErr) {
+        const msg = innerErr instanceof Error ? innerErr.message : String(innerErr);
+        if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('NOT_FOUND')) {
+          response = await ai.models.generateContent({
+            model: 'gemini-3.1-flash-lite',
+            contents: prompt,
+            config: { tools: [{ googleSearch: {} }] },
+          });
+        } else {
+          throw innerErr;
+        }
+      }
 
       const parsed = parseJsonObjectSafe(response.text || '');
       const groundingCitations = extractGroundingCitations(response, agencies[0]);
@@ -908,6 +939,185 @@ Return ONLY valid JSON matching this schema:
     }
   }
 
+  private syncNoticeToCompanies(
+    notice: RegulatoryKbNotice,
+    universe: Array<{ symbol: string; name: string; keywords: string[]; sectorGroup: SectorGroup }>
+  ): number {
+    let companiesUpdated = 0;
+    const nowIso = notice.retrievedAt || new Date().toISOString();
+    for (const sym of notice.symbols) {
+      const uMatch = universe.find((u) => u.symbol === sym);
+      if (!uMatch) continue;
+      const existing = this.state.companies[sym] || {
+        symbol: sym,
+        companyName: uMatch.name,
+        sector: getNepseSector(sym, uMatch.name),
+        sectorGroup: uMatch.sectorGroup,
+        updatedAt: nowIso,
+        dataStatus: 'Live' as const,
+        creditRating: {
+          agency: null,
+          ratingGrade: null,
+          outlook: 'Not Rated' as RatingOutlook,
+          ratingAction: null,
+          rationale: null,
+          lastRatedDate: null,
+        },
+        regulatoryStanding: 'Clean' as RegulatoryStanding,
+        nrbAssessment: null,
+        niaAssessment: null,
+        sebonStatus: null,
+        nepseDisclosures: null,
+        cdscStatus: null,
+        lockInOverhangFlag: false,
+        tailwinds: [],
+        riskFlags: [],
+        citations: [],
+      };
+
+      if ((notice.agency === 'ICRA' || notice.agency === 'CARE') && notice.ratingGrade) {
+        existing.creditRating = {
+          agency: notice.agency,
+          ratingGrade: notice.ratingGrade,
+          outlook: notice.ratingOutlook,
+          ratingAction: existing.creditRating.ratingAction || 'Observed in Portal',
+          rationale: notice.summary,
+          lastRatedDate: notice.publishedDate,
+        };
+      }
+      if (notice.agency === 'NRB' && !existing.nrbAssessment) existing.nrbAssessment = notice.summary;
+      if (notice.agency === 'NIA' && !existing.niaAssessment) existing.niaAssessment = notice.summary;
+      if (notice.agency === 'SEBON' && !existing.sebonStatus) existing.sebonStatus = notice.summary;
+      if (notice.agency === 'NEPSE' && !existing.nepseDisclosures) {
+        existing.nepseDisclosures = notice.summary;
+      }
+      if (notice.agency === 'CDSC') {
+        if (!existing.cdscStatus) existing.cdscStatus = notice.summary;
+        if (/lock[-\s]?in|unlock/i.test(`${notice.title} ${notice.summary}`)) {
+          existing.lockInOverhangFlag = true;
+        }
+      }
+
+      if (notice.impact === 'Positive' && !existing.tailwinds.includes(notice.title)) {
+        existing.tailwinds.push(notice.title);
+      }
+      if (notice.impact === 'Negative' && !existing.riskFlags.includes(notice.title)) {
+        existing.riskFlags.push(notice.title);
+        existing.regulatoryStanding = 'Alert';
+      }
+      if (notice.url && !existing.citations.some((c) => c.uri === notice.url)) {
+        existing.citations.push({ title: notice.title, uri: notice.url, agency: notice.agency });
+      }
+      existing.updatedAt = nowIso;
+      existing.dataStatus = 'Live';
+      this.state.companies[sym] = existing;
+      companiesUpdated++;
+    }
+    return companiesUpdated;
+  }
+
+  public recordAnnualReportIngestion(params: {
+    symbol: string;
+    companyName: string;
+    sector: string;
+    sectorGroup: SectorGroup;
+    fiscalYear: string;
+    sourceLabel: string;
+    sourceUrl: string | null;
+    summary: string;
+    tailwinds?: string[];
+    riskFlags?: string[];
+    dividends?: string[];
+  }): CompanyKnowledgeBaseEntry {
+    this.initIfNeeded();
+    const sym = params.symbol.trim().toUpperCase();
+    const nowIso = new Date().toISOString();
+    const existing = this.state.companies[sym] || {
+      symbol: sym,
+      companyName: params.companyName,
+      sector: params.sector,
+      sectorGroup: params.sectorGroup,
+      updatedAt: nowIso,
+      dataStatus: 'Live' as const,
+      creditRating: {
+        agency: null,
+        ratingGrade: null,
+        outlook: 'Not Rated' as RatingOutlook,
+        ratingAction: null,
+        rationale: null,
+        lastRatedDate: null,
+      },
+      regulatoryStanding: 'Clean' as RegulatoryStanding,
+      nrbAssessment: null,
+      niaAssessment: null,
+      sebonStatus: null,
+      nepseDisclosures: null,
+      cdscStatus: null,
+      lockInOverhangFlag: false,
+      tailwinds: [],
+      riskFlags: [],
+      citations: [],
+    };
+
+    const disclosureLine = `FY ${params.fiscalYear} Annual Report (${params.sourceLabel}): ${params.summary}`;
+    existing.nepseDisclosures = disclosureLine;
+    for (const t of params.tailwinds || []) {
+      const clean = t.trim();
+      if (clean && !existing.tailwinds.includes(clean)) {
+        existing.tailwinds.unshift(clean);
+      }
+    }
+    for (const d of params.dividends || []) {
+      const clean = `FY ${params.fiscalYear} Dividend/Bonus: ${d.trim()}`;
+      if (d.trim() && !existing.tailwinds.includes(clean)) {
+        existing.tailwinds.unshift(clean);
+      }
+    }
+    for (const r of params.riskFlags || []) {
+      const clean = r.trim();
+      if (clean && !existing.riskFlags.includes(clean)) {
+        existing.riskFlags.unshift(clean);
+      }
+    }
+    existing.tailwinds = existing.tailwinds.slice(0, 8);
+    existing.riskFlags = existing.riskFlags.slice(0, 8);
+
+    const safeUrl = safeHttpUrl(params.sourceUrl);
+    if (safeUrl && !existing.citations.some((c) => c.uri === safeUrl)) {
+      existing.citations.unshift({
+        title: `${sym} FY ${params.fiscalYear} Annual Report (${params.sourceLabel})`,
+        uri: safeUrl,
+        agency: 'NEPSE',
+      });
+    }
+    existing.updatedAt = nowIso;
+    existing.dataStatus = 'Live';
+    if (existing.regulatoryStanding === 'Unknown') {
+      existing.regulatoryStanding = 'Clean';
+    }
+    this.state.companies[sym] = existing;
+
+    this.upsertNotice({
+      id: makeNoticeId('NEPSE', `${sym} FY ${params.fiscalYear} Annual Report`, safeUrl),
+      agency: 'NEPSE',
+      title: `${sym} FY ${params.fiscalYear} Annual Report Ingested (${params.sourceLabel})`,
+      publishedDate: nowIso.slice(0, 10),
+      summary: params.summary,
+      url: safeUrl,
+      symbols: [sym],
+      sectorGroups: [params.sectorGroup],
+      impact: 'Positive',
+      ratingGrade: existing.creditRating.ratingGrade,
+      ratingOutlook: existing.creditRating.outlook,
+      retrievedAt: nowIso,
+      method: safeUrl ? 'Direct Scrape' : 'Cached Macro',
+    });
+
+    this.state.lastHarvestAt = nowIso;
+    this.save();
+    return existing;
+  }
+
   public async harvestAgencies(
     agenciesInput: RegulatoryAgency[],
     store: MarketStore
@@ -924,6 +1134,7 @@ Return ONLY valid JSON matching this schema:
     const warnings: string[] = [];
     const directResults: Record<string, number> = {};
     let addedNotices = 0;
+    let directCompaniesUpdated = 0;
 
     // Run direct portal scrapers in parallel (bounded 8s timeout per URL)
     const scrapeRuns = await Promise.all(
@@ -938,6 +1149,7 @@ Return ONLY valid JSON matching this schema:
       directResults[agency] = res.notices.length;
       for (const n of res.notices) {
         this.upsertNotice(n);
+        directCompaniesUpdated += this.syncNoticeToCompanies(n, universe);
         addedNotices++;
       }
       if (res.notices.length > 0) {
@@ -964,7 +1176,7 @@ Return ONLY valid JSON matching this schema:
 
     return {
       addedNotices,
-      companiesUpdated: grounded.companiesUpdated,
+      companiesUpdated: Math.max(directCompaniesUpdated, grounded.companiesUpdated),
       directResults,
       warnings,
       summary: this.getSummary(),
@@ -1044,11 +1256,25 @@ Return ONLY valid JSON:
   ]
 }`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-4-hydrogen',
-      contents: prompt,
-      config: { tools: [{ googleSearch: {} }] },
-    });
+    let response: GenerateContentResponse;
+    try {
+      response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents: prompt,
+        config: { tools: [{ googleSearch: {} }] },
+      });
+    } catch (innerErr) {
+      const msg = innerErr instanceof Error ? innerErr.message : String(innerErr);
+      if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('NOT_FOUND')) {
+        response = await ai.models.generateContent({
+          model: 'gemini-3.1-flash-lite',
+          contents: prompt,
+          config: { tools: [{ googleSearch: {} }] },
+        });
+      } else {
+        throw innerErr;
+      }
+    }
 
     const parsed = parseJsonObjectSafe(response.text || '');
     const allCitations = extractGroundingCitations(response, 'NEPSE');

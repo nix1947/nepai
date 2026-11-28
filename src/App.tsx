@@ -7,16 +7,19 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  Briefcase,
   CalendarClock,
   CandlestickChart,
   ChevronDown,
   ChevronRight,
   Compass,
   Crosshair,
+  FileText,
   FileWarning,
   Gauge,
   GitCompare,
   Globe,
+  HelpCircle,
   Home,
   Menu,
   Moon,
@@ -38,8 +41,14 @@ import {
 } from './components/CommandPaletteModal';
 import { CompareStocksDrawer } from './components/CompareStocksDrawer';
 import { InfoTip } from './components/InfoTip';
+import {
+  OnboardingGuideModal,
+  OnboardingResumeBar,
+  type GuideStepTarget,
+} from './components/OnboardingGuideModal';
 import { Stock360Bar, type Stock360Tab } from './components/Stock360Bar';
 import { WatchlistAlertsDrawer } from './components/WatchlistAlertsDrawer';
+import { useOnboardingGuide } from './hooks/useOnboardingGuide';
 import { useTradingSettings } from './hooks/useTradingSettings';
 import { useCompareList, useWatchlist } from './hooks/useWatchlist';
 import type { MasterScreenerResponse } from './types/fundamental';
@@ -48,12 +57,14 @@ import { formatTimeUntil } from './utils/format';
 import { evaluateWatchlistAlerts } from './utils/plainEnglish';
 import { AlgorithmsView } from './views/AlgorithmsView';
 import { AnalyzerView } from './views/AnalyzerView';
+import { AnnualReportView } from './views/AnnualReportView';
 import { FundamentalScreenerView } from './views/FundamentalScreenerView';
 import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
 import { MasterScreenerView } from './views/MasterScreenerView';
 import { OpportunityRadarView } from './views/OpportunityRadarView';
 import { OverviewView } from './views/OverviewView';
+import { PortfolioTradeDeskView } from './views/PortfolioTradeDeskView';
 import {
   CompositeDoNotBuyView,
   FundamentallyRiskyView,
@@ -72,7 +83,9 @@ import { ValuationView } from './views/ValuationView';
 type NavTab =
   | 'today'
   | 'master-screener'
+  | 'portfolio'
   | 'screener'
+  | 'annual-reports'
   | 'valuation'
   | 'overview'
   | 'pulse'
@@ -110,6 +123,7 @@ const NAV_GROUPS: NavGroupConfig[] = [
     items: [
       { id: 'today', label: 'Today Briefing', icon: Home },
       { id: 'master-screener', label: 'Master Screener', icon: SlidersHorizontal },
+      { id: 'portfolio', label: 'Portfolio & Trade Desk', icon: Briefcase },
     ],
   },
   {
@@ -118,6 +132,7 @@ const NAV_GROUPS: NavGroupConfig[] = [
     items: [
       { id: 'valuation', label: 'Pricing & Valuation', icon: Scale },
       { id: 'screener', label: 'Fundamental Screener', icon: Award },
+      { id: 'annual-reports', label: 'Annual Reports', icon: FileText },
       { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
     ],
   },
@@ -178,6 +193,7 @@ export default function App() {
   const [equityOnly, setEquityOnly] = useState<boolean>(true);
   const [explorerSymbol, setExplorerSymbol] = useState<string | null>(null);
   const [valuationSymbol, setValuationSymbol] = useState<string | null>(null);
+  const [annualReportSymbol, setAnnualReportSymbol] = useState<string | null>(null);
   const [screenerTarget, setScreenerTarget] = useState<{ symbol: string; tick: number } | null>(null);
   const [quantSymbol, setQuantSymbol] = useState<string | null>(null);
   const [quantNavTick, setQuantNavTick] = useState<number>(0);
@@ -202,6 +218,19 @@ export default function App() {
   const { watchlist, alertRules } = useWatchlist();
   const { compareSymbols } = useCompareList();
   const { settings } = useTradingSettings();
+  const {
+    onboardingState,
+    guideOpen,
+    pausedAtStep,
+    markTabVisited,
+    setCurrentStep,
+    completeGuide,
+    skipGuide,
+    pauseAndTryInApp,
+    openGuide,
+    resumeGuide,
+    dismissPausedBanner,
+  } = useOnboardingGuide();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -209,13 +238,14 @@ export default function App() {
     else root.classList.remove('dark');
   }, [darkMode]);
 
-  // Auto-expand sidebar group containing activeTab
+  // Auto-expand sidebar group containing activeTab & record explored tab
   useEffect(() => {
     const parent = NAV_GROUPS.find((g) => g.items.some((i) => i.id === activeTab));
     if (parent) {
       setExpandedGroups((prev) => (prev[parent.id] ? prev : { ...prev, [parent.id]: true }));
     }
-  }, [activeTab]);
+    markTabVisited(activeTab);
+  }, [activeTab, markTabVisited]);
 
   const loadMeta = useCallback(async (attempt = 0) => {
     try {
@@ -383,12 +413,35 @@ export default function App() {
     navigateTo('screener');
   };
 
+  const inspectInAnnualReports = (symbol?: string) => {
+    if (symbol) {
+      const clean = symbol.toUpperCase();
+      setActiveTicker(clean);
+      setAnnualReportSymbol(clean);
+    }
+    navigateTo('annual-reports');
+  };
+
   const handleStock360Switch = (view: Stock360Tab, sym: string) => {
     const clean = sym.toUpperCase();
     if (view === 'valuation') inspectInValuation(clean);
     else if (view === 'screener') inspectInScreener(clean);
+    else if (view === 'annual-reports') inspectInAnnualReports(clean);
     else if (view === 'explorer') inspectSymbol(clean);
     else inspectInAnalyzer(clean);
+  };
+
+  const handleTryGuideTarget = (target: GuideStepTarget, stepIndex: number) => {
+    pauseAndTryInApp(stepIndex);
+    if (target.action === 'palette') {
+      setPaletteOpen(true);
+    } else if (target.action === 'watchlist') {
+      setWatchlistOpen(true);
+    } else if (target.action === 'compare') {
+      setCompareOpen(true);
+    } else if (target.tabId) {
+      navigateTo(target.tabId as NavTab);
+    }
   };
 
   const masterRowMap = useMemo(() => {
@@ -417,13 +470,16 @@ export default function App() {
     activeTab !== 'scheduler' &&
     activeTab !== 'macro' &&
     activeTab !== 'master-screener' &&
+    activeTab !== 'portfolio' &&
     activeTab !== 'screener' &&
+    activeTab !== 'annual-reports' &&
     activeTab !== 'valuation' &&
     activeTab !== 'settings';
 
   const stock360View: Stock360Tab | null =
     activeTab === 'valuation' ||
     activeTab === 'screener' ||
+    activeTab === 'annual-reports' ||
     activeTab === 'explorer' ||
     activeTab === 'analyzer'
       ? activeTab
@@ -432,6 +488,7 @@ export default function App() {
   const resolved360Ticker =
     activeTicker ||
     (activeTab === 'valuation' ? valuationSymbol : null) ||
+    (activeTab === 'annual-reports' ? annualReportSymbol : null) ||
     (activeTab === 'explorer' || activeTab === 'analyzer' ? explorerSymbol : null);
 
   const sidebarContent = (
@@ -575,6 +632,23 @@ export default function App() {
             </span>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            openGuide(0);
+            setMobileMenuOpen(false);
+          }}
+          className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+        >
+          <span className="inline-flex items-center gap-1.5 font-medium">
+            <HelpCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>App Guide &amp; Tour</span>
+          </span>
+          <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 tabular-nums">
+            {onboardingState.visitedTabs.length} views
+          </span>
+        </button>
       </div>
     </div>
   );
@@ -681,6 +755,16 @@ export default function App() {
 
             <button
               type="button"
+              onClick={() => openGuide(0)}
+              title="Open interactive walkthrough & feature guide"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="hidden md:inline">Guide</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setDarkMode((v) => !v)}
               aria-label="Toggle theme"
               className="p-2 rounded-md border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
@@ -776,6 +860,7 @@ export default function App() {
               {activeTab === 'today' && (
                 <TodayBriefingView
                   daily={daily}
+                  equityOnly={equityOnly}
                   masterData={masterData}
                   loadingMaster={loadingMaster}
                   onOpenMasterScreener={() => navigateTo('master-screener')}
@@ -783,6 +868,7 @@ export default function App() {
                   onInspectSymbol={inspectSymbol}
                   onInspectInAnalyzer={inspectInAnalyzer}
                   onInspectInScreener={inspectInScreener}
+                  onOpenAnnualReports={inspectInAnnualReports}
                   onOpenWatchlistDrawer={() => setWatchlistOpen(true)}
                   onOpenCompareDrawer={() => setCompareOpen(true)}
                 />
@@ -807,6 +893,16 @@ export default function App() {
                   onInspectInScreener={inspectInScreener}
                 />
               )}
+              {activeTab === 'portfolio' && (
+                <PortfolioTradeDeskView
+                  masterData={masterData}
+                  loadingMaster={loadingMaster}
+                  onInspectSymbol={inspectSymbol}
+                  onInspectInAnalyzer={inspectInAnalyzer}
+                  onOpenValuation={inspectInValuation}
+                  onInspectInScreener={inspectInScreener}
+                />
+              )}
               {activeTab === 'screener' && (
                 <FundamentalScreenerView
                   equityOnly={equityOnly}
@@ -815,6 +911,18 @@ export default function App() {
                   onInspectInAnalyzer={inspectInAnalyzer}
                   onOpenValuation={inspectInValuation}
                   onSymbolChange={(sym) => setActiveTicker(sym)}
+                />
+              )}
+              {activeTab === 'annual-reports' && (
+                <AnnualReportView
+                  equityOnly={equityOnly}
+                  initialSymbol={annualReportSymbol || valuationSymbol || explorerSymbol}
+                  onSymbolChange={(sym) => {
+                    setActiveTicker(sym);
+                    setAnnualReportSymbol(sym);
+                  }}
+                  onOpenValuation={inspectInValuation}
+                  onInspectInScreener={inspectInScreener}
                 />
               )}
               {activeTab === 'valuation' && (
@@ -952,6 +1060,7 @@ export default function App() {
         onNavigateTab={(id) => navigateTo(id as NavTab)}
         onOpenValuation={inspectInValuation}
         onInspectInScreener={inspectInScreener}
+        onOpenAnnualReports={inspectInAnnualReports}
         onInspectSymbol={inspectSymbol}
         onInspectInAnalyzer={inspectInAnalyzer}
       />
@@ -971,6 +1080,23 @@ export default function App() {
         rows={masterData?.rows ?? []}
         onOpenValuation={inspectInValuation}
         onInspectSymbol={inspectSymbol}
+      />
+
+      <OnboardingGuideModal
+        open={guideOpen && !loadingMeta}
+        initialStep={onboardingState.lastStep}
+        visitedTabs={onboardingState.visitedTabs}
+        completedSteps={onboardingState.completedSteps}
+        onStepChange={setCurrentStep}
+        onComplete={completeGuide}
+        onSkip={skipGuide}
+        onTryTarget={handleTryGuideTarget}
+      />
+
+      <OnboardingResumeBar
+        stepIndex={pausedAtStep}
+        onResume={resumeGuide}
+        onDismiss={dismissPausedBanner}
       />
     </div>
   );

@@ -1,0 +1,88 @@
+name: NEPSE Regulatory Knowledge Base Crawl
+
+on:
+  schedule:
+    # Twice weekly at 18:08 NPT (12:23 UTC) Mon & Thu to crawl ICRA, CARE, NRB, NIA, SEBON, NEPSE, CDSC
+    - cron: '23 12 * * 1,4'
+  workflow_dispatch:
+    inputs:
+      agencies:
+        description: 'Agencies to crawl (ALL or comma-separated: ICRA,CARE,NRB,NIA,SEBON,NEPSE,CDSC)'
+        required: false
+        default: 'ALL'
+        type: string
+      enrich_limit:
+        description: 'Max company dossiers to refresh when GEMINI_API_KEY is configured'
+        required: false
+        default: '18'
+        type: string
+      symbols:
+        description: 'Optional comma-separated ticker symbols (e.g., NABIL,SHIVM)'
+        required: false
+        default: ''
+        type: string
+      force:
+        description: 'Force re-enrichment even for recently updated symbols'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: knowledge-base-crawl
+  cancel-in-progress: false
+
+jobs:
+  crawl-regulatory-kb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund || npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Crawl regulatory agencies & enrich NEPSE Knowledge Base
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          AGENCIES="${{ github.event.inputs.agencies || 'ALL' }}"
+          LIMIT="${{ github.event.inputs.enrich_limit || '18' }}"
+          SYMBOLS="${{ github.event.inputs.symbols || '' }}"
+          FORCE="${{ github.event.inputs.force || 'false' }}"
+
+          CMD="npx tsx scripts/harvest-knowledge-base.ts --agencies=${AGENCIES} --enrich-limit=${LIMIT}"
+          if [ -n "$SYMBOLS" ]; then
+            CMD="${CMD} --symbol=${SYMBOLS}"
+          fi
+          if [ "$FORCE" = "true" ]; then
+            CMD="${CMD} --force"
+          fi
+
+          echo "Running: $CMD"
+          $CMD
+
+      - name: Commit and push updated Regulatory Knowledge Base
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git status --porcelain -- 'data/financial/vault/regulatory-kb.json' | grep -q .; then
+            git add data/financial/vault/regulatory-kb.json
+            git commit -m "chore(kb): crawl NEPSE regulatory agencies & update knowledge base"
+            git pull --rebase origin ${{ github.event.repository.default_branch }} || true
+            git push origin HEAD:${{ github.event.repository.default_branch }}
+          else
+            echo "No new regulatory knowledge base updates to commit."
+          fi

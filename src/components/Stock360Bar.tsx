@@ -3,6 +3,7 @@ import {
   Award,
   CandlestickChart,
   Crosshair,
+  FileText,
   GitCompare,
   Scale,
   Star,
@@ -11,7 +12,7 @@ import { useCompareList, useWatchlist } from '../hooks/useWatchlist';
 import type { MasterScreenerRow } from '../types/fundamental';
 import { buildPlainEnglishVerdict } from '../utils/plainEnglish';
 
-export type Stock360Tab = 'valuation' | 'screener' | 'explorer' | 'analyzer';
+export type Stock360Tab = 'valuation' | 'screener' | 'annual-reports' | 'explorer' | 'analyzer';
 
 interface Stock360BarProps {
   symbol: string;
@@ -49,6 +50,7 @@ export const Stock360Bar: React.FC<Stock360BarProps> = ({
   }> = [
     { id: 'valuation', label: 'Pricing & Valuation', icon: Scale },
     { id: 'screener', label: '9-Investor Dossier', icon: Award },
+    { id: 'annual-reports', label: 'Annual Reports', icon: FileText },
     { id: 'explorer', label: 'Technical Chart', icon: CandlestickChart },
     { id: 'analyzer', label: 'ICT/SMC Analyzer', icon: Crosshair },
   ];

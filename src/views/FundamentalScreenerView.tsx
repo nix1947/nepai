@@ -57,7 +57,7 @@ interface FundamentalScreenerViewProps {
   onSymbolChange?: (symbol: string) => void;
 }
 
-type TableLens = 'overview' | 'growth' | 'valuation' | 'investors';
+type TableLens = 'overview' | 'growth' | 'valuation' | 'investors' | 'outlook';
 
 interface NumericFilterState {
   minPe: string;
@@ -109,6 +109,7 @@ interface StrategyPreset {
   onlyEvaluated: boolean;
   lens?: TableLens;
   sortBy?: string;
+  outlook?: 'all' | 'blow_up' | 'blow_down';
 }
 
 const STRATEGY_PRESETS: StrategyPreset[] = [
@@ -165,6 +166,26 @@ const STRATEGY_PRESETS: StrategyPreset[] = [
     lens: 'valuation',
     sortBy: 'overallScore',
   },
+  {
+    id: 'blow_up',
+    label: 'Next Qtr Blow-Up',
+    hint: 'Current-FY quarter signals upside inflection with cited catalysts',
+    filters: {},
+    onlyEvaluated: true,
+    lens: 'outlook',
+    sortBy: 'blowUp',
+    outlook: 'blow_up',
+  },
+  {
+    id: 'blow_down',
+    label: 'Next Qtr Blow-Down',
+    hint: 'Current-FY quarter signals downside warning with cited risks',
+    filters: {},
+    onlyEvaluated: true,
+    lens: 'outlook',
+    sortBy: 'blowDown',
+    outlook: 'blow_down',
+  },
 ];
 
 const RANKING_TABS: Array<{ id: 'all' | RankingCategory; label: string }> = [
@@ -191,6 +212,7 @@ const CONSENSUS_OPTIONS: Array<{ id: 'all' | ConsensusTag; label: string }> = [
 
 const TABLE_LENSES: Array<{ id: TableLens; label: string }> = [
   { id: 'overview', label: 'Overview & Investors' },
+  { id: 'outlook', label: 'Coming Qtr Blow-Up / Down' },
   { id: 'growth', label: 'Growth & Prev-Quarter Δ' },
   { id: 'valuation', label: 'Valuation & Balance Sheet' },
   { id: 'investors', label: '9-Investor Matrix' },
@@ -264,6 +286,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
 
   // Screener Filters & Lenses
   const [rankingTab, setRankingTab] = useState<'all' | RankingCategory>('all');
+  const [outlookFilter, setOutlookFilter] = useState<'all' | 'blow_up' | 'blow_down'>('all');
   const [consensusFilter, setConsensusFilter] = useState<'all' | ConsensusTag>('all');
   const [sectorFilter, setSectorFilter] = useState<string>('All');
   const [fiscalYearFilter, setFiscalYearFilter] = useState<string>('');
@@ -355,6 +378,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
     setActivePreset(preset.id);
     setNumFilters({ ...EMPTY_NUMERIC_FILTERS, ...preset.filters });
     setOnlyEvaluated(preset.onlyEvaluated);
+    setOutlookFilter(preset.outlook ?? 'all');
     if (preset.lens) setTableLens(preset.lens);
     if (preset.sortBy) setSortBy(preset.sortBy);
     if (preset.id !== 'all') {
@@ -366,6 +390,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
     setActivePreset('all');
     setNumFilters(EMPTY_NUMERIC_FILTERS);
     setRankingTab('all');
+    setOutlookFilter('all');
     setConsensusFilter('all');
     setSectorFilter('All');
     setSearchQuery('');
@@ -409,6 +434,19 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
     let rows = overview.rows;
 
     if (onlyEvaluated) rows = rows.filter((r) => r.hasFundamentalData);
+    if (outlookFilter === 'blow_up') {
+      rows = rows.filter(
+        (r) =>
+          r.comingQuarterOutlook.direction === 'Blow Up' ||
+          r.comingQuarterOutlook.direction === 'Moderate Upside'
+      );
+    } else if (outlookFilter === 'blow_down') {
+      rows = rows.filter(
+        (r) =>
+          r.comingQuarterOutlook.direction === 'Blow Down' ||
+          r.comingQuarterOutlook.direction === 'Downside Risk'
+      );
+    }
     if (sectorFilter !== 'All') {
       rows = rows.filter(
         (r) => r.sector === sectorFilter || r.sectorGroup === sectorFilter
@@ -507,6 +545,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
   }, [
     overview,
     onlyEvaluated,
+    outlookFilter,
     sectorFilter,
     rankingTab,
     consensusFilter,
@@ -1003,6 +1042,119 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
       ];
     }
 
+    if (tableLens === 'outlook') {
+      return [
+        compareCol,
+        starCol,
+        symbolCol,
+        {
+          key: 'currentNextQ',
+          label: 'Current Q → Target',
+          align: 'left',
+          sortValue: (r) => r.comingQuarterOutlook.comingQuarterLabel,
+          csvValue: (r) =>
+            `${r.comingQuarterOutlook.currentPeriodLabel} -> ${r.comingQuarterOutlook.comingQuarterLabel}`,
+          render: (r) => (
+            <div className="text-[11px] font-mono">
+              <div className="text-slate-800 dark:text-slate-200">
+                Target: {r.comingQuarterOutlook.comingQuarterLabel}
+              </div>
+              <div className="text-slate-400">
+                Base: {r.comingQuarterOutlook.currentPeriodLabel}
+              </div>
+            </div>
+          ),
+        },
+        {
+          key: 'outlookDir',
+          label: 'Next Qtr Outlook',
+          align: 'left',
+          sortValue: (r) =>
+            r.comingQuarterOutlook.direction === 'Insufficient Data'
+              ? -999
+              : r.comingQuarterOutlook.score,
+          csvValue: (r) =>
+            `${r.comingQuarterOutlook.direction} (${r.comingQuarterOutlook.score >= 0 ? '+' : ''}${r.comingQuarterOutlook.score})`,
+          render: (r) => {
+            const dir = r.comingQuarterOutlook.direction;
+            const tone =
+              dir === 'Blow Up' || dir === 'Moderate Upside'
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : dir === 'Blow Down' || dir === 'Downside Risk'
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-slate-500 dark:text-slate-400';
+            return (
+              <div>
+                <div className={`text-xs font-semibold ${tone}`}>{dir}</div>
+                <div className="text-[10px] font-mono text-slate-400">
+                  {dir === 'Insufficient Data'
+                    ? 'Pending Qtr'
+                    : `Score ${r.comingQuarterOutlook.score >= 0 ? '+' : ''}${r.comingQuarterOutlook.score} · ${r.comingQuarterOutlook.confidence} conf`}
+                </div>
+              </div>
+            );
+          },
+        },
+        {
+          key: 'outlookReasons',
+          label: 'Reasons & Signals (Current Q Basis)',
+          align: 'left',
+          sortValue: (r) => r.comingQuarterOutlook.reasons.length,
+          csvValue: (r) => r.comingQuarterOutlook.reasons.join(' | '),
+          render: (r) => (
+            <ul className="space-y-1 text-[11px] text-slate-700 dark:text-slate-300 max-w-md">
+              {r.comingQuarterOutlook.reasons.slice(0, 3).map((reason, idx) => (
+                <li key={idx} className="leading-snug">
+                  · {reason}
+                </li>
+              ))}
+            </ul>
+          ),
+        },
+        {
+          key: 'outlookRefs',
+          label: 'Verified References',
+          align: 'left',
+          sortable: false,
+          csvValue: (r) =>
+            r.comingQuarterOutlook.references
+              .map((ref) => (ref.url ? `${ref.label} (${ref.url})` : ref.label))
+              .join(' | '),
+          render: (r) => (
+            <div className="space-y-0.5 text-[10px] font-mono max-w-[220px]">
+              {r.comingQuarterOutlook.references.length === 0 ? (
+                <span className="text-slate-400">—</span>
+              ) : (
+                r.comingQuarterOutlook.references.slice(0, 3).map((ref, idx) =>
+                  ref.url ? (
+                    <a
+                      key={idx}
+                      href={ref.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="block truncate text-blue-600 dark:text-blue-400 hover:underline"
+                      title={`${ref.label} (${ref.period})`}
+                    >
+                      {ref.label} ({ref.period})
+                    </a>
+                  ) : (
+                    <span
+                      key={idx}
+                      className="block truncate text-slate-500 dark:text-slate-400"
+                      title={`${ref.label} (${ref.period})`}
+                    >
+                      {ref.label} ({ref.period})
+                    </span>
+                  )
+                )
+              )}
+            </div>
+          ),
+        },
+      ];
+    }
+
     // Default 'overview' lens
     return [
       compareCol,
@@ -1176,6 +1328,38 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
         sortValue: (r) => (r.hasFundamentalData ? r.scores.growthScore : -1),
         csvValue: (r) => r.scores.growthScore,
         render: (r) => <CompositeGrowthTrendCell row={r} />,
+      },
+      {
+        key: 'nextQtrOutlook',
+        label: 'Next Qtr Outlook',
+        align: 'left',
+        sortValue: (r) =>
+          r.comingQuarterOutlook.direction === 'Insufficient Data'
+            ? -999
+            : r.comingQuarterOutlook.score,
+        csvValue: (r) =>
+          `${r.comingQuarterOutlook.direction} (${r.comingQuarterOutlook.score}): ${r.comingQuarterOutlook.headline}`,
+        render: (r) => {
+          const dir = r.comingQuarterOutlook.direction;
+          const tone =
+            dir === 'Blow Up' || dir === 'Moderate Upside'
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : dir === 'Blow Down' || dir === 'Downside Risk'
+                ? 'text-red-600 dark:text-red-400'
+                : 'text-slate-500 dark:text-slate-400';
+          return (
+            <div className="max-w-[200px]">
+              <div className={`text-[11px] font-semibold ${tone}`}>
+                {dir === 'Insufficient Data'
+                  ? '—'
+                  : `${dir} (${r.comingQuarterOutlook.score >= 0 ? '+' : ''}${r.comingQuarterOutlook.score})`}
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                {r.comingQuarterOutlook.reasons[0] ?? r.comingQuarterOutlook.comingQuarterLabel}
+              </div>
+            </div>
+          );
+        },
       },
       {
         key: 'period',
@@ -1674,6 +1858,8 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
                 className="px-2 py-1.5 rounded border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950"
               >
                 <option value="overallScore">Sort: Overall Score</option>
+                <option value="blowUp">Sort: Next Qtr Blow-Up</option>
+                <option value="blowDown">Sort: Next Qtr Blow-Down Risk</option>
                 <option value="quality">Sort: Fundamental Quality</option>
                 <option value="value">Sort: Valuation Score</option>
                 <option value="mos">Sort: Margin of Safety</option>
@@ -2052,6 +2238,18 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+              <select
+                value={outlookFilter}
+                onChange={(e) =>
+                  setOutlookFilter(e.target.value as 'all' | 'blow_up' | 'blow_down')
+                }
+                aria-label="Filter by next quarter outlook"
+                className="px-2 py-1 rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-200"
+              >
+                <option value="all">Next Qtr: All Outlooks</option>
+                <option value="blow_up">Next Qtr: Blow-Up / Upside</option>
+                <option value="blow_down">Next Qtr: Blow-Down / Risk</option>
+              </select>
               <label className="inline-flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"

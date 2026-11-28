@@ -42,6 +42,12 @@ import {
   getValuationUniverseSummary,
   runAnnualReportDeepDive,
 } from './server/fundamental/annualValuationEngine.ts';
+import {
+  buildAnnualReportIntelligence,
+  distillAnnualReportWithAi,
+  getAnnualReportUniverse,
+  ingestAndDistillAnnualReport,
+} from './server/fundamental/annualReportIntelEngine.ts';
 import { FundamentalMonitorService } from './server/fundamental/fundamentalCollector.ts';
 import { evaluateHiddenGems } from './server/fundamental/hiddenGemsEngine.ts';
 import { evaluateScreenerUniverse } from './server/fundamental/investorScoringEngine.ts';
@@ -120,7 +126,7 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ limit: '25mb' }));
 
   const store = new MarketStore(DATA_DIR);
   const scheduler = new DailyScheduler(store);
@@ -182,6 +188,26 @@ async function startServer() {
     const nDays = req.query.nDays ? Math.max(2, Math.min(250, Number(req.query.nDays))) : 20;
     const equityOnly = req.query.equityOnly !== 'false';
     res.json(store.getMarketPulse(day, equityOnly, { start, end, nDays }));
+  });
+
+  app.get('/api/homepage-pulse', (req, res) => {
+    const dates = store.getDates();
+    const day =
+      typeof req.query.day === 'string' && isValidDateStr(req.query.day)
+        ? req.query.day
+        : dates[dates.length - 1];
+    if (!day) {
+      res.status(404).json({ error: 'No trading day loaded' });
+      return;
+    }
+    const nDays = req.query.nDays ? Math.max(5, Math.min(250, Number(req.query.nDays))) : 20;
+    const equityOnly = req.query.equityOnly !== 'false';
+    const payload = store.getHomepageCommand(day, nDays, equityOnly);
+    if (!payload) {
+      res.status(404).json({ error: 'No trading data available for homepage command' });
+      return;
+    }
+    res.json(payload);
   });
 
   app.get('/api/top-turnover-analytics', (req, res) => {
@@ -742,6 +768,7 @@ async function startServer() {
         monitorStatusMap: statusMap,
         benchmarkFdRatePct: parseBenchmarkFdRate(),
         annualWeightPct,
+        kbMap: regulatoryKb.getAllCompanyEntries(),
       });
 
       const activeQ = getActiveNepalFiscalQuarter(
@@ -819,8 +846,25 @@ async function startServer() {
       const minEpsQoq = req.query.minEpsQoq ? Number(req.query.minEpsQoq) : null;
       const minProfitYoy = req.query.minProfitYoy ? Number(req.query.minProfitYoy) : null;
       const improvingQoq = req.query.improvingQoq === 'true';
+      const outlookFilter =
+        typeof req.query.outlook === 'string' && req.query.outlook !== 'all'
+          ? req.query.outlook.trim()
+          : null;
 
       if (onlyEvaluated) rows = rows.filter((r) => r.hasFundamentalData);
+      if (outlookFilter === 'blow_up') {
+        rows = rows.filter(
+          (r) =>
+            r.comingQuarterOutlook.direction === 'Blow Up' ||
+            r.comingQuarterOutlook.direction === 'Moderate Upside'
+        );
+      } else if (outlookFilter === 'blow_down') {
+        rows = rows.filter(
+          (r) =>
+            r.comingQuarterOutlook.direction === 'Blow Down' ||
+            r.comingQuarterOutlook.direction === 'Downside Risk'
+        );
+      }
       if (sectorFilter) {
         rows = rows.filter(
           (r) => r.sector === sectorFilter || r.sectorGroup === sectorFilter
@@ -945,6 +989,10 @@ async function startServer() {
               return r.market.turnover ?? -1;
             case 'consensus':
               return r.passedInvestorCount;
+            case 'blowUp':
+              return r.hasFundamentalData ? r.comingQuarterOutlook.score : -999;
+            case 'blowDown':
+              return r.hasFundamentalData ? -r.comingQuarterOutlook.score : -999;
             default:
               return r.scores.overallScore;
           }
@@ -1019,6 +1067,7 @@ async function startServer() {
         monitorStatusMap: fundamentalMonitor.getStatusMap(),
         benchmarkFdRatePct: parseBenchmarkFdRate(),
         annualWeightPct,
+        kbMap: regulatoryKb.getAllCompanyEntries(),
       });
 
       const detail = evaluated.bySymbol.get(symbol);
@@ -1064,6 +1113,7 @@ async function startServer() {
         monitorStatusMap: fundamentalMonitor.getStatusMap(),
         benchmarkFdRatePct: parseBenchmarkFdRate(),
         annualWeightPct,
+        kbMap: regulatoryKb.getAllCompanyEntries(),
       });
 
       if (symbolParam) {
@@ -1200,6 +1250,11 @@ async function startServer() {
             'Pabrai',
             'Passed Investors',
             'Consensus Matches',
+            'Next Qtr Target',
+            'Next Qtr Direction',
+            'Next Qtr Score',
+            'Next Qtr Reasons',
+            'Next Qtr References',
           ],
           rows: targetRows.map((r) => [
             r.symbol,
@@ -1246,6 +1301,13 @@ async function startServer() {
             r.investorScores.pabrai,
             r.passedInvestorCount,
             r.consensusMatches.filter((c) => c.qualified).map((c) => c.label).join('; '),
+            r.comingQuarterOutlook.comingQuarterLabel,
+            r.comingQuarterOutlook.direction,
+            r.comingQuarterOutlook.score,
+            r.comingQuarterOutlook.reasons.join(' | '),
+            r.comingQuarterOutlook.references
+              .map((ref) => (ref.url ? `${ref.label} (${ref.url})` : ref.label))
+              .join(' | '),
           ]),
         },
       ]);
@@ -1437,6 +1499,104 @@ async function startServer() {
       res.status(500).json({
         error: err instanceof Error ? err.message : `Annual report deep-dive failed for ${symbol}`,
       });
+    }
+  });
+
+  // ---------------------------------------------------------------- Annual Report Analysis & Stock Intelligence Routes
+  app.get('/api/annual-reports/universe', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
+      res.json(getAnnualReportUniverse(store, fundamentalVault, regulatoryKb, { equityOnly }));
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to build annual report universe',
+      });
+    }
+  });
+
+  app.get('/api/annual-reports/company/:symbol', (req, res) => {
+    try {
+      const symbol = String(req.params.symbol || '').trim().toUpperCase();
+      if (!isValidSymbol(symbol)) {
+        res.status(400).json({ error: 'Invalid ticker symbol' });
+        return;
+      }
+      const equityOnly = req.query.equityOnly !== 'false';
+      const intel = buildAnnualReportIntelligence(store, fundamentalVault, regulatoryKb, symbol, {
+        equityOnly,
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+      });
+      if (!intel) {
+        res.status(404).json({
+          error: `No annual or quarterly financial ledger found in the knowledge base for ${symbol}.`,
+        });
+        return;
+      }
+      res.json(intel);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to analyze company annual reports',
+      });
+    }
+  });
+
+  app.post('/api/annual-reports/distill', async (req, res) => {
+    const symbol = String(req.body?.symbol || '').trim().toUpperCase();
+    if (!isValidSymbol(symbol)) {
+      res.status(400).json({ error: 'Valid ticker symbol required' });
+      return;
+    }
+    const fiscalYear =
+      typeof req.body?.fiscalYear === 'string' && req.body.fiscalYear.trim()
+        ? req.body.fiscalYear.trim()
+        : undefined;
+    const force = Boolean(req.body?.force);
+    try {
+      const result = await distillAnnualReportWithAi(
+        store,
+        fundamentalVault,
+        regulatoryKb,
+        symbol,
+        fiscalYear,
+        force
+      );
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : `Annual report distillation failed for ${symbol}`,
+      });
+    }
+  });
+
+  app.post('/api/annual-reports/ingest', async (req, res) => {
+    const symbol = String(req.body?.symbol || '').trim().toUpperCase();
+    if (!isValidSymbol(symbol)) {
+      res.status(400).json({ error: 'Valid symbol required' });
+      return;
+    }
+    try {
+      const result = await ingestAndDistillAnnualReport(store, fundamentalVault, regulatoryKb, {
+        symbol,
+        fiscalYear: typeof req.body?.fiscalYear === 'string' ? req.body.fiscalYear.trim() : undefined,
+        reportUrl:
+          typeof req.body?.reportUrl === 'string' && req.body.reportUrl.trim()
+            ? req.body.reportUrl.trim()
+            : typeof req.body?.sourceUrl === 'string' && req.body.sourceUrl.trim()
+              ? req.body.sourceUrl.trim()
+              : undefined,
+        fileName: typeof req.body?.fileName === 'string' ? req.body.fileName.trim() : undefined,
+        mimeType: typeof req.body?.mimeType === 'string' ? req.body.mimeType.trim() : undefined,
+        fileBase64: typeof req.body?.fileBase64 === 'string' ? req.body.fileBase64.trim() : undefined,
+        rawText: typeof req.body?.rawText === 'string' ? req.body.rawText : undefined,
+      });
+      res.json(result);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : `Annual report upload/link distillation failed for ${symbol}`;
+      const status =
+        /unsupported|invalid|provide|exceeds|private|localhost|http/i.test(message) ? 400 : 500;
+      res.status(status).json({ error: message });
     }
   });
 
@@ -1827,7 +1987,7 @@ async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, allowedHosts: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);

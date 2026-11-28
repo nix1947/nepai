@@ -4,6 +4,7 @@ import {
   Award,
   CandlestickChart,
   Crosshair,
+  FileText,
   Scale,
   Search,
   Star,
@@ -26,6 +27,7 @@ interface CommandPaletteModalProps {
   onNavigateTab: (tabId: string) => void;
   onOpenValuation: (symbol: string) => void;
   onInspectInScreener: (symbol: string) => void;
+  onOpenAnnualReports?: (symbol: string) => void;
   onInspectSymbol: (symbol: string) => void;
   onInspectInAnalyzer: (symbol: string) => void;
 }
@@ -38,6 +40,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   onNavigateTab,
   onOpenValuation,
   onInspectInScreener,
+  onOpenAnnualReports,
   onInspectSymbol,
   onInspectInAnalyzer,
 }) => {
@@ -183,18 +186,31 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
                             onInspectInScreener(m.symbol);
                             onClose();
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 whitespace-nowrap shrink-0"
                         >
                           <Award className="w-3 h-3" />
                           <span>Dossier</span>
                         </button>
+                        {onOpenAnnualReports && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onOpenAnnualReports(m.symbol);
+                              onClose();
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 whitespace-nowrap shrink-0"
+                          >
+                            <FileText className="w-3 h-3" />
+                            <span>Annual</span>
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
                             onInspectSymbol(m.symbol);
                             onClose();
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
                         >
                           <CandlestickChart className="w-3 h-3" />
                           <span>Chart</span>
@@ -205,7 +221,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
                             onInspectInAnalyzer(m.symbol);
                             onClose();
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
                         >
                           <Crosshair className="w-3 h-3" />
                           <span>Analyzer</span>

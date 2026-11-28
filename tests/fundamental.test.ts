@@ -4,9 +4,15 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import {
+  buildAnnualReportIntelligence,
+  getAnnualReportUniverse,
+  ingestAndDistillAnnualReport,
+} from '../server/fundamental/annualReportIntelEngine.ts';
+import {
   buildCompanyValuationDossier,
   getValuationUniverseSummary,
 } from '../server/fundamental/annualValuationEngine.ts';
+import { computeComingQuarterOutlook } from '../server/fundamental/comingQuarterOutlook.ts';
 import { FundamentalMonitorService } from '../server/fundamental/fundamentalCollector.ts';
 import {
   buildSpreadsheetExport,
@@ -19,6 +25,7 @@ import { evaluateScreenerUniverse } from '../server/fundamental/investorScoringE
 import { computeMasterScreener } from '../server/fundamental/masterScreenerEngine.ts';
 import {
   getActiveNepalFiscalQuarter,
+  getNepalFiscalYearCalendarContext,
   getUpcomingNepalFiscalQuarter,
   parseNepalPeriodLabel,
 } from '../server/fundamental/nepalCalendar.ts';
@@ -989,4 +996,516 @@ test('70% Annual / 30% Quarterly weighting blends metrics, scores, and Hidden Ge
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('Annual Report Intelligence builds per-FY analyses, 8 key pillars, comparison matrix, and multi-year trendSeries', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-ar-intel-test-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low\nSHIVM,Shivam Cements Ltd.,510,525,505,520,512,8,1.56,50000,26000000,520,690,460\n',
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    const makeFySnap = (
+      fy: string,
+      qLabel: string,
+      eps: number,
+      profitCr: number,
+      revCr: number,
+      equityCr: number,
+      assetsCr: number,
+      roe: number
+    ): CompanyFinancialSnapshot => ({
+      symbol: 'SHIVM',
+      companyName: 'Shivam Cements Ltd.',
+      sector: 'Manufacturing and Processing',
+      companyId: '99',
+      scrapedAt: '2026-11-27T06:00:00.000Z',
+      sourceUrl: 'https://www.sharesansar.com/company/shivm',
+      periods: [`${qLabel} ${fy}`],
+      tabs: [
+        {
+          key: 'profit_loss',
+          title: 'Profit and Loss',
+          headers: ["Particulars (Rs. in '000)", `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Income', isSectionHeader: false, particulars: 'Revenue', values: [String(revCr * 10_000)], numericValues: [revCr * 10_000] },
+            { section: 'Profit', isSectionHeader: false, particulars: 'Profit for the period', values: [String(profitCr * 10_000)], numericValues: [profitCr * 10_000] },
+          ],
+        },
+        {
+          key: 'balance_sheet',
+          title: 'Balance Sheet',
+          headers: ["Particulars (Rs. in '000)", `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Equity', isSectionHeader: false, particulars: "Total Shareholder's Equity", values: [String(equityCr * 10_000)], numericValues: [equityCr * 10_000] },
+            { section: 'Equity', isSectionHeader: false, particulars: 'Share Capital', values: ['5000000'], numericValues: [5_000_000] },
+            { section: 'Equity', isSectionHeader: false, particulars: 'Reserves', values: [String((equityCr - 500) * 10_000)], numericValues: [(equityCr - 500) * 10_000] },
+            { section: 'Debt', isSectionHeader: false, particulars: 'Long Term Debt', values: ['1200000'], numericValues: [1_200_000] },
+            { section: 'Assets', isSectionHeader: false, particulars: 'Total Assets', values: [String(assetsCr * 10_000)], numericValues: [assetsCr * 10_000] },
+          ],
+        },
+        {
+          key: 'key_metrics',
+          title: 'Key Metrics',
+          headers: ['Particulars', `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: [String(eps)], numericValues: [eps] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Net Worth Per Share', values: ['210'], numericValues: [210] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Return on Equity', values: [String(roe)], numericValues: [roe] },
+          ],
+        },
+      ],
+    });
+
+    for (const [fy, qLabel, eps, profitCr, revCr, eqCr, asCr, roe] of [
+      ['2080/81', 'Annual', 22, 110, 620, 920, 1250, 12.0],
+      ['2081/82', 'Annual', 28, 140, 740, 1020, 1340, 14.2],
+      ['2082/83', '4th Quarter', 34, 170, 860, 1120, 1420, 15.8],
+      ['2083/84', '1st Quarter', 38, 190, 920, 1180, 1490, 16.5],
+    ] as const) {
+      for (const rec of normalizeShareSansarSnapshot(
+        makeFySnap(fy, qLabel, eps, profitCr, revCr, eqCr, asCr, roe)
+      )) {
+        vault.upsertStatementRecord(rec);
+      }
+    }
+
+    const universe = getAnnualReportUniverse(store, vault, kb, { equityOnly: true });
+    assert.equal(universe.totalCompanies, 1);
+    assert.equal(universe.multiFyCount, 1);
+    assert.equal(universe.auditedAnnualCount, 1);
+    assert.equal(universe.candidates[0].symbol, 'SHIVM');
+    assert.equal(universe.candidates[0].totalFyCount, 4);
+    assert.equal(universe.candidates[0].auditedFyCount, 2);
+
+    const prePoushNow = new Date('2026-11-28T00:00:00Z');
+    const intel = buildAnnualReportIntelligence(store, vault, kb, 'SHIVM', {
+      now: prePoushNow,
+    });
+    assert.ok(intel, 'Expected AnnualReportIntelligenceResponse for SHIVM');
+    assert.equal(intel.symbol, 'SHIVM');
+    assert.equal(intel.fiscalContext.currentFy, '2083/84');
+    assert.equal(intel.fiscalContext.latestCompletedFy, '2082/83');
+    assert.equal(intel.fiscalContext.previousCompletedFy, '2081/82');
+    assert.equal(intel.fiscalContext.poushEndPassed, false);
+    // Before Poush end, since 2082/83 only has 4th Quarter (not Audited Annual), recommend prior Audited FY 2081/82
+    assert.equal(intel.recommendedAnnualFy, '2081/82');
+    assert.equal(intel.fallbackUsed, true);
+    assert.ok(intel.fallbackReason?.includes('2081/82'));
+    assert.equal(intel.fiscalYears.length, 4);
+    assert.equal(intel.auditedFyCount, 2);
+    assert.equal(intel.totalFyCount, 4);
+
+    // Every FY has all 8 required key analysis pillars
+    const expectedPillarIds = [
+      'managementQuality',
+      'growth',
+      'businessOpportunities',
+      'risks',
+      'weaknesses',
+      'uncertainties',
+      'upcomingBusinessPlans',
+      'businessDirection',
+    ];
+    for (const fyObj of intel.fiscalYears) {
+      assert.deepEqual(Object.keys(fyObj.pillars).sort(), [...expectedPillarIds].sort());
+      for (const pid of expectedPillarIds) {
+        assert.ok(fyObj.pillars[pid as keyof typeof fyObj.pillars].findings.length >= 1);
+      }
+    }
+
+    // Active recommended annual tab (2081/82) compares vs 2080/81
+    const recommendedTab = intel.fiscalYears.find((f) => f.fiscalYear === '2081/82');
+    assert.ok(recommendedTab);
+    assert.equal(recommendedTab.isLatest, true);
+    assert.equal(recommendedTab.basis, 'Audited Annual');
+    assert.equal(recommendedTab.yoyDeltas.priorFiscalYear, '2080/81');
+    assert.ok(recommendedTab.yoyDeltas.revenueYoYPct !== null && recommendedTab.yoyDeltas.revenueYoYPct > 10);
+    assert.ok(recommendedTab.yoyDeltas.netProfitYoYPct !== null && recommendedTab.yoyDeltas.netProfitYoYPct > 20);
+
+    // Current-FY 2083/84 remains accessible as Interim Quarterly
+    const interimTab = intel.fiscalYears.find((f) => f.fiscalYear === '2083/84');
+    assert.ok(interimTab);
+    assert.equal(interimTab.basis, 'Interim Quarterly');
+
+    // Comparison matrix defaults to recommendedAnnualFy (2081/82) vs prior (2080/81)
+    assert.ok(intel.comparison);
+    assert.equal(intel.comparison.latestFy, '2081/82');
+    assert.equal(intel.comparison.priorFy, '2080/81');
+    assert.ok(intel.comparison.metricDeltas.length >= 5);
+    assert.equal(intel.trendSeries.length, 4);
+    assert.equal(intel.trendSeries[0].fiscalYear, '2080/81');
+    assert.equal(intel.trendSeries[3].fiscalYear, '2083/84');
+
+    // Once Poush end is crossed (Feb 2027), latest closed FY 2082/83 becomes primary target
+    const postPoushIntel = buildAnnualReportIntelligence(store, vault, kb, 'SHIVM', {
+      now: new Date('2027-02-01T00:00:00Z'),
+    });
+    assert.ok(postPoushIntel);
+    assert.equal(postPoushIntel.fiscalContext.poushEndPassed, true);
+    assert.equal(postPoushIntel.recommendedAnnualFy, '2082/83');
+    assert.equal(postPoushIntel.fallbackUsed, false);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('MarketStore.getHomepageCommand computes volume/turnover comparisons, blowout/short scripts, spikes, top turnover up/down, and heatmap', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-home-cmd-test-'));
+  try {
+    const header = 'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,vwap,trans,w52_high,w52_low';
+    // Day 1-5 baseline sessions
+    const baseDates = ['2026-11-20', '2026-11-23', '2026-11-24', '2026-11-25', '2026-11-26'];
+    for (const d of baseDates) {
+      fs.writeFileSync(
+        path.join(tmpDir, `${d}.csv`),
+        [
+          header,
+          'NABIL,Nabil Bank Limited,500,505,498,502,500,2,0.4,10000,5020000,502,501,100,550,450',
+          'SAHAS,Sahas Urja Limited,410,415,405,412,410,2,0.49,8000,3296000,412,410,80,460,350',
+          'HBL,Himalayan Bank Limited,220,222,218,219,220,-1,-0.45,9000,1971000,219,220,90,260,195',
+        ].join('\n'),
+        'utf8'
+      );
+    }
+
+    // Latest day: SAHAS blows out +7.8% on 4x vol/TO; HBL dumps -5.5% on 3x vol/TO; NABIL steady up
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      [
+        header,
+        'NABIL,Nabil Bank Limited,502,512,501,510,502,8,1.59,18000,9180000,510,508,160,550,450',
+        'SAHAS,Sahas Urja Limited,414,446,412,444,412,32,7.77,36000,15840000,444,435,320,460,350',
+        'HBL,Himalayan Bank Limited,219,220,206,207,219,-12,-5.48,28000,5796000,207,211,240,260,195',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const cmd = store.getHomepageCommand('2026-11-27', 20, true);
+    assert.ok(cmd, 'Expected HomepagePulseResponse');
+    assert.equal(cmd.summary.date, '2026-11-27');
+    assert.equal(cmd.summary.prevDate, '2026-11-26');
+    assert.ok(cmd.summary.turnoverVsPrevPct !== null && cmd.summary.turnoverVsPrevPct > 100);
+    assert.ok(cmd.summary.volumeVsPrevPct !== null && cmd.summary.volumeVsPrevPct > 100);
+    assert.equal(cmd.historyStrip.length, 6);
+
+    assert.ok(cmd.blowoutScripts.length >= 1);
+    assert.equal(cmd.blowoutScripts[0].symbol, 'SAHAS');
+
+    assert.ok(cmd.shortScripts.length >= 1);
+    assert.equal(cmd.shortScripts[0].symbol, 'HBL');
+
+    assert.ok(cmd.unusualActivity.length >= 2);
+    assert.ok(cmd.unusualActivity.some((u) => u.symbol === 'SAHAS' && u.volumeMultN > 2));
+
+    assert.deepEqual(
+      cmd.topTurnoverUp.map((r) => r.symbol),
+      ['SAHAS', 'NABIL']
+    );
+    assert.deepEqual(
+      cmd.topTurnoverDown.map((r) => r.symbol),
+      ['HBL']
+    );
+
+    assert.ok(cmd.sectorHeatmap.length >= 2);
+    assert.equal(cmd.stockHeatmap.length, 3);
+    assert.ok(cmd.wowInsights.length >= 2);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('getNepalFiscalYearCalendarContext tracks FY 83/84, latest closed 82/83, prior 81/82, and Poush-end cutoff', () => {
+  const before = getNepalFiscalYearCalendarContext(new Date('2026-11-28T00:00:00Z'));
+  assert.equal(before.currentFy, '2083/84');
+  assert.equal(before.latestCompletedFy, '2082/83');
+  assert.equal(before.previousCompletedFy, '2081/82');
+  assert.equal(before.poushEndApproxDate, '2027-01-14');
+  assert.equal(before.poushEndPassed, false);
+  assert.ok(before.daysUntilPoushEnd > 40);
+
+  const after = getNepalFiscalYearCalendarContext(new Date('2027-02-01T00:00:00Z'));
+  assert.equal(after.currentFy, '2083/84');
+  assert.equal(after.latestCompletedFy, '2082/83');
+  assert.equal(after.poushEndPassed, true);
+  assert.equal(after.daysUntilPoushEnd, 0);
+});
+
+test('ingestAndDistillAnnualReport saves uploaded report, distills FY, and updates Regulatory Knowledge Base', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-ingest-ar-test-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp\nNABIL,Nabil Bank Limited,500,510,498,508,500,8,1.6,40000,20320000,508\n',
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    const snap: CompanyFinancialSnapshot = {
+      symbol: 'NABIL',
+      companyName: 'Nabil Bank Limited',
+      sector: 'Commercial Banks',
+      companyId: '1',
+      scrapedAt: '2026-11-27T06:00:00.000Z',
+      sourceUrl: 'https://www.sharesansar.com/company/nabil',
+      periods: ['1st Quarter 2083/2084'],
+      tabs: [
+        {
+          key: 'key_metrics',
+          title: 'Key Metrics',
+          headers: ['Particulars', '1st Quarter 2083/2084'],
+          rows: [
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: ['29.5'], numericValues: [29.5] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Return on Equity', values: ['14.8'], numericValues: [14.8] },
+          ],
+        },
+      ],
+    };
+    for (const rec of normalizeShareSansarSnapshot(snap)) {
+      vault.upsertStatementRecord(rec);
+    }
+
+    const reportText = [
+      'Nabil Bank Limited - Annual Report FY 2082/83',
+      'Executive Overview: Net profit rose 18.4% YoY with steady deposit mobilization and improving SME credit yields.',
+      'Management & Governance: Strong board risk oversight and disciplined digital banking cost ratios.',
+      'Opportunities: SME digital lending expansion, remittance fee growth, and lower cost of funds.',
+      'Risks: Elevated NPL recovery provisioning in construction portfolios and NRB CAR buffer compliance.',
+      'Upcoming Plans: Proposed 12% bonus share plus 8% cash dividend and core-banking cloud upgrade.',
+      'Long-Term Direction: Diversify non-funded fee income and sustain ROE above 15%.',
+    ].join('\n');
+
+    const ingested = await ingestAndDistillAnnualReport(store, vault, kb, {
+      symbol: 'NABIL',
+      fiscalYear: '2082/83',
+      fileName: 'nabil-annual-report-2082-83.txt',
+      mimeType: 'text/plain',
+      fileBase64: Buffer.from(reportText, 'utf8').toString('base64'),
+    });
+
+    assert.equal(ingested.symbol, 'NABIL');
+    assert.equal(ingested.fiscalYear, '2082/83');
+    assert.equal(ingested.sourceType, 'upload');
+    assert.equal(ingested.kbUpdated, true);
+    assert.ok(fs.existsSync(path.resolve(process.cwd(), ingested.savedFilePath)));
+    assert.ok(ingested.distillation.executiveSummary.length > 20);
+
+    // KB updated with notice and company dossier
+    const kbEntry = kb.getCompanyEntry('NABIL');
+    assert.ok(kbEntry);
+    assert.ok(kb.getSummary().totalNotices >= 1);
+
+    // Subsequent intelligence read picks up synthetic FY 2082/83 tab with AI distillation
+    const intel = buildAnnualReportIntelligence(store, vault, kb, 'NABIL', {
+      now: new Date('2026-11-28T00:00:00Z'),
+    });
+    assert.ok(intel);
+    assert.equal(intel.recommendedAnnualFy, '2082/83');
+    assert.equal(intel.fallbackUsed, false);
+    assert.ok(intel.fiscalYears.some((f) => f.fiscalYear === '2082/83' && Boolean(f.aiDistillation)));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('computeComingQuarterOutlook identifies Blow Up vs Blow Down catalysts with inline citations and references', () => {
+  const bullSnap: CompanyFinancialSnapshot = {
+    symbol: 'SHIVM',
+    companyName: 'Shivam Cements Ltd.',
+    sector: 'Manufacturing and Processing',
+    companyId: '99',
+    scrapedAt: '2026-11-27T06:00:00.000Z',
+    sourceUrl: 'https://www.sharesansar.com/company/shivm',
+    periods: ['1st Quarter 2083/2084', '4th Quarter 2082/2083', '1st Quarter 2082/2083'],
+    tabs: [
+      {
+        key: 'profit_loss',
+        title: 'Profit and Loss',
+        headers: ['Particulars', '1st Quarter 2083/2084', '4th Quarter 2082/2083', '1st Quarter 2082/2083'],
+        rows: [
+          { section: 'Income', isSectionHeader: false, particulars: 'Revenue', values: ['3500000', '2400000', '2100000'], numericValues: [3500000, 2400000, 2100000] },
+          { section: 'Profit', isSectionHeader: false, particulars: 'Profit for the period', values: ['720000', '410000', '340000'], numericValues: [720000, 410000, 340000] },
+        ],
+      },
+      {
+        key: 'balance_sheet',
+        title: 'Balance Sheet',
+        headers: ['Particulars', '1st Quarter 2083/2084', '4th Quarter 2082/2083', '1st Quarter 2082/2083'],
+        rows: [
+          { section: 'Equity', isSectionHeader: false, particulars: 'Share Capital', values: ['5000000', '5000000', '5000000'], numericValues: [5000000, 5000000, 5000000] },
+          { section: 'Equity', isSectionHeader: false, particulars: 'Reserves', values: ['4200000', '3500000', '3100000'], numericValues: [4200000, 3500000, 3100000] },
+        ],
+      },
+      {
+        key: 'key_metrics',
+        title: 'Key Metrics',
+        headers: ['Particulars', '1st Quarter 2083/2084', '4th Quarter 2082/2083', '1st Quarter 2082/2083'],
+        rows: [
+          { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: ['42.0', '26.0', '21.0'], numericValues: [42.0, 26.0, 21.0] },
+          { section: 'Ratios', isSectionHeader: false, particulars: 'Return on Equity', values: ['18.5', '13.2', '12.0'], numericValues: [18.5, 13.2, 12.0] },
+        ],
+      },
+    ],
+  };
+
+  const bullRecords = normalizeShareSansarSnapshot(bullSnap);
+  const bullGrowth = computeGrowthComparisons(bullRecords);
+  const bullOutlook = computeComingQuarterOutlook({
+    sectorGroup: 'Manufacturing',
+    ledger: { records: bullRecords, companyName: 'Shivam Cements Ltd.' },
+    activeRecord: bullRecords[0],
+    growth: bullGrowth,
+    valuation: {
+      method: 'Sector Valuation Blended',
+      sectorMethodologyNote: 'Blended P/E, P/B and DCF manufacturing model',
+      currentPrice: 520,
+      livePe: 12.4,
+      livePb: 1.8,
+      livePeg: 0.45,
+      marketCap: 26_000_000_000,
+      enterpriseValue: null,
+      earningsYieldPct: 10.5,
+      earningsYieldBasis: 'TTM EPS / Price',
+      ncavPerShare: null,
+      intrinsicValue: 730,
+      intrinsicValueLow: 650,
+      intrinsicValueHigh: 810,
+      marginOfSafetyPct: 28.4,
+      provenance: 'Calculated',
+      formulaInputs: [],
+      assumptions: [],
+      limitations: [],
+    },
+    market: {
+      date: '2026-11-27',
+      ltp: 520,
+      changePct: 3.1,
+      turnover: 35_000_000,
+      volume: 67_000,
+      avgTurnoverN: 18_000_000,
+      turnoverMultN: 1.9,
+      periodReturnNPct: 4.5,
+      vsD120Pct: 5.1,
+      vsD180Pct: 6.1,
+      w52High: 690,
+      w52Low: 460,
+      gap52hPct: -24.6,
+      momentumScore: 76,
+      liquidityTier: 'High',
+    },
+    kbEntry: null,
+    now: new Date('2026-11-28T00:00:00Z'),
+  });
+
+  assert.equal(bullOutlook.currentPeriodLabel, 'Q1 FY 2083/84');
+  assert.equal(bullOutlook.comingQuarterLabel, 'Q2 FY 2083/84');
+  assert.equal(bullOutlook.direction, 'Blow Up');
+  assert.ok(bullOutlook.score >= 30);
+  assert.ok(bullOutlook.catalysts.length >= 2);
+  assert.ok(bullOutlook.reasons.every((r) => r.includes('[Ref:')));
+  assert.ok(bullOutlook.references.length >= 1);
+
+  const bearSnap: CompanyFinancialSnapshot = {
+    symbol: 'RISK',
+    companyName: 'Risk Finance Ltd.',
+    sector: 'Finance',
+    companyId: '88',
+    scrapedAt: '2026-11-27T06:00:00.000Z',
+    sourceUrl: 'https://www.sharesansar.com/company/risk',
+    periods: ['1st Quarter 2083/2084', '4th Quarter 2082/2083', '1st Quarter 2082/2083'],
+    tabs: [
+      {
+        key: 'profit_loss',
+        title: 'Profit and Loss',
+        headers: ['Particulars', '1st Quarter 2083/2084', '4th Quarter 2082/2083', '1st Quarter 2082/2083'],
+        rows: [
+          { section: 'Income', isSectionHeader: false, particulars: 'Revenue', values: ['500000', '780000', '820000'], numericValues: [500000, 780000, 820000] },
+          { section: 'Profit', isSectionHeader: false, particulars: 'Profit for the period', values: ['-80000', '65000', '90000'], numericValues: [-80000, 65000, 90000] },
+        ],
+      },
+      {
+        key: 'key_metrics',
+        title: 'Key Metrics',
+        headers: ['Particulars', '1st Quarter 2083/2084', '4th Quarter 2082/2083', '1st Quarter 2082/2083'],
+        rows: [
+          { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: ['-4.5', '7.2', '9.5'], numericValues: [-4.5, 7.2, 9.5] },
+          { section: 'Ratios', isSectionHeader: false, particulars: 'NPL', values: ['8.9', '5.1', '4.2'], numericValues: [8.9, 5.1, 4.2] },
+          { section: 'Ratios', isSectionHeader: false, particulars: 'CAR', values: ['9.4', '11.2', '12.0'], numericValues: [9.4, 11.2, 12.0] },
+        ],
+      },
+    ],
+  };
+
+  const bearRecords = normalizeShareSansarSnapshot(bearSnap);
+  const bearGrowth = computeGrowthComparisons(bearRecords);
+  const bearOutlook = computeComingQuarterOutlook({
+    sectorGroup: 'Banking',
+    ledger: { records: bearRecords, companyName: 'Risk Finance Ltd.' },
+    activeRecord: bearRecords[0],
+    growth: bearGrowth,
+    valuation: {
+      method: 'Sector Valuation Blended',
+      sectorMethodologyNote: 'Banking/Finance P/B and Residual Income model',
+      currentPrice: 450,
+      livePe: null,
+      livePb: 3.1,
+      livePeg: null,
+      marketCap: 4_500_000_000,
+      enterpriseValue: null,
+      earningsYieldPct: -1.0,
+      earningsYieldBasis: 'TTM EPS / Price',
+      ncavPerShare: null,
+      intrinsicValue: 305,
+      intrinsicValueLow: 270,
+      intrinsicValueHigh: 340,
+      marginOfSafetyPct: -32,
+      provenance: 'Calculated',
+      formulaInputs: [],
+      assumptions: [],
+      limitations: [],
+    },
+    market: {
+      date: '2026-11-27',
+      ltp: 450,
+      changePct: -3.2,
+      turnover: 1_200_000,
+      volume: 2_600,
+      avgTurnoverN: 1_500_000,
+      turnoverMultN: 0.8,
+      periodReturnNPct: -6.4,
+      vsD120Pct: -3.2,
+      vsD180Pct: -4.3,
+      w52High: 520,
+      w52Low: 380,
+      gap52hPct: -13.5,
+      momentumScore: 30,
+      liquidityTier: 'Low',
+    },
+    kbEntry: null,
+    now: new Date('2026-11-28T00:00:00Z'),
+  });
+
+  assert.equal(bearOutlook.comingQuarterLabel, 'Q2 FY 2083/84');
+  assert.equal(bearOutlook.direction, 'Blow Down');
+  assert.ok(bearOutlook.score <= -30);
+  assert.ok(bearOutlook.risks.length >= 2);
+  assert.ok(bearOutlook.reasons.every((r) => r.includes('[Ref:')));
+  assert.ok(bearOutlook.references.length >= 1);
+});
+
+
+
 

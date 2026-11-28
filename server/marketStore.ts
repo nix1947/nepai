@@ -3,6 +3,14 @@ import path from 'path';
 import type {
   CompareStockSummary,
   DailyAggregate,
+  HomepageHeatmapStock,
+  HomepageHistoryPoint,
+  HomepagePulseResponse,
+  HomepageScriptSpotlight,
+  HomepageSectorHeatmapRow,
+  HomepageTopTurnoverRow,
+  HomepageUnusualStockRow,
+  HomepageWowInsight,
   MarketPulseResponse,
   MarketPulseRow,
   MarketPulseSummary,
@@ -2149,5 +2157,532 @@ export class MarketStore {
     }
 
     return { nDays: cleanN, dates: alignedDates, stocks };
+  }
+
+  public getHomepageCommand(
+    day?: string,
+    nDays = 20,
+    equityOnly = true
+  ): HomepagePulseResponse | null {
+    const cleanN = Math.max(5, Math.min(250, Math.round(nDays)));
+    const targetDay =
+      day && isValidDateStr(day) ? day : this.sortedDates[this.sortedDates.length - 1];
+    if (!targetDay) return null;
+
+    const endIdx = this.sortedDates.indexOf(targetDay);
+    const prevDate = endIdx > 0 ? this.sortedDates[endIdx - 1] : null;
+    const pulse = this.getMarketPulse(targetDay, equityOnly, { nDays: cleanN });
+
+    const prevMap = new Map<string, PriceRow>();
+    let prevTurnover: number | null = null;
+    let prevVolume: number | null = null;
+    let prevTrades: number | null = null;
+    const prevSectorTurn = new Map<string, number>();
+    const prevSectorVol = new Map<string, number>();
+
+    if (prevDate) {
+      const prevRows = this.getDayPrices(prevDate, equityOnly);
+      prevTurnover = 0;
+      prevVolume = 0;
+      prevTrades = 0;
+      for (const r of prevRows) {
+        prevMap.set(r.symbol, r);
+        prevTurnover += r.turnover || 0;
+        prevVolume += r.volume || 0;
+        prevTrades += r.trans || 0;
+        const sec = getNepseSector(r.symbol, r.name);
+        prevSectorTurn.set(sec, (prevSectorTurn.get(sec) || 0) + (r.turnover || 0));
+        prevSectorVol.set(sec, (prevSectorVol.get(sec) || 0) + (r.volume || 0));
+      }
+    }
+
+    const pctChange = (cur: number, base: number | null): number | null =>
+      base !== null && base > 0 ? round2(((cur - base) / base) * 100) : null;
+
+    // Equity-consistent rolling window history strip (last 14 sessions up to targetDay)
+    const histStartIdx = endIdx >= 0 ? Math.max(0, endIdx - Math.max(cleanN, 14) + 1) : 0;
+    const rollingDates =
+      endIdx >= 0 ? this.sortedDates.slice(histStartIdx, endIdx + 1) : [targetDay];
+
+    const dailyEqTotals = rollingDates.map((d) => {
+      const rows = this.getDayPrices(d, equityOnly);
+      let turnover = 0;
+      let volume = 0;
+      let advancers = 0;
+      let decliners = 0;
+      let unchanged = 0;
+      for (const r of rows) {
+        turnover += r.turnover || 0;
+        volume += r.volume || 0;
+        if ((r.diff_pct ?? 0) > 0) advancers++;
+        else if ((r.diff_pct ?? 0) < 0) decliners++;
+        else unchanged++;
+      }
+      return { date: d, turnover, volume, advancers, decliners, unchanged };
+    });
+
+    const last5Totals = dailyEqTotals.slice(-5);
+    const lastNTotals = dailyEqTotals.slice(-cleanN);
+    const avg5dTurnover = mean(last5Totals.map((x) => x.turnover));
+    const avgNdTurnover = mean(lastNTotals.map((x) => x.turnover));
+    const avg5dVolume = mean(last5Totals.map((x) => x.volume));
+    const avgNdVolume = mean(lastNTotals.map((x) => x.volume));
+
+    const stripSource = dailyEqTotals.slice(-14);
+    const historyStrip: HomepageHistoryPoint[] = stripSource.map((pt, i) => {
+      const prevPt = i > 0 ? stripSource[i - 1] : null;
+      return {
+        ...pt,
+        turnoverVsPrevPct: prevPt ? pctChange(pt.turnover, prevPt.turnover) : null,
+        volumeVsPrevPct: prevPt ? pctChange(pt.volume, prevPt.volume) : null,
+      };
+    });
+
+    // Flow balance (Up-stock rupees vs Down-stock rupees)
+    let upTurnover = 0;
+    let downTurnover = 0;
+    let flatTurnover = 0;
+    for (const r of pulse.rows) {
+      if ((r.diff_pct ?? 0) > 0) upTurnover += r.turnover;
+      else if ((r.diff_pct ?? 0) < 0) downTurnover += r.turnover;
+      else flatTurnover += r.turnover;
+    }
+    const netFlowTiltPct =
+      pulse.summary.totalTurnover > 0
+        ? round1(((upTurnover - downTurnover) / pulse.summary.totalTurnover) * 100)
+        : 0;
+
+    const isPromoterOrFund = (r: PriceRow) =>
+      /\bPromoter\b|\bDebenture\b|\bMutual Fund\b|\bPreference\b/i.test(r.name);
+
+    const activeStatsCache = new Map<
+      string,
+      { activeDays: number; turnMult: number; volMult: number; prior20High: number | null; prior20Low: number | null }
+    >();
+    const getActiveStats = (r: MarketPulseRow) => {
+      const hit = activeStatsCache.get(r.symbol);
+      if (hit) return hit;
+      const hist = (this.bySymbol.get(r.symbol) || []).filter((h) => h.date <= targetDay);
+      const priorWindow = hist.slice(-(cleanN + 1), -1);
+      const prior20 = hist.slice(-21, -1);
+      const prior20High = prior20.length > 0 ? Math.max(...prior20.map((h) => h.high)) : null;
+      const prior20Low = prior20.length > 0 ? Math.min(...prior20.map((h) => h.low)) : null;
+      const avgTurn = priorWindow.length > 0 ? mean(priorWindow.map((h) => h.turnover)) : 0;
+      const avgVol = priorWindow.length > 0 ? mean(priorWindow.map((h) => h.volume)) : 0;
+      const res = {
+        activeDays: priorWindow.length,
+        turnMult: priorWindow.length >= 3 && avgTurn > 0 ? round2(r.turnover / avgTurn) : r.turnover_vs_avg_n,
+        volMult: priorWindow.length >= 3 && avgVol > 0 ? round2(r.volume / avgVol) : r.volume_vs_avg_n,
+        prior20High,
+        prior20Low,
+      };
+      activeStatsCache.set(r.symbol, res);
+      return res;
+    };
+
+    const stockCandidatePool = pulse.rows.filter((r) =>
+      equityOnly ? !isPromoterOrFund(r) && r.trans >= 5 : r.trans >= 1
+    );
+
+    // Blow-out (Bullish expansion / breakout) & Short-Bias (Distribution / blow-off trap) Scripts of the Day
+    const liquidThreshold = Math.max(
+      1_500_000,
+      pulse.rows.length > 0 ? Math.min(3_000_000, pulse.summary.totalTurnover * 0.0008) : 1_500_000
+    );
+
+    const buildSpotlights = (bias: 'blowout' | 'short'): HomepageScriptSpotlight[] => {
+      const scored: HomepageScriptSpotlight[] = [];
+      for (const r of stockCandidatePool) {
+        if (r.turnover < liquidThreshold) continue;
+        const stats = getActiveStats(r);
+        if (stats.activeDays < 3) continue;
+        const chg = r.diff_pct ?? 0;
+        const prev = prevMap.get(r.symbol);
+        const turnPrevPct = pctChange(r.turnover, prev?.turnover ?? null);
+        const volPrevPct = pctChange(r.volume, prev?.volume ?? null);
+
+        if (bias === 'blowout') {
+          if (chg <= 0.4) continue;
+          const is20dBreak = stats.prior20High !== null && r.close > stats.prior20High;
+          const isNear52h = r.gap_52h_pct !== null && r.gap_52h_pct <= 4.0;
+          const aboveVwap = (r.vwap_pct ?? 0) > 0;
+          const score = round1(
+            clip(
+              chg * 4.5 +
+                Math.min(stats.turnMult, 5) * 9 +
+                Math.min(stats.volMult, 5) * 8 +
+                (r.close_pos_pct >= 75 ? (r.close_pos_pct - 60) * 0.35 : 0) +
+                (aboveVwap ? 8 : 0) +
+                (is20dBreak ? 10 : 0) +
+                (isNear52h ? 6 : 0),
+              0,
+              100
+            )
+          );
+          const triggers: string[] = [];
+          if (stats.volMult >= 1.5) triggers.push(`${stats.volMult.toFixed(1)}x Vol`);
+          if (stats.turnMult >= 1.5) triggers.push(`${stats.turnMult.toFixed(1)}x TO`);
+          if (r.close_pos_pct >= 80) triggers.push(`Strong Close (${r.close_pos_pct.toFixed(0)}%)`);
+          if (aboveVwap) triggers.push(`Above VWAP (+${(r.vwap_pct ?? 0).toFixed(1)}%)`);
+          if (is20dBreak) triggers.push('20D Breakout');
+          else if (isNear52h) triggers.push('Near 52W High');
+
+          const setupLabel = is20dBreak
+            ? '20D Volume Breakout'
+            : chg >= 8.5
+              ? 'Circuit Expansion'
+              : stats.turnMult >= 2.2
+                ? 'Flow Acceleration'
+                : 'Momentum Leader';
+
+          scored.push({
+            symbol: r.symbol,
+            name: r.name,
+            sector: r.sector,
+            bias: 'blowout',
+            setupLabel,
+            ltp: r.ltp || r.close,
+            diffPct: chg,
+            turnover: r.turnover,
+            volume: r.volume,
+            prevTurnover: prev?.turnover ?? null,
+            prevVolume: prev?.volume ?? null,
+            turnoverVsPrevPct: turnPrevPct,
+            volumeVsPrevPct: volPrevPct,
+            turnoverMultN: stats.turnMult,
+            volumeMultN: stats.volMult,
+            closePosPct: r.close_pos_pct,
+            rangePct: r.range_pct ?? 0,
+            vwapPct: r.vwap_pct,
+            avgTradeSize: r.avg_trade_size,
+            score,
+            headline: `Gained +${chg.toFixed(1)}% on ${stats.volMult.toFixed(1)}x vol & ${stats.turnMult.toFixed(1)}x turnover (Rs ${(r.turnover / 1e7).toFixed(2)} Cr), closing at ${r.close_pos_pct.toFixed(0)}% of day range.`,
+            triggers: triggers.slice(0, 4),
+          });
+        } else {
+          const isWickTrap =
+            (r.range_pct ?? 0) >= 3.2 && r.close_pos_pct <= 28 && (r.vwap_pct ?? 0) < 0;
+          const isSelloff = chg <= -0.8;
+          if (!isSelloff && !isWickTrap) continue;
+
+          const is20dBreakDown = stats.prior20Low !== null && r.close < stats.prior20Low;
+          const belowVwap = (r.vwap_pct ?? 0) < 0;
+          const score = round1(
+            clip(
+              Math.max(0, -chg) * 5.0 +
+                Math.min(stats.turnMult, 5) * 8 +
+                Math.min(stats.volMult, 5) * 7 +
+                (r.close_pos_pct <= 35 ? (40 - r.close_pos_pct) * 0.45 : 0) +
+                (belowVwap ? 8 : 0) +
+                (isWickTrap ? 12 : 0) +
+                (is20dBreakDown ? 10 : 0),
+              0,
+              100
+            )
+          );
+          const triggers: string[] = [];
+          if (stats.volMult >= 1.5) triggers.push(`${stats.volMult.toFixed(1)}x Vol`);
+          if (stats.turnMult >= 1.5) triggers.push(`${stats.turnMult.toFixed(1)}x TO`);
+          if (r.close_pos_pct <= 30) triggers.push(`Weak Close (${r.close_pos_pct.toFixed(0)}%)`);
+          if (belowVwap) triggers.push(`Below VWAP (${(r.vwap_pct ?? 0).toFixed(1)}%)`);
+          if (isWickTrap) triggers.push('Upper-Wick Trap');
+          if (is20dBreakDown) triggers.push('20D Breakdown');
+
+          const setupLabel = isWickTrap && chg >= -0.8
+            ? 'Blow-Off Wick Exhaustion'
+            : is20dBreakDown
+              ? 'Heavy Breakdown'
+              : stats.turnMult >= 2.0
+                ? 'High-Volume Distribution'
+                : 'Short-Bias Selloff';
+
+          scored.push({
+            symbol: r.symbol,
+            name: r.name,
+            sector: r.sector,
+            bias: 'short',
+            setupLabel,
+            ltp: r.ltp || r.close,
+            diffPct: chg,
+            turnover: r.turnover,
+            volume: r.volume,
+            prevTurnover: prev?.turnover ?? null,
+            prevVolume: prev?.volume ?? null,
+            turnoverVsPrevPct: turnPrevPct,
+            volumeVsPrevPct: volPrevPct,
+            turnoverMultN: stats.turnMult,
+            volumeMultN: stats.volMult,
+            closePosPct: r.close_pos_pct,
+            rangePct: r.range_pct ?? 0,
+            vwapPct: r.vwap_pct,
+            avgTradeSize: r.avg_trade_size,
+            score,
+            headline: isWickTrap && chg >= -0.8
+              ? `Intraday blow-off fade: ${(r.range_pct ?? 0).toFixed(1)}% swing closed at bottom ${r.close_pos_pct.toFixed(0)}% of range below VWAP on ${stats.volMult.toFixed(1)}x vol.`
+              : `Dropped ${chg.toFixed(1)}% on ${stats.volMult.toFixed(1)}x vol & ${stats.turnMult.toFixed(1)}x turnover (Rs ${(r.turnover / 1e7).toFixed(2)} Cr), closing near low (${r.close_pos_pct.toFixed(0)}%).`,
+            triggers: triggers.slice(0, 4),
+          });
+        }
+      }
+      return scored.sort((a, b) => b.score - a.score).slice(0, 4);
+    };
+
+    const blowoutScripts = buildSpotlights('blowout');
+    const shortScripts = buildSpotlights('short');
+
+    // Unusual Activity: ranked by Volume Spike + Turnover Spike (with liquidity & active-history floors)
+    const minUnusualTurn = Math.max(1_500_000, pulse.summary.totalTurnover * 0.0005);
+    const unusualPool = stockCandidatePool
+      .filter((r) => r.turnover >= minUnusualTurn && getActiveStats(r).activeDays >= 4)
+      .map((r) => {
+        const stats = getActiveStats(r);
+        const prev = prevMap.get(r.symbol);
+        const chg = r.diff_pct ?? 0;
+        let activityTag: HomepageUnusualStockRow['activityTag'] = 'Accumulation Surge';
+        if (chg >= 2.0 && r.close_pos_pct >= 70) {
+          activityTag = 'Breakout Spike';
+        } else if (chg <= -1.5 && r.close_pos_pct <= 35) {
+          activityTag = 'Heavy Distribution';
+        } else if (r.close_pos_pct <= 28 && (r.range_pct ?? 0) >= 3.0) {
+          activityTag = 'Wick Churn / Trap';
+        } else if (Math.abs(chg) <= 1.2 && r.close_pos_pct >= 50) {
+          activityTag = 'Silent Absorption';
+        }
+        return {
+          row: r,
+          stats,
+          spikeScore: stats.volMult * 0.5 + stats.turnMult * 0.5,
+          item: {
+            symbol: r.symbol,
+            name: r.name,
+            sector: r.sector,
+            ltp: r.ltp || r.close,
+            diffPct: chg,
+            turnover: r.turnover,
+            volume: r.volume,
+            trans: r.trans,
+            prevTurnover: prev?.turnover ?? null,
+            prevVolume: prev?.volume ?? null,
+            turnoverVsPrevPct: pctChange(r.turnover, prev?.turnover ?? null),
+            volumeVsPrevPct: pctChange(r.volume, prev?.volume ?? null),
+            turnoverMultN: stats.turnMult,
+            volumeMultN: stats.volMult,
+            closePosPct: r.close_pos_pct,
+            vwapPct: r.vwap_pct,
+            avgTradeSize: r.avg_trade_size,
+            activityTag,
+          } satisfies HomepageUnusualStockRow,
+        };
+      });
+
+    const spiked = unusualPool.filter(
+      (x) => x.stats.volMult >= 1.5 || x.stats.turnMult >= 1.5
+    );
+    const unusualActivity = (spiked.length >= 6 ? spiked : unusualPool)
+      .sort((a, b) => b.spikeScore - a.spikeScore)
+      .slice(0, 15)
+      .map((x) => x.item);
+
+    // Top Turnover Up & Top Turnover Down
+    const mapTopTurnover = (list: MarketPulseRow[]): HomepageTopTurnoverRow[] =>
+      list.slice(0, 8).map((r, i) => {
+        const stats = getActiveStats(r);
+        const prev = prevMap.get(r.symbol);
+        return {
+          rank: i + 1,
+          symbol: r.symbol,
+          name: r.name,
+          sector: r.sector,
+          ltp: r.ltp || r.close,
+          diffPct: r.diff_pct ?? 0,
+          turnover: r.turnover,
+          marketSharePct:
+            pulse.summary.totalTurnover > 0
+              ? round2((r.turnover / pulse.summary.totalTurnover) * 100)
+              : 0,
+          volume: r.volume,
+          trans: r.trans,
+          prevTurnover: prev?.turnover ?? null,
+          turnoverVsPrevPct: pctChange(r.turnover, prev?.turnover ?? null),
+          turnoverMultN: stats.turnMult,
+          volumeMultN: stats.volMult,
+          closePosPct: r.close_pos_pct,
+          vwapPct: r.vwap_pct,
+          avgTradeSize: r.avg_trade_size,
+        };
+      });
+
+    const topTurnoverUp = mapTopTurnover(
+      [...stockCandidatePool]
+        .filter((r) => (r.diff_pct ?? 0) > 0)
+        .sort((a, b) => b.turnover - a.turnover)
+    );
+    const topTurnoverDown = mapTopTurnover(
+      [...stockCandidatePool]
+        .filter((r) => (r.diff_pct ?? 0) < 0)
+        .sort((a, b) => b.turnover - a.turnover)
+    );
+
+    // Sector & Stock Heat Map
+    const secVolMap = new Map<string, number>();
+    for (const r of pulse.rows) {
+      secVolMap.set(r.sector, (secVolMap.get(r.sector) || 0) + (r.volume || 0));
+    }
+
+    const sectorHeatmap: HomepageSectorHeatmapRow[] = pulse.sectors.map((sec) => {
+      const vol = secVolMap.get(sec.sector) || 0;
+      const pTurn = prevDate ? (prevSectorTurn.get(sec.sector) ?? 0) : null;
+      const pVol = prevDate ? (prevSectorVol.get(sec.sector) ?? 0) : null;
+      return {
+        ...sec,
+        volume: vol,
+        prevTurnover: pTurn,
+        prevVolume: pVol,
+        turnoverVsPrevPct: pctChange(sec.turnover, pTurn),
+        volumeVsPrevPct: pctChange(vol, pVol),
+      };
+    });
+
+    const stockHeatmap: HomepageHeatmapStock[] = [...stockCandidatePool]
+      .sort((a, b) => b.turnover - a.turnover)
+      .slice(0, 60)
+      .map((r) => {
+        const prev = prevMap.get(r.symbol);
+        const stats = getActiveStats(r);
+        return {
+          symbol: r.symbol,
+          name: r.name,
+          sector: r.sector,
+          ltp: r.ltp || r.close,
+          diffPct: r.diff_pct ?? 0,
+          turnover: r.turnover,
+          turnoverSharePct:
+            pulse.summary.totalTurnover > 0
+              ? round2((r.turnover / pulse.summary.totalTurnover) * 100)
+              : 0,
+          volume: r.volume,
+          turnoverMultN: stats.turnMult,
+          volumeMultN: stats.volMult,
+          turnoverVsPrevPct: pctChange(r.turnover, prev?.turnover ?? null),
+          closePosPct: r.close_pos_pct,
+          vwapPct: r.vwap_pct,
+        };
+      });
+
+    // "Aha / Wow" automated discovery callouts
+    const wowInsights: HomepageWowInsight[] = [];
+    const topRotatingSector = [...sectorHeatmap].sort(
+      (a, b) => b.rotationDeltaPct - a.rotationDeltaPct
+    )[0];
+    if (topRotatingSector) {
+      wowInsights.push({
+        id: 'sector-rotation',
+        category: 'Sector Rotation',
+        title: `${topRotatingSector.sector} leads money rotation`,
+        detail: `Captured ${topRotatingSector.turnoverSharePct.toFixed(1)}% of NEPSE turnover (${topRotatingSector.rotationDeltaPct >= 0 ? '+' : ''}${topRotatingSector.rotationDeltaPct.toFixed(1)} pp vs ${cleanN}D avg) led by ${topRotatingSector.leaderSymbol}.`,
+        symbol: topRotatingSector.leaderSymbol,
+        tone: topRotatingSector.avgChangePct >= 0 ? 'emerald' : 'amber',
+      });
+    }
+
+    wowInsights.push({
+      id: 'flow-tilt',
+      category: 'Capital Flow Balance',
+      title:
+        netFlowTiltPct >= 10
+          ? 'Rupees decisively chasing green stocks'
+          : netFlowTiltPct <= -10
+            ? 'Turnover heavy in declining stocks'
+            : 'Balanced two-way institutional rotation',
+      detail: `Rs ${(upTurnover / 1e7).toFixed(1)} Cr flowed into advancing scripts vs Rs ${(downTurnover / 1e7).toFixed(1)} Cr into declining scripts (${netFlowTiltPct >= 0 ? '+' : ''}${netFlowTiltPct.toFixed(0)}% net tilt).`,
+      tone: netFlowTiltPct >= 10 ? 'emerald' : netFlowTiltPct <= -10 ? 'red' : 'blue',
+    });
+
+    const stealthPick = unusualActivity.find((u) => u.activityTag === 'Silent Absorption');
+    if (stealthPick) {
+      wowInsights.push({
+        id: 'stealth-absorption',
+        category: 'Silent Absorption',
+        title: `${stealthPick.symbol} absorbing ${stealthPick.turnoverMultN.toFixed(1)}x turnover quietly`,
+        detail: `Price moved only ${stealthPick.diffPct >= 0 ? '+' : ''}${stealthPick.diffPct.toFixed(1)}% while volume spiked ${stealthPick.volumeMultN.toFixed(1)}x ${cleanN}D avg (avg ticket Rs ${(stealthPick.avgTradeSize / 1000).toFixed(0)}k).`,
+        symbol: stealthPick.symbol,
+        tone: 'blue',
+      });
+    } else if (blowoutScripts[0]) {
+      const b0 = blowoutScripts[0];
+      wowInsights.push({
+        id: 'top-expansion',
+        category: 'Expansion Leader',
+        title: `${b0.symbol} triggered ${b0.setupLabel}`,
+        detail: b0.headline,
+        symbol: b0.symbol,
+        tone: 'emerald',
+      });
+    }
+
+    const trapOrShort = shortScripts[0];
+    if (trapOrShort) {
+      wowInsights.push({
+        id: 'distribution-watch',
+        category: 'Distribution / Trap Watch',
+        title: `${trapOrShort.symbol} flagged (${trapOrShort.setupLabel})`,
+        detail: trapOrShort.headline,
+        symbol: trapOrShort.symbol,
+        tone: 'red',
+      });
+    }
+
+    return {
+      summary: {
+        date: targetDay,
+        prevDate,
+        nDays: cleanN,
+        totalStocks: pulse.summary.total,
+        advancers: pulse.summary.advancers,
+        decliners: pulse.summary.decliners,
+        unchanged: pulse.summary.unchanged,
+        adRatio: pulse.summary.adRatio,
+        todayTurnover: pulse.summary.totalTurnover,
+        prevTurnover,
+        avg5dTurnover,
+        avgNdTurnover,
+        turnoverVsPrevPct: pctChange(pulse.summary.totalTurnover, prevTurnover),
+        turnoverVs5dPct: pctChange(pulse.summary.totalTurnover, avg5dTurnover),
+        turnoverVsNdPct: pctChange(pulse.summary.totalTurnover, avgNdTurnover),
+        todayVolume: pulse.summary.totalVolume,
+        prevVolume,
+        avg5dVolume,
+        avgNdVolume,
+        volumeVsPrevPct: pctChange(pulse.summary.totalVolume, prevVolume),
+        volumeVs5dPct: pctChange(pulse.summary.totalVolume, avg5dVolume),
+        volumeVsNdPct: pctChange(pulse.summary.totalVolume, avgNdVolume),
+        todayTrades: pulse.summary.totalTrades,
+        prevTrades,
+        tradesVsPrevPct: pctChange(pulse.summary.totalTrades, prevTrades),
+        upTurnover,
+        downTurnover,
+        flatTurnover,
+        netFlowTiltPct,
+        sentimentScore: pulse.summary.sentimentScore,
+        sentimentLabel: pulse.summary.sentimentLabel,
+        aboveVwap: pulse.summary.aboveVwap,
+        vwapEligible: pulse.summary.vwapEligible,
+        aboveMa120: pulse.summary.aboveMa120,
+        ma120Eligible: pulse.summary.ma120Eligible,
+        upperCircuitCount: pulse.summary.upperCircuitCount,
+        lowerCircuitCount: pulse.summary.lowerCircuitCount,
+        medianAvgTradeSize: pulse.summary.medianAvgTradeSize,
+        top5ConcentrationPct: pulse.summary.top5ConcentrationPct,
+      },
+      historyStrip,
+      blowoutScripts,
+      shortScripts,
+      unusualActivity,
+      topTurnoverUp,
+      topTurnoverDown,
+      sectorHeatmap,
+      stockHeatmap,
+      wowInsights: wowInsights.slice(0, 4),
+    };
   }
 }

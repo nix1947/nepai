@@ -32,7 +32,9 @@ import {
   parseNepalPeriodLabel,
 } from '../server/fundamental/nepalCalendar.ts';
 import { RegulatoryKnowledgeBase } from '../server/fundamental/regulatoryKnowledgeBase.ts';
+import { computeSectorRotation } from '../server/fundamental/sectorRotationEngine.ts';
 import { computeSectorValuation } from '../server/fundamental/sectorMethodology.ts';
+import { computeSignalScorecard } from '../server/fundamental/signalScorecardEngine.ts';
 import { buildStrategicOutlookHeatmap } from '../server/fundamental/strategicOutlookEngine.ts';
 import { MarketStore } from '../server/marketStore.ts';
 import {
@@ -42,6 +44,8 @@ import {
 } from '../server/financialScraper.ts';
 import { DailyScheduler } from '../server/scheduler.ts';
 import { evaluateLatestHtml } from '../server/scraper.ts';
+import type { PriceRow } from '../src/types/market.ts';
+import { applyCorporateActionAdjustments } from '../src/utils/adjustedPrices.ts';
 
 test('Nepal BS fiscal quarter parsing & quarter-end + 15-day trigger window', () => {
   const parsedQ1 = parseNepalPeriodLabel('1st Quarter 2083/2084');
@@ -2115,4 +2119,290 @@ test('Non-operating investment/property gains trigger One-Off Caution and anchor
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('applyCorporateActionAdjustments scales pre-ex-date OHLC prices and leaves post-ex bars untouched', () => {
+  const mkBar = (date: string, price: number): PriceRow => ({
+    date,
+    symbol: 'NABIL',
+    name: 'Nabil Bank Limited',
+    conf: null,
+    open: price,
+    high: price + 5,
+    low: price - 5,
+    close: price,
+    ltp: price,
+    close_ltp: 0,
+    close_ltp_pct: 0,
+    vwap: price,
+    prev_close: price,
+    diff: 0,
+    diff_pct: 0,
+    range_pct: 1.5,
+    volume: 10000,
+    turnover: price * 10000,
+    trans: 100,
+    w52_high: price + 40,
+    w52_low: price - 40,
+    d120: price,
+    d180: price,
+    price_range: 10,
+    vwap_pct: 0,
+  });
+
+  const history: PriceRow[] = [
+    mkBar('2026-10-01', 600),
+    mkBar('2026-10-10', 625),
+    mkBar('2026-10-15', 500),
+    mkBar('2026-10-20', 515),
+  ];
+
+  const { adjustedHistory, applied } = applyCorporateActionAdjustments(history, [
+    {
+      id: 'ca_nabil_2026',
+      symbol: 'NABIL',
+      companyName: 'Nabil Bank Limited',
+      fiscalYear: '2082/83',
+      actionType: 'Dividend',
+      bonusPct: 25,
+      cashPct: 10,
+      rightRatioPct: null,
+      bookClosureDate: '2026-10-15',
+      exDate: '2026-10-15',
+      agmDate: '2026-11-01',
+      status: 'Approved',
+      headline: '25% Bonus & 10% Cash Dividend',
+      sourceLabel: 'NEPSE Corporate Portal',
+      sourceUrl: 'https://www.nepalstock.com/news',
+      retrievedAt: '2026-10-05T00:00:00Z',
+      method: 'Portal Feed',
+    },
+  ]);
+
+  assert.equal(applied.length, 1);
+  assert.equal(applied[0].factor, 0.8);
+  // Pre-ex bars scaled by 1 / 1.25 = 0.8
+  assert.equal(adjustedHistory[0].close, 480);
+  assert.equal(adjustedHistory[1].close, 500);
+  // On & after exDate unchanged
+  assert.equal(adjustedHistory[2].close, 500);
+  assert.equal(adjustedHistory[3].close, 515);
+});
+
+test('RegulatoryKnowledgeBase indexes corporate actions & lock-in events with tiers and exports corporate-actions-kb.csv', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-kb-actions-'));
+  try {
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    kb.upsertCorporateAction({
+      id: 'ca_ebl_1',
+      symbol: 'EBL',
+      companyName: 'Everest Bank Limited',
+      fiscalYear: '2082/83',
+      actionType: 'Dividend',
+      bonusPct: 10,
+      cashPct: 5.53,
+      rightRatioPct: null,
+      bookClosureDate: '2026-12-10',
+      exDate: '2026-12-10',
+      agmDate: '2026-12-28',
+      status: 'Proposed',
+      headline: 'EBL proposes 10% Bonus and 5.53% Cash Dividend',
+      sourceLabel: 'NEPSE Corporate Portal',
+      sourceUrl: 'https://www.nepalstock.com/ebl',
+      retrievedAt: '2026-11-28T00:00:00Z',
+      method: 'Portal Feed',
+    });
+
+    kb.upsertLockInEvent({
+      id: 'li_sah_1',
+      symbol: 'SAHAS',
+      companyName: 'Sahas Urja Limited',
+      shareholderCategory: 'Promoter',
+      unlockDate: '2026-12-12',
+      lockedShares: 12000000,
+      pctOfTotalShares: 35,
+      headline: 'SAHAS 12,000,000 Promoter & Local Shares lock-in expires 2026-12-12',
+      sourceLabel: 'CDSC',
+      sourceUrl: 'https://cdsc.com.np/notice',
+      retrievedAt: '2026-11-28T00:00:00Z',
+      method: 'Portal Feed',
+    });
+
+    // Persist JSON + CSV via save()
+    kb.setLastDailyCrawlDate('2026-11-28');
+
+    const lockIns = kb.getLockInEvents('SAHAS', new Date('2026-11-28T00:00:00Z'));
+    assert.equal(lockIns.length, 1);
+    assert.equal(lockIns[0].daysRemaining, 14);
+    assert.equal(lockIns[0].overhangTier, 'Critical (<30d)');
+
+    const queried = kb.queryKnowledgeBase({ symbol: 'EBL' });
+    assert.equal(queried.corporateActions.length, 1);
+    assert.equal(queried.corporateActions[0].bonusPct, 10);
+
+    const csvPath = path.join(tmpDir, 'financial', 'vault', 'corporate-actions-kb.csv');
+    assert.ok(fs.existsSync(csvPath), 'corporate-actions-kb.csv should be written on save');
+    const csvText = fs.readFileSync(csvPath, 'utf8');
+    assert.match(csvText, /record_type,symbol,company_name/);
+    assert.match(csvText, /CORPORATE_ACTION,EBL/);
+    assert.match(csvText, /LOCK_IN_EXPIRY,SAHAS/);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('computeSectorRotation tracks multi-horizon turnover share shifts and classifies rotation phases', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-sector-rot-'));
+  try {
+    const header = 'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low';
+    // Generate 22 sessions: early 17 sessions favor NABIL (Commercial Banks), latest 5 sessions rotate strongly into SHPC (Hydro Power)
+    const dates: string[] = [];
+    for (let i = 1; i <= 22; i++) {
+      const d = `2026-10-${String(i).padStart(2, '0')}`;
+      dates.push(d);
+      const isRecent5 = i > 17;
+      const nabilTurn = isRecent5 ? 2_000_000 : 12_000_000;
+      const nabilChg = isRecent5 ? -1.2 : 1.0;
+      const nabilClose = isRecent5 ? 495 : 510;
+      const shpcTurn = isRecent5 ? 18_000_000 : 2_500_000;
+      const shpcChg = isRecent5 ? 4.2 : 0.2;
+      const shpcClose = isRecent5 ? 360 + i : 340;
+      fs.writeFileSync(
+        path.join(tmpDir, `${d}.csv`),
+        [
+          header,
+          `NABIL,Nabil Bank Limited,${nabilClose},${nabilClose + 3},${nabilClose - 3},${nabilClose},500,-6,${nabilChg},4000,${nabilTurn},${nabilClose},550,450`,
+          `SHPC,Sanima Mai Hydropower Ltd.,${shpcClose},${shpcClose + 8},${shpcClose - 2},${shpcClose},340,14,${shpcChg},45000,${shpcTurn},${shpcClose},410,290`,
+        ].join('\n') + '\n',
+        'utf8'
+      );
+    }
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+
+    const rot = computeSectorRotation(store, vault, { equityOnly: true });
+    assert.equal(rot.datesUsed, 22);
+    assert.ok(rot.sectors.length >= 2);
+    const hydro = rot.sectors.find((s) => /Hydro/i.test(s.sector))!;
+    const banks = rot.sectors.find((s) => /Bank/i.test(s.sector))!;
+    assert.ok(hydro && banks);
+    assert.ok(hydro.shareShift5vs20Pp > 0, 'Hydro should exhibit positive 5D vs 20D inflow shift');
+    assert.ok(banks.shareShift5vs20Pp < 0, 'Banks should exhibit negative 5D vs 20D share shift');
+    assert.equal(hydro.rotationPhase, 'Leading Inflow');
+    assert.equal(banks.rotationPhase, 'Lagging Outflow');
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('computeSignalScorecard evaluates causal 5D/10D/20D forward stats across multi-session market history', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-scorecard-'));
+  try {
+    const header = 'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,vwap,trans,w52_high,w52_low,d120';
+    // Build 32 sessions with steadily trending NABIL & SAHAS triggering turnover surge / top-15 VWAP leaders
+    for (let i = 1; i <= 32; i++) {
+      const month = i <= 30 ? '10' : '11';
+      const day = i <= 30 ? i : i - 30;
+      const d = `2026-${month}-${String(day).padStart(2, '0')}`;
+      const baseP = 400 + i * 3;
+      const surge = i % 6 === 0;
+      const nabilTurn = surge ? 25_000_000 : 7_000_000;
+      const nabilVol = surge ? 60_000 : 16_000;
+      fs.writeFileSync(
+        path.join(tmpDir, `${d}.csv`),
+        [
+          header,
+          `NABIL,Nabil Bank Limited,${baseP - 2},${baseP + 6},${baseP - 3},${baseP + 5},${baseP},5,1.8,${nabilVol},${nabilTurn},${baseP + 5},${baseP + 1},300,560,380,${baseP - 40}`,
+          `ADBL,Agricultural Development Bank Limited,300,304,296,299,300,-1,-0.33,12000,3612000,299,301,120,340,260,290`,
+        ].join('\n') + '\n',
+        'utf8'
+      );
+    }
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    const scorecard = computeSignalScorecard(store, vault, kb, { equityOnly: true });
+    assert.equal(scorecard.totalSessionsAnalyzed, 32);
+    assert.ok(scorecard.evaluationCheckpoints >= 1);
+    assert.equal(scorecard.cohorts.length, 5);
+    assert.ok(scorecard.baselineByHorizon['5'].samples > 0);
+    const leaders = scorecard.cohorts.find((c) => c.id === 'liquidity_leaders')!;
+    assert.ok(leaders);
+    assert.ok(leaders.statsByHorizon['5'].samples > 0);
+    assert.ok((leaders.statsByHorizon['5'].winRatePct ?? 0) >= 80);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('buildExplorerOverview integrates KB entry, corporate actions, and lock-in expiry risks into playbook', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-explorer-kb-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low\nEBL,Everest Bank Limited,600,610,595,605,600,5,0.83,20000,12100000,605,650,520\n',
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    const soonDate = new Date(Date.now() + 20 * 86_400_000).toISOString().slice(0, 10);
+    kb.upsertCorporateAction({
+      id: 'ca_ebl_exp',
+      symbol: 'EBL',
+      companyName: 'Everest Bank Limited',
+      fiscalYear: '2082/83',
+      actionType: 'Dividend',
+      bonusPct: 15,
+      cashPct: 5,
+      rightRatioPct: null,
+      bookClosureDate: soonDate,
+      exDate: soonDate,
+      agmDate: null,
+      status: 'Approved',
+      headline: '15% Bonus & 5% Cash Dividend',
+      sourceLabel: 'NEPSE Corporate Portal',
+      sourceUrl: null,
+      retrievedAt: new Date().toISOString(),
+      method: 'Portal Feed',
+    });
+
+    kb.upsertLockInEvent({
+      id: 'li_ebl_exp',
+      symbol: 'EBL',
+      companyName: 'Everest Bank Limited',
+      shareholderCategory: 'Promoter',
+      unlockDate: soonDate,
+      lockedShares: 5000000,
+      pctOfTotalShares: 18,
+      headline: 'Promoter lock-in expires soon',
+      sourceLabel: 'CDSC',
+      sourceUrl: null,
+      retrievedAt: new Date().toISOString(),
+      method: 'Portal Feed',
+    });
+
+    const overview = buildExplorerOverview({ store, vault, kb, symbol: 'EBL', equityOnly: true });
+    assert.equal(overview.corporateActions.length, 1);
+    assert.equal(overview.lockInEvents.length, 1);
+    assert.ok(
+      overview.decisionPlaybook.riskPoints.some((r) => /lock-in\s+(?:expiry|expires|overhang)/i.test(r)),
+      'Playbook risk points should highlight imminent lock-in expiry'
+    );
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 

@@ -22,6 +22,7 @@ import {
   Globe,
   HelpCircle,
   Home,
+  Layers,
   LayoutGrid,
   Menu,
   Moon,
@@ -61,6 +62,7 @@ import { evaluateWatchlistAlerts } from './utils/plainEnglish';
 import { AlgorithmsView } from './views/AlgorithmsView';
 import { AnalyzerView } from './views/AnalyzerView';
 import { AnnualReportView } from './views/AnnualReportView';
+import { CatalystCalendarView } from './views/CatalystCalendarView';
 import { FinancialsVaultView } from './views/FinancialsVaultView';
 import { FundamentalScreenerView } from './views/FundamentalScreenerView';
 import { MacroRisksView } from './views/MacroRisksView';
@@ -77,7 +79,9 @@ import {
 } from './views/RiskIntelligenceViews';
 import { ScannersView } from './views/ScannersView';
 import { SchedulerView } from './views/SchedulerView';
+import { SectorRotationView } from './views/SectorRotationView';
 import { SettingsView } from './views/SettingsView';
+import { SignalScorecardView } from './views/SignalScorecardView';
 import { StockExplorerView } from './views/StockExplorerView';
 import { StrategicOutlookView } from './views/StrategicOutlookView';
 import { TodayBriefingView } from './views/TodayBriefingView';
@@ -93,10 +97,13 @@ type NavTab =
   | 'annual-reports'
   | 'strategic-outlook'
   | 'financials-vault'
+  | 'catalyst-calendar'
   | 'valuation'
   | 'overview'
   | 'pulse'
   | 'turnover'
+  | 'sector-rotation'
+  | 'signal-scorecard'
   | 'radar'
   | 'direction'
   | 'scanners'
@@ -142,6 +149,7 @@ const NAV_GROUPS: NavGroupConfig[] = [
       { id: 'annual-reports', label: 'Annual Reports', icon: FileText },
       { id: 'strategic-outlook', label: 'Strategic Outlook Heat Map', icon: LayoutGrid },
       { id: 'financials-vault', label: 'Quarterly Financials Vault', icon: Database },
+      { id: 'catalyst-calendar', label: 'Catalysts & Lock-Ins', icon: CalendarClock },
       { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
     ],
   },
@@ -152,6 +160,8 @@ const NAV_GROUPS: NavGroupConfig[] = [
       { id: 'overview', label: 'Overview', icon: BarChart3 },
       { id: 'pulse', label: 'Market Pulse', icon: Gauge },
       { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
+      { id: 'sector-rotation', label: 'Sector Rotation', icon: Layers },
+      { id: 'signal-scorecard', label: 'Signal Scorecard', icon: Award },
       { id: 'direction', label: 'Turnover × Direction', icon: Activity },
       { id: 'scanners', label: 'Scanners', icon: Radar },
       { id: 'explorer', label: 'Stock Explorer', icon: CandlestickChart },
@@ -518,6 +528,7 @@ export default function App() {
     activeTab !== 'annual-reports' &&
     activeTab !== 'strategic-outlook' &&
     activeTab !== 'financials-vault' &&
+    activeTab !== 'catalyst-calendar' &&
     activeTab !== 'valuation' &&
     activeTab !== 'settings';
 
@@ -999,6 +1010,13 @@ export default function App() {
                   onSelectFundamentalMenu={handleSelectFundamentalMenu}
                 />
               )}
+              {activeTab === 'catalyst-calendar' && (
+                <CatalystCalendarView
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                  onOpenValuation={inspectInValuation}
+                />
+              )}
               {activeTab === 'valuation' && (
                 <ValuationView
                   equityOnly={equityOnly}
@@ -1022,6 +1040,20 @@ export default function App() {
               )}
               {activeTab === 'turnover' && (
                 <TopTurnoverView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
+              {activeTab === 'sector-rotation' && (
+                <SectorRotationView
+                  dates={dates}
+                  equityOnly={equityOnly}
+                  onInspectSymbol={inspectSymbol}
+                />
+              )}
+              {activeTab === 'signal-scorecard' && (
+                <SignalScorecardView
                   dates={dates}
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}

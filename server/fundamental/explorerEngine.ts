@@ -1,9 +1,12 @@
 import type {
   CompanyFundamentalDetailResponse,
+  CompanyKnowledgeBaseEntry,
+  CorporateActionRecord,
   ExplorerDecisionPillar,
   ExplorerDecisionPlaybook,
   ExplorerOverviewResponse,
   ExplorerTechnicalSummary,
+  LockInEventRecord,
   ReportMonitorStatus,
   ScreenedCompanyRow,
   SectorPeerBenchmark,
@@ -17,6 +20,7 @@ import {
   evaluateScreenerUniverse,
 } from './investorScoringEngine.ts';
 import { classifySectorGroup } from './nepalCalendar.ts';
+import type { RegulatoryKnowledgeBase } from './regulatoryKnowledgeBase.ts';
 
 function clip(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
@@ -44,6 +48,7 @@ function sanitizeSourceLabel(text: string): string {
 export function buildExplorerOverview(params: {
   store: MarketStore;
   vault: FundamentalVault;
+  kb?: RegulatoryKnowledgeBase | null;
   symbol: string;
   equityOnly?: boolean;
   monitorStatusMap?: Map<string, ReportMonitorStatus>;
@@ -52,6 +57,7 @@ export function buildExplorerOverview(params: {
   const {
     store,
     vault,
+    kb = null,
     symbol,
     equityOnly = false,
     monitorStatusMap,
@@ -63,6 +69,7 @@ export function buildExplorerOverview(params: {
     equityOnly,
     monitorStatusMap,
     benchmarkFdRatePct,
+    kbMap: kb?.getAllCompanyEntries(),
   });
 
   const fundamental: CompanyFundamentalDetailResponse | null =
@@ -130,6 +137,10 @@ export function buildExplorerOverview(params: {
   const sector = summaryRow?.sector || analyzer?.sector || fallbackMeta.sector;
   const sectorGroup = summaryRow?.sectorGroup || fallbackMeta.sectorGroup;
 
+  const kbEntry: CompanyKnowledgeBaseEntry | null = kb?.getCompanyEntry(sym) ?? null;
+  const corporateActions: CorporateActionRecord[] = kb?.getCorporateActions(sym) ?? [];
+  const lockInEvents: LockInEventRecord[] = kb?.getLockInEvents(sym) ?? [];
+
   const decisionPlaybook = synthesizeDecisionPlaybook({
     symbol: sym,
     summaryRow,
@@ -137,6 +148,9 @@ export function buildExplorerOverview(params: {
     sectorBenchmark,
     technical,
     benchmarkFdRatePct,
+    kbEntry,
+    corporateActions,
+    lockInEvents,
   });
 
   return {
@@ -151,6 +165,9 @@ export function buildExplorerOverview(params: {
     technical,
     decisionPlaybook,
     benchmarkFdRatePct,
+    kbEntry,
+    corporateActions,
+    lockInEvents,
   };
 }
 
@@ -161,6 +178,9 @@ function synthesizeDecisionPlaybook(params: {
   sectorBenchmark: SectorPeerBenchmark | null;
   technical: ExplorerTechnicalSummary | null;
   benchmarkFdRatePct: number;
+  kbEntry: CompanyKnowledgeBaseEntry | null;
+  corporateActions: CorporateActionRecord[];
+  lockInEvents: LockInEventRecord[];
 }): ExplorerDecisionPlaybook {
   const {
     symbol,
@@ -169,6 +189,9 @@ function synthesizeDecisionPlaybook(params: {
     sectorBenchmark,
     technical,
     benchmarkFdRatePct,
+    kbEntry,
+    corporateActions,
+    lockInEvents,
   } = params;
 
   const avg = sectorBenchmark?.averages ?? null;
@@ -210,6 +233,15 @@ function synthesizeDecisionPlaybook(params: {
       : `${technical.htfAlignmentLabel} · ${technical.zoneLabel} (${technical.pctInRange}% of range)`
     : 'No historical price bars loaded for structural scan.';
 
+  const activeLockIns = lockInEvents.filter(
+    (l) => typeof l.daysRemaining === 'number' && l.daysRemaining >= 0 && l.daysRemaining <= 90
+  );
+  const recentBonusOrRight = corporateActions.find(
+    (a) =>
+      a.status !== 'Completed' &&
+      ((a.bonusPct ?? 0) >= 8 || (a.cashPct ?? 0) >= 8 || (a.rightRatioPct ?? 0) > 0)
+  );
+
   if (!fundamental || !summaryRow) {
     const techPillar: ExplorerDecisionPillar = {
       key: 'technical',
@@ -227,9 +259,25 @@ function synthesizeDecisionPlaybook(params: {
         `Active Grade ${technical.topSetup.grade} long setup: ${technical.topSetup.name} targeting Rs ${technical.topSetup.target2.toFixed(1)} (1:${technical.topSetup.rrT2.toFixed(1)} R:R).`
       );
     }
+    if (recentBonusOrRight) {
+      bullPoints.push(
+        `Corporate action tracked: ${recentBonusOrRight.headline} (${recentBonusOrRight.fiscalYear ?? 'Latest FY'}).`
+      );
+    }
+    if (kbEntry?.creditRating.ratingGrade) {
+      bullPoints.push(
+        `Credit profile: ${kbEntry.creditRating.agency ?? 'Agency'} ${kbEntry.creditRating.ratingGrade} (${kbEntry.creditRating.outlook}).`
+      );
+    }
     if (technical && !technical.passesLiquidityFilter) {
       riskPoints.push(
         `20d average turnover Rs ${(technical.avgTurnover20Npr / 1e5).toFixed(1)}L is below institutional comfort floor.`
+      );
+    }
+    if (activeLockIns.length > 0) {
+      const nextUnlock = activeLockIns[0];
+      riskPoints.push(
+        `Supply overhang: ${nextUnlock.shareholderCategory} lock-in expires on ${nextUnlock.unlockDate} (${nextUnlock.daysRemaining}d remaining).`
       );
     }
 
@@ -416,13 +464,23 @@ function synthesizeDecisionPlaybook(params: {
       `Earnings Yield (${val.earningsYieldPct?.toFixed(2)}%) beats Nepal ${benchmarkFdRatePct.toFixed(1)}% FD benchmark by +${fdSpreadPct.toFixed(2)}pp.`
     );
   }
+  if (recentBonusOrRight) {
+    bullPoints.push(
+      `Active corporate distribution/capital event: ${recentBonusOrRight.headline}.`
+    );
+  }
+  if (kbEntry?.creditRating.ratingGrade && /AAA|AA|A[+-]?$/i.test(kbEntry.creditRating.ratingGrade)) {
+    bullPoints.push(
+      `Investment-grade credit standing: ${kbEntry.creditRating.agency ?? 'Rating'} ${kbEntry.creditRating.ratingGrade} (${kbEntry.creditRating.outlook}).`
+    );
+  }
   if (technical?.topSetup) {
     bullPoints.push(
       `Chart confirms Grade ${technical.topSetup.grade} ${technical.topSetup.name} with 1:${technical.topSetup.rrT2.toFixed(1)} R:R toward Rs ${technical.topSetup.target2.toFixed(1)}.`
     );
   }
   for (const s of summaryRow.recommendation.strengths) {
-    if (bullPoints.length >= 5) break;
+    if (bullPoints.length >= 6) break;
     if (!bullPoints.some((b) => b.slice(0, 24) === s.slice(0, 24))) {
       bullPoints.push(s);
     }
@@ -431,6 +489,19 @@ function synthesizeDecisionPlaybook(params: {
   const riskPoints: string[] = [];
   if (eq.hasNonOperatingCaution && eq.cautionMessage) {
     riskPoints.push(eq.cautionMessage);
+  }
+  if (activeLockIns.length > 0) {
+    const nextUnlock = activeLockIns[0];
+    riskPoints.push(
+      `Promoter / Lock-In Expiry Alert: ${nextUnlock.shareholderCategory} shares unlock ${nextUnlock.unlockDate} (${nextUnlock.daysRemaining}d away)${nextUnlock.pctOfTotalShares ? ` · ${nextUnlock.pctOfTotalShares}% equity overhang` : ''}.`
+    );
+  } else if (kbEntry?.lockInOverhangFlag) {
+    riskPoints.push('Knowledge base flags active CDSC/NEPSE share lock-in supply overhang.');
+  }
+  if (kbEntry && (kbEntry.regulatoryStanding === 'Alert' || kbEntry.regulatoryStanding === 'Watch')) {
+    riskPoints.push(
+      `Regulatory KB Standing: ${kbEntry.regulatoryStanding}${kbEntry.riskFlags[0] ? ` (${kbEntry.riskFlags[0]})` : ''}.`
+    );
   }
   if (q4.yearsCount >= 1 && q4.epsVsAvgPct !== null && q4.epsVsAvgPct < -5) {
     riskPoints.push(
@@ -453,7 +524,7 @@ function synthesizeDecisionPlaybook(params: {
     );
   }
   for (const r of summaryRow.recommendation.downsideRisks) {
-    if (riskPoints.length >= 5) break;
+    if (riskPoints.length >= 6) break;
     if (!riskPoints.includes(r)) riskPoints.push(r);
   }
 

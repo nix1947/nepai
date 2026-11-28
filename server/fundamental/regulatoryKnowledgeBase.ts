@@ -5,8 +5,11 @@ import fs from 'fs';
 import path from 'path';
 import type {
   CompanyKnowledgeBaseEntry,
+  CorporateActionRecord,
+  CorporateActionType,
   KnowledgeBaseResponse,
   KnowledgeBaseSummary,
+  LockInEventRecord,
   RatingOutlook,
   RegulatoryAgency,
   RegulatoryKbCitation,
@@ -105,6 +108,8 @@ export function getNepalDateStr(date: Date = new Date()): string {
 interface PersistedRegulatoryKb {
   notices: RegulatoryKbNotice[];
   companies: Record<string, CompanyKnowledgeBaseEntry>;
+  corporateActions: CorporateActionRecord[];
+  lockInEvents: LockInEventRecord[];
   agencyLastFetch: Partial<Record<RegulatoryAgency, string>>;
   lastHarvestAt: string | null;
   lastDailyCrawlDate: string | null;
@@ -118,6 +123,69 @@ function makeNoticeId(agency: RegulatoryAgency, title: string, url: string | nul
     .digest('hex')
     .slice(0, 14);
   return `${agency.toLowerCase()}_${hash}`;
+}
+
+function makeCorpActionId(symbol: string, fy: string | null, type: CorporateActionType, dateKey: string | null): string {
+  const hash = crypto
+    .createHash('sha1')
+    .update(`${symbol}|${fy || ''}|${type}|${dateKey || ''}`)
+    .digest('hex')
+    .slice(0, 12);
+  return `ca_${symbol.toLowerCase()}_${hash}`;
+}
+
+function makeLockInId(symbol: string, unlockDate: string, category: string): string {
+  const hash = crypto
+    .createHash('sha1')
+    .update(`${symbol}|${unlockDate}|${category}`)
+    .digest('hex')
+    .slice(0, 12);
+  return `li_${symbol.toLowerCase()}_${hash}`;
+}
+
+function csvEscape(val: unknown): string {
+  const s = val === null || val === undefined ? '' : String(val);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function normalizeIsoDate(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const s = raw.trim();
+  if (!s) return null;
+  const iso = s.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  if (iso) {
+    return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`;
+  }
+  const parsed = Date.parse(s);
+  if (Number.isFinite(parsed)) {
+    const d = new Date(parsed);
+    if (d.getUTCFullYear() >= 2015 && d.getUTCFullYear() <= 2040) {
+      return d.toISOString().slice(0, 10);
+    }
+  }
+  return null;
+}
+
+function parsePctNumber(raw: unknown): number | null {
+  if (typeof raw === 'number' && Number.isFinite(raw) && raw >= 0 && raw <= 1000) {
+    return Math.round(raw * 100) / 100;
+  }
+  if (typeof raw !== 'string') return null;
+  const cleaned = raw.replace(/[,%\s]/g, '');
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) && n >= 0 && n <= 1000 ? Math.round(n * 100) / 100 : null;
+}
+
+function computeDaysBetweenDates(dateIso: string, refDate: Date = new Date()): number | null {
+  const targetMs = Date.parse(`${dateIso}T00:00:00Z`);
+  if (!Number.isFinite(targetMs)) return null;
+  const refStr = getNepalDateStr(refDate);
+  const refMs = Date.parse(`${refStr}T00:00:00Z`);
+  return Math.round((targetMs - refMs) / 86_400_000);
 }
 
 function safeHttpUrl(raw: unknown): string | null {
@@ -280,10 +348,13 @@ function strArray(raw: unknown): string[] {
 
 export class RegulatoryKnowledgeBase {
   public readonly kbPath: string;
+  public readonly corporateCsvPath: string;
   private dataDir: string;
   private state: PersistedRegulatoryKb = {
     notices: [],
     companies: {},
+    corporateActions: [],
+    lockInEvents: [],
     agencyLastFetch: {},
     lastHarvestAt: null,
     lastDailyCrawlDate: null,
@@ -298,6 +369,7 @@ export class RegulatoryKnowledgeBase {
       fs.mkdirSync(vaultDir, { recursive: true });
     }
     this.kbPath = path.join(vaultDir, 'regulatory-kb.json');
+    this.corporateCsvPath = path.join(vaultDir, 'corporate-actions-kb.csv');
   }
 
   public isGeminiConfigured(): boolean {
@@ -313,6 +385,8 @@ export class RegulatoryKnowledgeBase {
         this.state = {
           notices: Array.isArray(parsed.notices) ? parsed.notices : [],
           companies: parsed.companies && typeof parsed.companies === 'object' ? parsed.companies : {},
+          corporateActions: Array.isArray(parsed.corporateActions) ? parsed.corporateActions : [],
+          lockInEvents: Array.isArray(parsed.lockInEvents) ? parsed.lockInEvents : [],
           agencyLastFetch:
             parsed.agencyLastFetch && typeof parsed.agencyLastFetch === 'object'
               ? parsed.agencyLastFetch
@@ -336,11 +410,93 @@ export class RegulatoryKnowledgeBase {
     }
   }
 
+  private writeCorporateActionsCsv(): void {
+    try {
+      const headers = [
+        'record_type',
+        'symbol',
+        'company_name',
+        'fiscal_year',
+        'action_type',
+        'bonus_pct',
+        'cash_pct',
+        'right_ratio_pct',
+        'book_closure_or_unlock_date',
+        'ex_date',
+        'agm_date',
+        'status',
+        'locked_shares',
+        'pct_of_total_shares',
+        'shareholder_category',
+        'method',
+        'source_label',
+        'headline',
+      ];
+      const lines = [headers.join(',')];
+      for (const ca of this.state.corporateActions) {
+        lines.push(
+          [
+            'CORPORATE_ACTION',
+            ca.symbol,
+            ca.companyName,
+            ca.fiscalYear ?? '',
+            ca.actionType,
+            ca.bonusPct ?? '',
+            ca.cashPct ?? '',
+            ca.rightRatioPct ?? '',
+            ca.bookClosureDate ?? '',
+            ca.exDate ?? '',
+            ca.agmDate ?? '',
+            ca.status,
+            '',
+            '',
+            '',
+            ca.method,
+            ca.sourceLabel,
+            ca.headline,
+          ]
+            .map(csvEscape)
+            .join(',')
+        );
+      }
+      for (const li of this.state.lockInEvents) {
+        lines.push(
+          [
+            'LOCK_IN_EXPIRY',
+            li.symbol,
+            li.companyName,
+            '',
+            'Lock-In',
+            '',
+            '',
+            '',
+            li.unlockDate,
+            '',
+            '',
+            '',
+            li.lockedShares ?? '',
+            li.pctOfTotalShares ?? '',
+            li.shareholderCategory,
+            li.method,
+            li.sourceLabel,
+            li.headline,
+          ]
+            .map(csvEscape)
+            .join(',')
+        );
+      }
+      fs.writeFileSync(this.corporateCsvPath, `${lines.join('\n')}\n`, 'utf8');
+    } catch {
+      // ignore disk write issues
+    }
+  }
+
   private save(): void {
     try {
       const dir = path.dirname(this.kbPath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(this.kbPath, JSON.stringify(this.state, null, 2), 'utf8');
+      this.writeCorporateActionsCsv();
     } catch {
       // ignore disk write issues
     }
@@ -513,6 +669,100 @@ export class RegulatoryKnowledgeBase {
     }
   }
 
+  public upsertCorporateAction(action: CorporateActionRecord): void {
+    this.initIfNeeded();
+    const sym = action.symbol.trim().toUpperCase();
+    const clean: CorporateActionRecord = { ...action, symbol: sym };
+    const idx = this.state.corporateActions.findIndex((c) => c.id === clean.id);
+    if (idx >= 0) {
+      const prev = this.state.corporateActions[idx];
+      this.state.corporateActions[idx] = {
+        ...prev,
+        ...clean,
+        bonusPct: clean.bonusPct ?? prev.bonusPct,
+        cashPct: clean.cashPct ?? prev.cashPct,
+        rightRatioPct: clean.rightRatioPct ?? prev.rightRatioPct,
+        bookClosureDate: clean.bookClosureDate ?? prev.bookClosureDate,
+        exDate: clean.exDate ?? prev.exDate,
+        agmDate: clean.agmDate ?? prev.agmDate,
+        sourceUrl: clean.sourceUrl ?? prev.sourceUrl,
+      };
+    } else {
+      this.state.corporateActions.unshift(clean);
+    }
+    if (this.state.corporateActions.length > 500) {
+      this.state.corporateActions = this.state.corporateActions.slice(0, 500);
+    }
+  }
+
+  public upsertLockInEvent(event: LockInEventRecord): void {
+    this.initIfNeeded();
+    const sym = event.symbol.trim().toUpperCase();
+    const clean: LockInEventRecord = { ...event, symbol: sym };
+    const idx = this.state.lockInEvents.findIndex((e) => e.id === clean.id);
+    if (idx >= 0) {
+      const prev = this.state.lockInEvents[idx];
+      this.state.lockInEvents[idx] = {
+        ...prev,
+        ...clean,
+        lockedShares: clean.lockedShares ?? prev.lockedShares,
+        pctOfTotalShares: clean.pctOfTotalShares ?? prev.pctOfTotalShares,
+        sourceUrl: clean.sourceUrl ?? prev.sourceUrl,
+      };
+    } else {
+      this.state.lockInEvents.unshift(clean);
+    }
+    if (this.state.lockInEvents.length > 300) {
+      this.state.lockInEvents = this.state.lockInEvents.slice(0, 300);
+    }
+  }
+
+  public getCorporateActions(symbol?: string): CorporateActionRecord[] {
+    this.initIfNeeded();
+    const sym = symbol?.trim().toUpperCase();
+    const list = sym
+      ? this.state.corporateActions.filter((c) => c.symbol === sym)
+      : [...this.state.corporateActions];
+    return list.sort((a, b) => {
+      const da = a.bookClosureDate || a.exDate || a.agmDate || a.retrievedAt.slice(0, 10);
+      const db = b.bookClosureDate || b.exDate || b.agmDate || b.retrievedAt.slice(0, 10);
+      return db.localeCompare(da);
+    });
+  }
+
+  public getLockInEvents(symbol?: string, refDate: Date = new Date()): LockInEventRecord[] {
+    this.initIfNeeded();
+    const sym = symbol?.trim().toUpperCase();
+    const list = sym
+      ? this.state.lockInEvents.filter((e) => e.symbol === sym)
+      : [...this.state.lockInEvents];
+    return list
+      .map((ev) => {
+        const days = computeDaysBetweenDates(ev.unlockDate, refDate);
+        let overhangTier: LockInEventRecord['overhangTier'] = 'Upcoming';
+        if (days !== null) {
+          if (days < 0) overhangTier = 'Unlocked';
+          else if (days <= 30) overhangTier = 'Critical (<30d)';
+          else if (days <= 90) overhangTier = 'Near-Term (<90d)';
+          else overhangTier = 'Upcoming';
+        }
+        return {
+          ...ev,
+          daysRemaining: days ?? undefined,
+          overhangTier,
+        };
+      })
+      .sort((a, b) => {
+        const da = a.daysRemaining ?? 99999;
+        const db = b.daysRemaining ?? 99999;
+        // Show upcoming closest events first, then recently unlocked
+        const aFuture = da >= -14 ? 0 : 1;
+        const bFuture = db >= -14 ? 0 : 1;
+        if (aFuture !== bFuture) return aFuture - bFuture;
+        return aFuture === 0 ? da - db : db - da;
+      });
+  }
+
   public getCompanyEntry(symbol: string): CompanyKnowledgeBaseEntry | null {
     this.initIfNeeded();
     return this.state.companies[symbol.toUpperCase()] ?? null;
@@ -539,12 +789,24 @@ export class RegulatoryKnowledgeBase {
         byAgency[n.agency]++;
       }
     }
+    const today = getNepalDateStr();
+    const upcomingBookClosuresCount = this.state.corporateActions.filter(
+      (c) => c.bookClosureDate && c.bookClosureDate >= today
+    ).length;
+    const upcomingLockInsCount = this.state.lockInEvents.filter(
+      (l) => l.unlockDate >= today
+    ).length;
+
     return {
       totalCompaniesIndexed: Object.keys(this.state.companies).length,
       totalNotices: this.state.notices.length,
       byAgency,
       lastHarvestAt: this.state.lastHarvestAt,
       agencyLastFetch: { ...this.state.agencyLastFetch },
+      totalCorporateActions: this.state.corporateActions.length,
+      totalLockInEvents: this.state.lockInEvents.length,
+      upcomingBookClosuresCount,
+      upcomingLockInsCount,
     };
   }
 
@@ -557,6 +819,8 @@ export class RegulatoryKnowledgeBase {
     const summary = this.getSummary();
     let notices = [...this.state.notices];
     let companies = Object.values(this.state.companies);
+    let corporateActions = this.getCorporateActions(params?.symbol);
+    let lockInEvents = this.getLockInEvents(params?.symbol);
 
     if (params?.agency && params.agency !== 'ALL') {
       notices = notices.filter((n) => n.agency === params.agency);
@@ -585,10 +849,22 @@ export class RegulatoryKnowledgeBase {
           (c.sebonStatus || '').toLowerCase().includes(q) ||
           (c.cdscStatus || '').toLowerCase().includes(q)
       );
+      corporateActions = corporateActions.filter(
+        (c) =>
+          c.symbol.toLowerCase().includes(q) ||
+          c.companyName.toLowerCase().includes(q) ||
+          c.headline.toLowerCase().includes(q)
+      );
+      lockInEvents = lockInEvents.filter(
+        (l) =>
+          l.symbol.toLowerCase().includes(q) ||
+          l.companyName.toLowerCase().includes(q) ||
+          l.headline.toLowerCase().includes(q)
+      );
     }
 
     companies.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-    return { summary, notices, companies };
+    return { summary, notices, companies, corporateActions, lockInEvents };
   }
 
   public getLastDailyCrawlDate(): string | null {
@@ -1412,12 +1688,429 @@ Return ONLY valid JSON matching this schema:
     return existing;
   }
 
+  private async fetchShareSansarCorporatePortals(
+    universe: Array<{ symbol: string; name: string; keywords: string[]; sectorGroup: SectorGroup }>
+  ): Promise<{ corporateActions: CorporateActionRecord[]; lockInEvents: LockInEventRecord[]; errors: string[] }> {
+    const portals: Array<{ url: string; kind: 'dividend' | 'agm' | 'right' | 'news' }> = [
+      { url: 'https://www.sharesansar.com/proposed-dividend', kind: 'dividend' },
+      { url: 'https://www.sharesansar.com/agm-list', kind: 'agm' },
+      { url: 'https://www.sharesansar.com/right-share', kind: 'right' },
+      { url: 'https://www.sharesansar.com/announcement', kind: 'news' },
+    ];
+    const corporateActions: CorporateActionRecord[] = [];
+    const lockInEvents: LockInEventRecord[] = [];
+    const errors: string[] = [];
+    const nowIso = new Date().toISOString();
+    const todayIso = getNepalDateStr();
+
+    for (const portal of portals) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8500);
+      try {
+        const res = await fetch(portal.url, {
+          signal: controller.signal,
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
+        });
+        if (!res.ok) {
+          errors.push(`Corporate portal (${portal.kind}): HTTP ${res.status}`);
+          continue;
+        }
+        const html = await res.text();
+        const $ = cheerio.load(html);
+
+        if (portal.kind === 'dividend' || portal.kind === 'agm' || portal.kind === 'right') {
+          const headers: string[] = [];
+          $('table thead tr th').each((_i, th) => {
+            headers.push($(th).text().replace(/\s+/g, ' ').trim().toLowerCase());
+          });
+
+          $('table tbody tr')
+            .slice(0, 60)
+            .each((_idx, tr) => {
+              const cells: string[] = [];
+              $(tr)
+                .find('td')
+                .each((_ci, td) => {
+                  cells.push($(td).text().replace(/\s+/g, ' ').trim());
+                });
+              if (cells.length < 3) return;
+              const rowText = cells.join(' · ');
+              const matchedSyms = this.matchSymbolsInText(rowText, universe);
+              const sym = matchedSyms[0] || cells.find((c) => /^[A-Z0-9]{2,10}$/.test(c.trim()));
+              if (!sym) return;
+              const uMatch = universe.find((u) => u.symbol === sym.toUpperCase());
+              const companyName = uMatch?.name || sym.toUpperCase();
+
+              const colIdx = (pred: (h: string) => boolean): number => headers.findIndex(pred);
+              const fyCell =
+                colIdx((h) => h.includes('fiscal') || h === 'fy') >= 0
+                  ? cells[colIdx((h) => h.includes('fiscal') || h === 'fy')]
+                  : null;
+              const fyMatch = (fyCell || rowText).match(/\b(20\d{2}\/\d{2,4})\b/);
+              const fiscalYear = fyMatch ? fyMatch[1] : null;
+
+              let bonusPct: number | null = null;
+              let cashPct: number | null = null;
+              let rightRatioPct: number | null = null;
+              let bookClosureDate: string | null = null;
+              let agmDate: string | null = null;
+
+              const bonusIdx = colIdx((h) => h.includes('bonus'));
+              if (bonusIdx >= 0) bonusPct = parsePctNumber(cells[bonusIdx]);
+              const cashIdx = colIdx((h) => h.includes('cash'));
+              if (cashIdx >= 0) cashPct = parsePctNumber(cells[cashIdx]);
+              const ratioIdx = colIdx((h) => h.includes('ratio') || h.includes('right') || h.includes('%'));
+              if (portal.kind === 'right' && ratioIdx >= 0) {
+                const rawR = cells[ratioIdx];
+                const colon = rawR.match(/(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)/);
+                if (colon && Number(colon[1]) > 0) {
+                  rightRatioPct = Math.round((Number(colon[2]) / Number(colon[1])) * 10000) / 100;
+                } else {
+                  rightRatioPct = parsePctNumber(rawR);
+                }
+              }
+
+              const bookIdx = colIdx((h) => h.includes('book') || h.includes('close'));
+              if (bookIdx >= 0) bookClosureDate = normalizeIsoDate(cells[bookIdx]);
+              const agmIdx = colIdx((h) => h.includes('agm'));
+              if (agmIdx >= 0) agmDate = normalizeIsoDate(cells[agmIdx]);
+
+              const actionType: CorporateActionType =
+                portal.kind === 'right'
+                  ? 'Right Share'
+                  : portal.kind === 'agm'
+                    ? 'AGM'
+                    : 'Dividend';
+              const status: CorporateActionRecord['status'] =
+                bookClosureDate && bookClosureDate < todayIso
+                  ? 'Book Closed'
+                  : agmDate && agmDate < todayIso
+                    ? 'Completed'
+                    : 'Proposed';
+
+              const headlineParts = [
+                fiscalYear ? `FY ${fiscalYear}` : null,
+                bonusPct !== null && bonusPct > 0 ? `${bonusPct}% Bonus` : null,
+                cashPct !== null && cashPct > 0 ? `${cashPct}% Cash` : null,
+                rightRatioPct !== null && rightRatioPct > 0 ? `${rightRatioPct}% Right Share` : null,
+                bookClosureDate ? `Book Close ${bookClosureDate}` : null,
+                agmDate ? `AGM ${agmDate}` : null,
+              ].filter(Boolean);
+
+              if (headlineParts.length === 0) return;
+
+              corporateActions.push({
+                id: makeCorpActionId(sym.toUpperCase(), fiscalYear, actionType, bookClosureDate || agmDate),
+                symbol: sym.toUpperCase(),
+                companyName,
+                fiscalYear,
+                actionType,
+                bonusPct,
+                cashPct,
+                rightRatioPct,
+                bookClosureDate,
+                exDate: bookClosureDate,
+                agmDate,
+                status,
+                headline: headlineParts.join(' · '),
+                sourceLabel: 'NEPSE Corporate Portal',
+                sourceUrl: safeHttpUrl(portal.url),
+                retrievedAt: nowIso,
+                method: 'Portal Feed',
+              });
+            });
+        } else {
+          // Scan announcements for lock-in expiry disclosures & dividend declarations
+          $('main a, article a, .news a, .post a, h3 a, a')
+            .slice(0, 120)
+            .each((_idx, el) => {
+              const title = $(el).text().replace(/\s+/g, ' ').trim();
+              if (title.length < 20 || title.length > 240) return;
+              if (!/lock[-\s]?in|unlock|dividend|bonus|right\s*share|book\s*clos/i.test(title)) return;
+              const matched = this.matchSymbolsInText(title, universe);
+              if (matched.length === 0) return;
+              const sym = matched[0];
+              const uMatch = universe.find((u) => u.symbol === sym);
+              const dateIso = normalizeIsoDate(title);
+
+              let href: string | null = null;
+              try {
+                href = safeHttpUrl(new URL($(el).attr('href') || '', portal.url).toString());
+              } catch {
+                href = safeHttpUrl(portal.url);
+              }
+
+              if (/lock[-\s]?in|unlock/i.test(title) && dateIso) {
+                const cat: LockInEventRecord['shareholderCategory'] = /promoter/i.test(title)
+                  ? 'Promoter'
+                  : /local|affected/i.test(title)
+                    ? 'Local Affected'
+                    : /employee/i.test(title)
+                      ? 'Employee'
+                      : 'Mixed';
+                lockInEvents.push({
+                  id: makeLockInId(sym, dateIso, cat),
+                  symbol: sym,
+                  companyName: uMatch?.name || sym,
+                  shareholderCategory: cat,
+                  unlockDate: dateIso,
+                  lockedShares: null,
+                  pctOfTotalShares: null,
+                  headline: title,
+                  sourceLabel: 'NEPSE Corporate Portal',
+                  sourceUrl: href,
+                  retrievedAt: nowIso,
+                  method: 'Portal Feed',
+                });
+              }
+            });
+        }
+      } catch (err) {
+        errors.push(`Corporate portal (${portal.kind}): ${err instanceof Error ? err.message : 'fetch failed'}`);
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    return { corporateActions, lockInEvents, errors };
+  }
+
+  public async distillCorporateActionsAndLockInsWithSearch(
+    store: MarketStore,
+    targetSymbols?: string[]
+  ): Promise<{
+    corporateActionsAdded: number;
+    lockInEventsAdded: number;
+    warning: string | null;
+  }> {
+    this.initIfNeeded();
+    const ai = getAiClient();
+    if (!ai) {
+      return {
+        corporateActionsAdded: 0,
+        lockInEventsAdded: 0,
+        warning: 'GEMINI_API_KEY not set — skipped Google Search corporate action & lock-in distillation.',
+      };
+    }
+
+    const universe = this.buildUniverseLookup(store);
+    const focusNote =
+      targetSymbols && targetSymbols.length > 0
+        ? `Focus especially on symbols: ${targetSymbols.slice(0, 12).join(', ')}.`
+        : 'Prioritize active NEPSE commercial banks, development banks, hydropower, microfinance, insurance, and manufacturing blue-chips.';
+
+    const prompt = `You are a Nepal Stock Exchange (NEPSE) corporate actions & share supply analyst.
+Use Google Search (checking sharesansar.com, nepalstock.com, cdsc.com.np, and sebon.gov.np) to find and DISTILL the most up-to-date VERIFIED:
+1) Proposed or approved Bonus Share %, Cash Dividend %, Right Share ratios, Book Closure dates, and AGM dates for NEPSE-listed stocks.
+2) Upcoming or recent Promoter / Local-Affected / Employee share lock-in period expiry events (unlock dates and locked share counts).
+
+${focusNote}
+
+STRICT ANTI-FABRICATION RULE:
+- Report ONLY real verified corporate actions and lock-in expiry disclosures confirmed in search results.
+- Never guess dates, percentages, or share counts. Use null when unknown.
+
+Return ONLY valid JSON:
+{
+  "corporateActions": [
+    {
+      "symbol": "TICKER",
+      "fiscalYear": "2082/83 or null",
+      "actionType": "Dividend" | "Right Share" | "AGM" | "Book Closure",
+      "bonusPct": 10.5,
+      "cashPct": 5.26,
+      "rightRatioPct": null,
+      "bookClosureDate": "YYYY-MM-DD or null",
+      "agmDate": "YYYY-MM-DD or null",
+      "status": "Proposed" | "Approved" | "Book Closed" | "Completed",
+      "headline": "Concise 1-line summary",
+      "url": "https://... or null"
+    }
+  ],
+  "lockInEvents": [
+    {
+      "symbol": "TICKER",
+      "shareholderCategory": "Promoter" | "Local Affected" | "Employee" | "Foreign" | "Mixed",
+      "unlockDate": "YYYY-MM-DD",
+      "lockedShares": 1250000,
+      "pctOfTotalShares": 12.5,
+      "headline": "Concise 1-line summary of shares unlocking",
+      "url": "https://... or null"
+    }
+  ]
+}`;
+
+    try {
+      let response: GenerateContentResponse;
+      try {
+        response = await ai.models.generateContent({
+          model: 'gemini-4-hydrogen',
+          contents: prompt,
+          config: { tools: [{ googleSearch: {} }] },
+        });
+      } catch (innerErr) {
+        const msg = innerErr instanceof Error ? innerErr.message : String(innerErr);
+        if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('NOT_FOUND')) {
+          response = await ai.models.generateContent({
+            model: 'gemini-3.1-flash-lite',
+            contents: prompt,
+            config: { tools: [{ googleSearch: {} }] },
+          });
+        } else {
+          throw innerErr;
+        }
+      }
+
+      const parsed = parseJsonObjectSafe(response.text || '');
+      const citations = extractGroundingCitations(response, 'NEPSE');
+      const nowIso = new Date().toISOString();
+      const todayIso = getNepalDateStr();
+
+      let corporateActionsAdded = 0;
+      let lockInEventsAdded = 0;
+
+      const rawCas = Array.isArray(parsed?.corporateActions) ? parsed.corporateActions : [];
+      for (const item of rawCas) {
+        if (!item || typeof item !== 'object') continue;
+        const o = item as Record<string, unknown>;
+        const sym = String(o.symbol || '').trim().toUpperCase();
+        if (!sym || !/^[A-Z0-9._-]{2,16}$/.test(sym)) continue;
+        const uMatch = universe.find((u) => u.symbol === sym);
+        const fy = strOrNull(o.fiscalYear);
+        const typeRaw = String(o.actionType || 'Dividend');
+        const actionType: CorporateActionType =
+          typeRaw === 'Right Share' || typeRaw === 'AGM' || typeRaw === 'Book Closure' || typeRaw === 'Other'
+            ? typeRaw
+            : 'Dividend';
+        const bonusPct = parsePctNumber(o.bonusPct);
+        const cashPct = parsePctNumber(o.cashPct);
+        const rightRatioPct = parsePctNumber(o.rightRatioPct);
+        const bookClosureDate = normalizeIsoDate(o.bookClosureDate);
+        const agmDate = normalizeIsoDate(o.agmDate);
+        const headline =
+          strOrNull(o.headline) ||
+          [
+            fy ? `FY ${fy}` : null,
+            bonusPct ? `${bonusPct}% Bonus` : null,
+            cashPct ? `${cashPct}% Cash` : null,
+            rightRatioPct ? `${rightRatioPct}% Right` : null,
+            bookClosureDate ? `Book Close ${bookClosureDate}` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ');
+        if (!headline) continue;
+
+        const statusRaw = String(o.status || 'Proposed');
+        const status: CorporateActionRecord['status'] =
+          statusRaw === 'Approved' || statusRaw === 'Book Closed' || statusRaw === 'Completed'
+            ? statusRaw
+            : bookClosureDate && bookClosureDate < todayIso
+              ? 'Book Closed'
+              : 'Proposed';
+        const url = safeHttpUrl(o.url) || citations[0]?.uri || null;
+
+        this.upsertCorporateAction({
+          id: makeCorpActionId(sym, fy, actionType, bookClosureDate || agmDate || headline.slice(0, 24)),
+          symbol: sym,
+          companyName: uMatch?.name || sym,
+          fiscalYear: fy,
+          actionType,
+          bonusPct,
+          cashPct,
+          rightRatioPct,
+          bookClosureDate,
+          exDate: bookClosureDate,
+          agmDate,
+          status,
+          headline,
+          sourceLabel: 'Google Search Distilled',
+          sourceUrl: url,
+          retrievedAt: nowIso,
+          method: 'Search Grounded',
+        });
+        corporateActionsAdded++;
+      }
+
+      const rawLocks = Array.isArray(parsed?.lockInEvents) ? parsed.lockInEvents : [];
+      for (const item of rawLocks) {
+        if (!item || typeof item !== 'object') continue;
+        const o = item as Record<string, unknown>;
+        const sym = String(o.symbol || '').trim().toUpperCase();
+        const unlockDate = normalizeIsoDate(o.unlockDate);
+        if (!sym || !/^[A-Z0-9._-]{2,16}$/.test(sym) || !unlockDate) continue;
+        const uMatch = universe.find((u) => u.symbol === sym);
+        const catRaw = String(o.shareholderCategory || 'Promoter');
+        const shareholderCategory: LockInEventRecord['shareholderCategory'] =
+          catRaw === 'Local Affected' || catRaw === 'Employee' || catRaw === 'Foreign' || catRaw === 'Mixed'
+            ? catRaw
+            : 'Promoter';
+        const lockedShares =
+          typeof o.lockedShares === 'number' && Number.isFinite(o.lockedShares) && o.lockedShares > 0
+            ? Math.round(o.lockedShares)
+            : null;
+        const pctOfTotalShares = parsePctNumber(o.pctOfTotalShares);
+        const headline =
+          strOrNull(o.headline) ||
+          `${shareholderCategory} share lock-in expires on ${unlockDate}`;
+        const url = safeHttpUrl(o.url) || citations[0]?.uri || null;
+
+        this.upsertLockInEvent({
+          id: makeLockInId(sym, unlockDate, shareholderCategory),
+          symbol: sym,
+          companyName: uMatch?.name || sym,
+          shareholderCategory,
+          unlockDate,
+          lockedShares,
+          pctOfTotalShares,
+          headline,
+          sourceLabel: 'Google Search Distilled',
+          sourceUrl: url,
+          retrievedAt: nowIso,
+          method: 'Search Grounded',
+        });
+        lockInEventsAdded++;
+
+        const days = computeDaysBetweenDates(unlockDate);
+        if (days !== null && days >= -7 && days <= 120) {
+          const comp = this.state.companies[sym];
+          if (comp) {
+            comp.lockInOverhangFlag = true;
+            if (!comp.riskFlags.some((r) => r.includes(unlockDate))) {
+              comp.riskFlags.unshift(`${shareholderCategory} lock-in expiry on ${unlockDate}: ${headline}`);
+            }
+            comp.cdscStatus = comp.cdscStatus || headline;
+            comp.updatedAt = nowIso;
+          }
+        }
+      }
+
+      if (corporateActionsAdded > 0 || lockInEventsAdded > 0) {
+        this.state.lastHarvestAt = nowIso;
+        this.save();
+      }
+
+      return { corporateActionsAdded, lockInEventsAdded, warning: null };
+    } catch (err) {
+      return {
+        corporateActionsAdded: 0,
+        lockInEventsAdded: 0,
+        warning: `Google Search corporate action distillation failed: ${err instanceof Error ? err.message : String(err)}`,
+      };
+    }
+  }
+
   public async harvestAgencies(
     agenciesInput: RegulatoryAgency[],
     store: MarketStore
   ): Promise<{
     addedNotices: number;
     companiesUpdated: number;
+    corporateActionsAdded: number;
+    lockInEventsAdded: number;
     directResults: Record<string, number>;
     warnings: string[];
     summary: KnowledgeBaseSummary;
@@ -1429,14 +2122,19 @@ Return ONLY valid JSON matching this schema:
     const directResults: Record<string, number> = {};
     let addedNotices = 0;
     let directCompaniesUpdated = 0;
+    let corporateActionsAdded = 0;
+    let lockInEventsAdded = 0;
 
-    // Run direct portal scrapers in parallel (bounded 8s timeout per URL)
-    const scrapeRuns = await Promise.all(
-      agencies.map(async (agency) => ({
-        agency,
-        res: await this.directScrapeAgency(agency, universe),
-      }))
-    );
+    // Run direct portal fetchers + corporate portal structured feeds in parallel
+    const [scrapeRuns, corpPortalRes] = await Promise.all([
+      Promise.all(
+        agencies.map(async (agency) => ({
+          agency,
+          res: await this.directScrapeAgency(agency, universe),
+        }))
+      ),
+      this.fetchShareSansarCorporatePortals(universe),
+    ]);
 
     const nowIso = new Date().toISOString();
     for (const { agency, res } of scrapeRuns) {
@@ -1454,8 +2152,23 @@ Return ONLY valid JSON matching this schema:
       }
     }
 
-    // Supplement with Gemini Search Grounding targeting those official domains
-    const grounded = await this.searchGroundedAgencyHarvest(agencies, universe);
+    for (const ca of corpPortalRes.corporateActions) {
+      this.upsertCorporateAction(ca);
+      corporateActionsAdded++;
+    }
+    for (const li of corpPortalRes.lockInEvents) {
+      this.upsertLockInEvent(li);
+      lockInEventsAdded++;
+    }
+    if (corpPortalRes.errors.length > 0 && corporateActionsAdded === 0) {
+      warnings.push(corpPortalRes.errors[0]);
+    }
+
+    // Supplement with Gemini Search Grounding targeting official agency domains & corporate actions
+    const [grounded, distilledCorp] = await Promise.all([
+      this.searchGroundedAgencyHarvest(agencies, universe),
+      this.distillCorporateActionsAndLockInsWithSearch(store),
+    ]);
     let groundedCompaniesUpdated = 0;
     for (const n of grounded.notices) {
       this.upsertNotice(n);
@@ -1463,8 +2176,13 @@ Return ONLY valid JSON matching this schema:
       addedNotices++;
       this.state.agencyLastFetch[n.agency] = nowIso;
     }
+    corporateActionsAdded += distilledCorp.corporateActionsAdded;
+    lockInEventsAdded += distilledCorp.lockInEventsAdded;
     if (grounded.warning) {
       warnings.push(grounded.warning);
+    }
+    if (distilledCorp.warning && !warnings.includes(distilledCorp.warning)) {
+      warnings.push(distilledCorp.warning);
     }
 
     this.state.lastHarvestAt = nowIso;
@@ -1476,6 +2194,8 @@ Return ONLY valid JSON matching this schema:
         directCompaniesUpdated + groundedCompaniesUpdated,
         grounded.companiesUpdated
       ),
+      corporateActionsAdded,
+      lockInEventsAdded,
       directResults,
       warnings,
       summary: this.getSummary(),

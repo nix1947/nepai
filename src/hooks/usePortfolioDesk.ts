@@ -8,6 +8,7 @@ export interface PortfolioHolding {
   shares: number;
   buyPrice: number; // WACC / buy price per kitta
   holdingTerm: HoldingTerm; // short = 7.5% CGT, long (>365d) = 5% CGT
+  buyDate?: string; // YYYY-MM-DD purchase date for exact 365-day CGT countdown
   stopLoss: number | null;
   targetPrice: number | null;
   addedAt: string;
@@ -148,17 +149,19 @@ export function usePortfolioDesk() {
     (input: Omit<PortfolioHolding, 'id' | 'addedAt'>) => {
       const sym = input.symbol.trim().toUpperCase();
       if (!sym || input.shares <= 0 || input.buyPrice <= 0) return;
+      const today = new Date().toISOString().slice(0, 10);
       const entry: PortfolioHolding = {
         ...input,
         id: `${sym}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         symbol: sym,
         shares: Math.round(input.shares),
         buyPrice: Number(input.buyPrice.toFixed(2)),
+        buyDate: input.buyDate && /^\d{4}-\d{2}-\d{2}$/.test(input.buyDate) ? input.buyDate : today,
         stopLoss:
           input.stopLoss && input.stopLoss > 0 ? Number(input.stopLoss.toFixed(2)) : null,
         targetPrice:
           input.targetPrice && input.targetPrice > 0 ? Number(input.targetPrice.toFixed(2)) : null,
-        addedAt: new Date().toISOString().slice(0, 10),
+        addedAt: today,
         notes: (input.notes || '').trim(),
       };
       persistHoldings([entry, ...readHoldings()]);

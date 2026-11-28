@@ -669,6 +669,9 @@ export interface ExplorerOverviewResponse {
   technical: ExplorerTechnicalSummary | null;
   decisionPlaybook: ExplorerDecisionPlaybook;
   benchmarkFdRatePct: number;
+  kbEntry: CompanyKnowledgeBaseEntry | null;
+  corporateActions: CorporateActionRecord[];
+  lockInEvents: LockInEventRecord[];
 }
 
 export interface MonitorSymbolEntry {
@@ -817,18 +820,63 @@ export interface CompanyKnowledgeBaseEntry {
   citations: RegulatoryKbCitation[];
 }
 
+export type CorporateActionType = 'Dividend' | 'Right Share' | 'AGM' | 'Book Closure' | 'Other';
+
+export interface CorporateActionRecord {
+  id: string;
+  symbol: string;
+  companyName: string;
+  fiscalYear: string | null;
+  actionType: CorporateActionType;
+  bonusPct: number | null;
+  cashPct: number | null;
+  rightRatioPct: number | null;
+  bookClosureDate: string | null;
+  exDate: string | null;
+  agmDate: string | null;
+  status: 'Proposed' | 'Approved' | 'Book Closed' | 'Completed';
+  headline: string;
+  sourceLabel: string;
+  sourceUrl: string | null;
+  retrievedAt: string;
+  method: 'Portal Feed' | 'Search Grounded' | 'Annual Report';
+}
+
+export interface LockInEventRecord {
+  id: string;
+  symbol: string;
+  companyName: string;
+  shareholderCategory: 'Promoter' | 'Local Affected' | 'Employee' | 'Foreign' | 'Mixed';
+  unlockDate: string;
+  lockedShares: number | null;
+  pctOfTotalShares: number | null;
+  daysRemaining?: number;
+  overhangTier?: 'Critical (<30d)' | 'Near-Term (<90d)' | 'Upcoming' | 'Unlocked';
+  headline: string;
+  sourceLabel: string;
+  sourceUrl: string | null;
+  retrievedAt: string;
+  method: 'Portal Feed' | 'Search Grounded';
+}
+
 export interface KnowledgeBaseSummary {
   totalCompaniesIndexed: number;
   totalNotices: number;
   byAgency: Record<RegulatoryAgency, number>;
   lastHarvestAt: string | null;
   agencyLastFetch: Partial<Record<RegulatoryAgency, string>>;
+  totalCorporateActions: number;
+  totalLockInEvents: number;
+  upcomingBookClosuresCount: number;
+  upcomingLockInsCount: number;
 }
 
 export interface KnowledgeBaseResponse {
   summary: KnowledgeBaseSummary;
   notices: RegulatoryKbNotice[];
   companies: CompanyKnowledgeBaseEntry[];
+  corporateActions: CorporateActionRecord[];
+  lockInEvents: LockInEventRecord[];
 }
 
 export type HiddenGemArchetype =
@@ -1732,6 +1780,120 @@ export interface StrategicOutlookHeatmapResponse {
   sectorBenchmarks: StrategicOutlookSectorBenchmark[];
   rows: StrategicOutlookCompanyRow[];
 }
+
+export interface CatalystDeadlineItem {
+  id: string;
+  title: string;
+  date: string;
+  daysRemaining: number;
+  category: 'Fiscal Deadline' | 'Reporting Window' | 'Book Closure' | 'AGM' | 'Lock-In';
+  description: string;
+}
+
+export interface CatalystValuationTrigger {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  ltp: number | null;
+  compositeFairValue: number | null;
+  marginOfSafetyPct: number | null;
+  epsVsQ4Avg3yPct: number | null;
+  operatingProfitVsQ4Avg3yPct: number | null;
+  comingQuarterDirection: ComingQuarterDirection;
+  triggerType: 'Deep Buy Zone' | '3Y Q4 Beat Leader' | 'Earnings Inflection';
+  headline: string;
+}
+
+export interface CatalystCalendarResponse {
+  generatedAt: string;
+  asOfDate: string;
+  fiscalContext: NepalFiscalYearContext;
+  kbSummary: KnowledgeBaseSummary;
+  geminiConfigured: boolean;
+  hasGitHubToken: boolean;
+  lockInEvents: LockInEventRecord[];
+  corporateActions: CorporateActionRecord[];
+  fiscalDeadlines: CatalystDeadlineItem[];
+  valuationTriggers: CatalystValuationTrigger[];
+  recentNotices: RegulatoryKbNotice[];
+}
+
+export type SectorRotationPhase =
+  | 'Leading Inflow'
+  | 'Improving Accumulation'
+  | 'Weakening Distribution'
+  | 'Lagging Outflow';
+
+export interface SectorRotationRow {
+  sector: string;
+  sectorGroup: SectorGroup;
+  stocksCount: number;
+  advancers1d: number;
+  decliners1d: number;
+  breadthPct: number;
+  turnover1dCr: number;
+  turnover5dAvgCr: number;
+  turnover20dAvgCr: number;
+  share1dPct: number;
+  share5dPct: number;
+  share20dPct: number;
+  share60dPct: number;
+  shareShift5vs20Pp: number;
+  shareShift20vs60Pp: number;
+  return1dPct: number | null;
+  return5dPct: number | null;
+  return20dPct: number | null;
+  avgRoePct: number | null;
+  avgMosPct: number | null;
+  rotationPhase: SectorRotationPhase;
+  topMovers: Array<{
+    symbol: string;
+    ltp: number;
+    changePct: number;
+    turnoverCr: number;
+  }>;
+}
+
+export interface SectorRotationResponse {
+  generatedAt: string;
+  asOfDate: string | null;
+  datesUsed: number;
+  totalTurnover1dCr: number;
+  totalTurnover5dAvgCr: number;
+  totalTurnover20dAvgCr: number;
+  sectors: SectorRotationRow[];
+}
+
+export interface SignalScorecardHorizonStats {
+  horizonDays: 5 | 10 | 20;
+  samples: number;
+  winRatePct: number | null;
+  avgReturnPct: number | null;
+  medianReturnPct: number | null;
+  excessVsBaselinePct: number | null;
+  bestReturnPct: number | null;
+  worstReturnPct: number | null;
+  profitFactor: number | null;
+}
+
+export interface SignalScorecardCohort {
+  id: string;
+  name: string;
+  category: 'Momentum & Flow' | 'Smart Money' | 'Technical Setup' | 'Fundamental';
+  description: string;
+  currentCandidates: string[];
+  statsByHorizon: Record<'5' | '10' | '20', SignalScorecardHorizonStats>;
+}
+
+export interface SignalScorecardResponse {
+  generatedAt: string;
+  asOfDate: string | null;
+  totalSessionsAnalyzed: number;
+  evaluationCheckpoints: number;
+  baselineByHorizon: Record<'5' | '10' | '20', SignalScorecardHorizonStats>;
+  cohorts: SignalScorecardCohort[];
+}
+
 
 
 

@@ -100,7 +100,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git status --porcelain -- 'data/financial/*.json' 'data/financial/*.csv' 'data/financial/vault/ledgers/*.json' 'data/financial/vault/quarterly_metrics.csv' 'data/financial/vault/regulatory-kb.json' 'data/financial/vault/annual-report-ai-cache.json' | grep -q .; then
+          if git status --porcelain -- 'data/financial/*.json' 'data/financial/*.csv' 'data/financial/vault/ledgers/*.json' 'data/financial/vault/quarterly_metrics.csv' 'data/financial/vault/regulatory-kb.json' 'data/financial/vault/corporate-actions-kb.csv' 'data/financial/vault/annual-report-ai-cache.json' | grep -q .; then
             git add data/financial
             git commit -m "chore(kb): daily regulatory, annual & quarterly knowledge base crawl"
             git pull --rebase origin ${{ github.event.repository.default_branch }} || true

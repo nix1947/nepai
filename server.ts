@@ -50,16 +50,26 @@ import {
 } from './server/fundamental/annualReportIntelEngine.ts';
 import { FundamentalMonitorService } from './server/fundamental/fundamentalCollector.ts';
 import { evaluateHiddenGems } from './server/fundamental/hiddenGemsEngine.ts';
+import { buildExplorerOverview } from './server/fundamental/explorerEngine.ts';
 import { evaluateScreenerUniverse } from './server/fundamental/investorScoringEngine.ts';
 import { computeMasterScreener } from './server/fundamental/masterScreenerEngine.ts';
-import { getActiveNepalFiscalQuarter } from './server/fundamental/nepalCalendar.ts';
+import {
+  getActiveNepalFiscalQuarter,
+  getNepalFiscalYearCalendarContext,
+  getUpcomingNepalFiscalQuarter,
+} from './server/fundamental/nepalCalendar.ts';
 import {
   ALL_AGENCIES,
   getNepalDateStr,
   RegulatoryKnowledgeBase,
 } from './server/fundamental/regulatoryKnowledgeBase.ts';
+import { computeSectorRotation } from './server/fundamental/sectorRotationEngine.ts';
+import { computeSignalScorecard } from './server/fundamental/signalScorecardEngine.ts';
 import { buildStrategicOutlookHeatmap } from './server/fundamental/strategicOutlookEngine.ts';
 import type {
+  CatalystCalendarResponse,
+  CatalystDeadlineItem,
+  CatalystValuationTrigger,
   ConsensusTag,
   HiddenGemArchetype,
   QuarterCode,
@@ -790,7 +800,222 @@ async function startServer() {
     }
   });
 
-  // ---------------------------------------------------------------- ShareSansar Quarterly Financials (data/financial/)
+  // ---------------------------------------------------------------- Stock Explorer 360 & Intelligence Routes
+  app.get('/api/explorer/:symbol', (req, res) => {
+    try {
+      const symbol = String(req.params.symbol || '').trim().toUpperCase();
+      if (!isValidSymbol(symbol)) {
+        res.status(400).json({ error: 'Invalid ticker symbol' });
+        return;
+      }
+      const equityOnly = req.query.equityOnly !== 'false';
+      fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
+      const overview = buildExplorerOverview({
+        store,
+        vault: fundamentalVault,
+        kb: regulatoryKb,
+        symbol,
+        equityOnly,
+        monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+      });
+      res.json(overview);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to build Explorer 360 overview',
+      });
+    }
+  });
+
+  app.get('/api/intelligence/catalysts', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      const now = new Date();
+      const todayIso = getNepalDateStr(now);
+      const fiscalContext = getNepalFiscalYearCalendarContext(now);
+      const activeQ = getActiveNepalFiscalQuarter(now, 15);
+      const upcomingQ = getUpcomingNepalFiscalQuarter(now, 15);
+
+      const daysUntil = (isoDate: string): number => {
+        const t = Date.parse(`${isoDate}T00:00:00Z`);
+        const base = Date.parse(`${todayIso}T00:00:00Z`);
+        if (Number.isNaN(t) || Number.isNaN(base)) return 0;
+        return Math.round((t - base) / 86_400_000);
+      };
+
+      const kbData = regulatoryKb.queryKnowledgeBase();
+      const fiscalDeadlines: CatalystDeadlineItem[] = [
+        {
+          id: 'poush-end-agm',
+          title: `FY ${fiscalContext.latestCompletedFy} Annual Report & Poush-End AGM Cutoff`,
+          date: fiscalContext.poushEndApproxDate,
+          daysRemaining: daysUntil(fiscalContext.poushEndApproxDate),
+          category: 'Fiscal Deadline',
+          description: fiscalContext.ruleSummary,
+        },
+        {
+          id: 'active-quarter-window',
+          title: `${activeQ.quarter} FY ${activeQ.fiscalYear} Unaudited Statement Window`,
+          date: activeQ.checkStartDate,
+          daysRemaining: daysUntil(activeQ.checkStartDate),
+          category: 'Reporting Window',
+          description: `Quarter ended ~${activeQ.quarterEndApprox}; reporting compliance checkpoint opens ${activeQ.checkStartDate}.`,
+        },
+        {
+          id: 'upcoming-quarter-window',
+          title: `Upcoming ${upcomingQ.quarter} FY ${upcomingQ.fiscalYear} Reporting Window`,
+          date: upcomingQ.checkStartDate,
+          daysRemaining: daysUntil(upcomingQ.checkStartDate),
+          category: 'Reporting Window',
+          description: `Quarter ends ~${upcomingQ.quarterEndApprox}; automated collector pulls +15d post close (${upcomingQ.checkStartDate}).`,
+        },
+      ];
+
+      for (const l of kbData.lockInEvents.slice(0, 12)) {
+        if ((l.daysRemaining ?? 999) >= -7 && (l.daysRemaining ?? 999) <= 180) {
+          fiscalDeadlines.push({
+            id: `lock-${l.id}`,
+            title: `${l.symbol} ${l.shareholderCategory} Lock-In Expiry`,
+            date: l.unlockDate,
+            daysRemaining: l.daysRemaining ?? daysUntil(l.unlockDate),
+            category: 'Lock-In',
+            description: l.headline,
+          });
+        }
+      }
+
+      for (const a of kbData.corporateActions.slice(0, 15)) {
+        const targetDate = a.bookClosureDate || a.agmDate || a.exDate;
+        if (!targetDate) continue;
+        const dRem = daysUntil(targetDate);
+        if (dRem >= -7 && dRem <= 120) {
+          fiscalDeadlines.push({
+            id: `ca-${a.id}`,
+            title: `${a.symbol} ${a.actionType} (${a.bonusPct ? `${a.bonusPct}% Bonus` : a.cashPct ? `${a.cashPct}% Cash` : a.headline.slice(0, 32)})`,
+            date: targetDate,
+            daysRemaining: dRem,
+            category: a.actionType === 'AGM' ? 'AGM' : 'Book Closure',
+            description: a.headline,
+          });
+        }
+      }
+
+      fiscalDeadlines.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+      const evaluated = evaluateScreenerUniverse(store, fundamentalVault, {
+        equityOnly,
+        monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+        kbMap: regulatoryKb.getAllCompanyEntries(),
+      });
+
+      const valuationTriggers: CatalystValuationTrigger[] = [];
+      for (const row of evaluated.rows) {
+        if (!row.hasFundamentalData) continue;
+        const mos = row.keyMetrics.marginOfSafetyPct;
+        const epsQ4 = row.keyMetrics.epsVsQ4Avg3yPct;
+        const opQ4 = row.keyMetrics.operatingProfitVsQ4Avg3yPct;
+        const hasCaution = row.keyMetrics.earningsQuality.hasNonOperatingCaution;
+        const dir = row.comingQuarterOutlook.direction;
+
+        if ((mos !== null && mos >= 15) && row.scores.fundamentalQualityScore >= 55) {
+          valuationTriggers.push({
+            symbol: row.symbol,
+            companyName: row.companyName,
+            sector: row.sector,
+            ltp: row.market.ltp,
+            compositeFairValue: row.keyMetrics.intrinsicValue,
+            marginOfSafetyPct: mos,
+            epsVsQ4Avg3yPct: epsQ4,
+            operatingProfitVsQ4Avg3yPct: opQ4,
+            comingQuarterDirection: dir,
+            triggerType: 'Deep Buy Zone',
+            headline: `Trades at +${mos.toFixed(1)}% Margin of Safety below fair value (Rs ${row.keyMetrics.intrinsicValue?.toFixed(0) ?? '—'}) with Quality ${row.scores.fundamentalQualityScore.toFixed(0)}/100.`,
+          });
+        } else if (
+          (hasCaution ? (opQ4 ?? -999) >= 12 : (epsQ4 ?? -999) >= 12) &&
+          row.scores.overallScore >= 56
+        ) {
+          const metricVal = hasCaution ? opQ4! : epsQ4!;
+          valuationTriggers.push({
+            symbol: row.symbol,
+            companyName: row.companyName,
+            sector: row.sector,
+            ltp: row.market.ltp,
+            compositeFairValue: row.keyMetrics.intrinsicValue,
+            marginOfSafetyPct: mos,
+            epsVsQ4Avg3yPct: epsQ4,
+            operatingProfitVsQ4Avg3yPct: opQ4,
+            comingQuarterDirection: dir,
+            triggerType: '3Y Q4 Beat Leader',
+            headline: `${hasCaution ? 'Operating Profit' : 'Annualized EPS'} beats 3Y Q4 baseline by +${metricVal.toFixed(1)}% (${dir}).`,
+          });
+        } else if (dir === 'Blow Up' || dir === 'Moderate Upside') {
+          valuationTriggers.push({
+            symbol: row.symbol,
+            companyName: row.companyName,
+            sector: row.sector,
+            ltp: row.market.ltp,
+            compositeFairValue: row.keyMetrics.intrinsicValue,
+            marginOfSafetyPct: mos,
+            epsVsQ4Avg3yPct: epsQ4,
+            operatingProfitVsQ4Avg3yPct: opQ4,
+            comingQuarterDirection: dir,
+            triggerType: 'Earnings Inflection',
+            headline: row.comingQuarterOutlook.reasons[0] || `Coming quarter outlook signals ${dir}.`,
+          });
+        }
+      }
+
+      const payload: CatalystCalendarResponse = {
+        generatedAt: new Date().toISOString(),
+        asOfDate: todayIso,
+        fiscalContext,
+        kbSummary: kbData.summary,
+        geminiConfigured: regulatoryKb.isGeminiConfigured(),
+        hasGitHubToken: Boolean(process.env.GITHUB_TOKEN?.trim()),
+        lockInEvents: kbData.lockInEvents,
+        corporateActions: kbData.corporateActions,
+        fiscalDeadlines: fiscalDeadlines.slice(0, 30),
+        valuationTriggers: valuationTriggers.slice(0, 24),
+        recentNotices: kbData.notices.slice(0, 25),
+      };
+      res.json(payload);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to build catalysts & lock-in calendar',
+      });
+    }
+  });
+
+  app.get('/api/intelligence/sector-rotation', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      res.json(
+        computeSectorRotation(store, fundamentalVault, {
+          equityOnly,
+          benchmarkFdRatePct: parseBenchmarkFdRate(),
+        })
+      );
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to compute sector rotation',
+      });
+    }
+  });
+
+  app.get('/api/intelligence/signal-scorecard', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      res.json(computeSignalScorecard(store, fundamentalVault, regulatoryKb, { equityOnly }));
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to compute signal scorecard',
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- Corporate Quarterly Financials (data/financial/)
   app.get('/api/financials', (_req, res) => {
     try {
       res.json({
@@ -1915,7 +2140,26 @@ async function startServer() {
         rawAgencies.length > 0 ? rawAgencies : ALL_AGENCIES,
         store
       );
-      res.json(out);
+      const todayNpt = getNepalDateStr();
+      const cfg = scheduler.getStatus().config;
+      let githubPushed = false;
+      let githubPushMessage: string | undefined;
+      if (
+        cfg.pushToGitHub &&
+        out.addedNotices + out.corporateActionsAdded + out.lockInEventsAdded > 0
+      ) {
+        const pushRes = await scheduler.triggerAutoGitHubPush(
+          'kb',
+          `chore(kb): harvest notices, corporate actions & lock-ins (${todayNpt})`
+        );
+        githubPushed = pushRes.committed;
+        githubPushMessage = pushRes.message;
+      }
+      res.json({
+        ...out,
+        githubPushed,
+        githubPushMessage,
+      });
     } catch (err) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'Failed to harvest regulatory knowledge base',

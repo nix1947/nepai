@@ -79,6 +79,11 @@ interface EnrichedHolding {
   netPnlPct: number;
   dayChangeNpr: number;
   mosPct: number | null;
+  effectiveBuyDate: string;
+  daysHeld: number;
+  daysToLongTerm: number;
+  ltcgUnlockDate: string;
+  cgtSavingsNpr: number;
   alerts: Array<{ severity: 'high' | 'warn'; text: string }>;
 }
 
@@ -114,6 +119,7 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
   const [newSymbol, setNewSymbol] = useState<string>('');
   const [newShares, setNewShares] = useState<string>('100');
   const [newBuyPrice, setNewBuyPrice] = useState<string>('');
+  const [newBuyDate, setNewBuyDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [newTerm, setNewTerm] = useState<HoldingTerm>('short');
   const [newStop, setNewStop] = useState<string>('');
   const [newTarget, setNewTarget] = useState<string>('');
@@ -158,13 +164,31 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
 
   // Enrich all holdings with live market, fees, CGT, and fundamental/KB danger flags
   const enrichedHoldings: EnrichedHolding[] = useMemo(() => {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayMs = Date.parse(`${todayIso}T00:00:00Z`);
+
     return holdings.map((h) => {
       const row = rowMap.get(h.symbol) ?? null;
       const ltp = row?.ltp && row.ltp > 0 ? row.ltp : h.buyPrice;
-      const cgtRate = h.holdingTerm === 'long' ? 0.05 : 0.075;
+      const effectiveBuyDate =
+        h.buyDate && /^\d{4}-\d{2}-\d{2}$/.test(h.buyDate) ? h.buyDate : h.addedAt;
+      const buyMs = Date.parse(`${effectiveBuyDate}T00:00:00Z`);
+      const daysHeld = Number.isNaN(buyMs)
+        ? 0
+        : Math.max(0, Math.floor((todayMs - buyMs) / 86_400_000));
+      const daysToLongTerm = Math.max(0, 366 - daysHeld);
+      const unlockDt = Number.isNaN(buyMs) ? new Date() : new Date(buyMs + 366 * 86_400_000);
+      const ltcgUnlockDate = unlockDt.toISOString().slice(0, 10);
+
+      const effectiveTerm: HoldingTerm = daysHeld > 365 ? 'long' : h.holdingTerm;
+      const cgtRate = effectiveTerm === 'long' ? 0.05 : 0.075;
       const buyCost = calcNepseBuyCost(h.shares, h.buyPrice);
       const grossMarketValue = h.shares * ltp;
       const sellCalc = calcNepseSellProceeds(h.shares, ltp, buyCost.total, 0, cgtRate);
+      const shortSellCalc = calcNepseSellProceeds(h.shares, ltp, buyCost.total, 0, 0.075);
+      const longSellCalc = calcNepseSellProceeds(h.shares, ltp, buyCost.total, 0, 0.05);
+      const cgtSavingsNpr = Math.max(0, shortSellCalc.cgt - longSellCalc.cgt);
+
       const breakevenPrice = solvePriceForNetProceeds(h.shares, buyCost.total, cgtRate, buyCost.total);
       const netPnlPct = buyCost.total > 0 ? (sellCalc.netProfit / buyCost.total) * 100 : 0;
       const prevClose =
@@ -212,6 +236,11 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
         netPnlPct,
         dayChangeNpr,
         mosPct,
+        effectiveBuyDate,
+        daysHeld,
+        daysToLongTerm,
+        ltcgUnlockDate,
+        cgtSavingsNpr,
         alerts,
       };
     });
@@ -223,6 +252,7 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
     let totalNetLiquidationEquity = 0;
     let totalNetPnl = 0;
     let totalDayChange = 0;
+    let totalPotentialCgtSavings = 0;
     let mosWeightedSum = 0;
     let mosWeightDenom = 0;
     let masterWeightedSum = 0;
@@ -236,6 +266,9 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
       totalNetLiquidationEquity += item.sellCalc.netReceivable;
       totalNetPnl += item.sellCalc.netProfit;
       totalDayChange += item.dayChangeNpr;
+      if (item.daysToLongTerm > 0 && item.cgtSavingsNpr > 0) {
+        totalPotentialCgtSavings += item.cgtSavingsNpr;
+      }
 
       const sec = item.row?.sector || 'Unclassified';
       sectorMap.set(sec, (sectorMap.get(sec) ?? 0) + item.grossMarketValue);
@@ -273,6 +306,7 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
       totalNetPnl,
       totalReturnPct,
       totalDayChange,
+      totalPotentialCgtSavings,
       weightedMosPct: mosWeightDenom > 0 ? mosWeightedSum / mosWeightDenom : null,
       weightedMasterScore: masterWeightDenom > 0 ? masterWeightedSum / masterWeightDenom : null,
       sectorBreakdown,
@@ -452,11 +486,15 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
       setFeedback({ kind: 'err', text: 'Enter a valid symbol, kitta (>0), and WACC price (>0).' });
       return;
     }
+    const buyMs = Date.parse(`${newBuyDate}T00:00:00Z`);
+    const daysHeld = Number.isNaN(buyMs) ? 0 : Math.floor((Date.now() - buyMs) / 86_400_000);
+    const resolvedTerm: HoldingTerm = daysHeld > 365 ? 'long' : newTerm;
     addHolding({
       symbol: sym,
       shares,
       buyPrice,
-      holdingTerm: newTerm,
+      holdingTerm: resolvedTerm,
+      buyDate: newBuyDate,
       stopLoss: Number(newStop) > 0 ? Number(newStop) : null,
       targetPrice: Number(newTarget) > 0 ? Number(newTarget) : null,
       notes: newNotes,
@@ -817,16 +855,16 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
         </div>
 
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Fair Value &amp; Quality Edge</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">Fair Value &amp; CGT Tax Edge</div>
           <div className="mt-1 text-xl font-bold font-mono tabular-nums text-slate-900 dark:text-slate-100">
             {portfolioStats.weightedMosPct !== null ? fmtPct(portfolioStats.weightedMosPct) : '—'} MOS
           </div>
           <div className="mt-1 text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400">
-            Master Score{' '}
-            {portfolioStats.weightedMasterScore !== null
-              ? `${portfolioStats.weightedMasterScore.toFixed(0)}/100`
-              : '—'}{' '}
-            · {portfolioStats.riskList.filter((r) => r.severity === 'high').length} high alerts
+            Master {portfolioStats.weightedMasterScore !== null ? `${portfolioStats.weightedMasterScore.toFixed(0)}/100` : '—'}
+            {' · '}
+            {portfolioStats.totalPotentialCgtSavings > 0
+              ? `5% LTCG saves ${fmtNpr(portfolioStats.totalPotentialCgtSavings)}`
+              : `${portfolioStats.riskList.filter((r) => r.severity === 'high').length} high alerts`}
           </div>
         </div>
 
@@ -918,8 +956,8 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
                 All buy fees (broker slab + 0.015% SEBON + Rs 25 DP) &amp; CGT applied automatically
               </span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 text-xs">
-              <label className="space-y-1 col-span-2 sm:col-span-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-2.5 text-xs">
+              <label className="space-y-1">
                 <span className="text-slate-500 dark:text-slate-400 block">Symbol</span>
                 <input
                   type="text"
@@ -963,14 +1001,32 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
               </label>
 
               <label className="space-y-1">
-                <span className="text-slate-500 dark:text-slate-400 block">Holding Term</span>
+                <span className="text-slate-500 dark:text-slate-400 block">Buy Date (365d CGT)</span>
+                <input
+                  type="date"
+                  value={newBuyDate}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewBuyDate(val);
+                    const ms = Date.parse(`${val}T00:00:00Z`);
+                    if (!Number.isNaN(ms)) {
+                      const held = Math.floor((Date.now() - ms) / 86_400_000);
+                      setNewTerm(held > 365 ? 'long' : 'short');
+                    }
+                  }}
+                  className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-mono text-[11px]"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-slate-500 dark:text-slate-400 block">CGT Term</span>
                 <select
                   value={newTerm}
                   onChange={(e) => setNewTerm(e.target.value as HoldingTerm)}
                   className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs"
                 >
-                  <option value="short">Short (&le;365d · 7.5% CGT)</option>
-                  <option value="long">Long (&gt;365d · 5% CGT)</option>
+                  <option value="short">Short (&le;365d · 7.5%)</option>
+                  <option value="long">Long (&gt;365d · 5%)</option>
                 </select>
               </label>
 
@@ -1208,11 +1264,40 @@ export const PortfolioTradeDeskView: React.FC<PortfolioTradeDeskViewProps> = ({
                                   title="Click to toggle CGT term (7.5% Short vs 5% Long)"
                                   className="text-[10px] font-mono text-slate-500 hover:text-blue-600"
                                 >
-                                  ({h.holdingTerm === 'long' ? '5% CGT' : '7.5% CGT'})
+                                  ({item.daysHeld > 365 || h.holdingTerm === 'long' ? '5% CGT' : '7.5% CGT'})
                                 </button>
                               </div>
-                              <div className="text-[11px] text-slate-500 truncate max-w-[155px]">
+                              <div className="text-[11px] text-slate-500 truncate max-w-[175px]">
                                 {row?.sector || h.notes || 'NEPSE Equity'}
+                              </div>
+                              <div className="text-[10px] font-mono tabular-nums text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                <input
+                                  type="date"
+                                  value={item.effectiveBuyDate}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    const ms = Date.parse(`${val}T00:00:00Z`);
+                                    const held = Number.isNaN(ms)
+                                      ? 0
+                                      : Math.floor((Date.now() - ms) / 86_400_000);
+                                    updateHolding(h.id, {
+                                      buyDate: val,
+                                      holdingTerm: held > 365 ? 'long' : 'short',
+                                    });
+                                  }}
+                                  className="bg-transparent text-[10px] font-mono text-slate-500 dark:text-slate-400 focus:outline-none hover:text-slate-800 dark:hover:text-slate-200 w-[95px]"
+                                />
+                                <span>·</span>
+                                {item.daysToLongTerm === 0 ? (
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                    5% LTCG Unlocked ({item.daysHeld}d)
+                                  </span>
+                                ) : (
+                                  <span>
+                                    {item.daysToLongTerm}d to 5% CGT
+                                    {item.cgtSavingsNpr > 0 ? ` (saves ${fmtNpr(item.cgtSavingsNpr)})` : ''}
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="py-2.5 px-3 text-right font-mono tabular-nums font-medium">

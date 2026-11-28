@@ -39,6 +39,7 @@ interface AnalyzerViewProps {
   equityOnly: boolean;
   allSymbols: SymbolInfo[];
   initialSymbol?: string | null;
+  onSymbolChange?: (symbol: string) => void;
 }
 
 const DEFAULT_OVERLAYS: OverlayToggleState = {
@@ -155,6 +156,7 @@ export const AnalyzerView: React.FC<AnalyzerViewProps> = ({
   equityOnly,
   allSymbols,
   initialSymbol,
+  onSymbolChange,
 }) => {
   const defaultSymbol = useMemo(() => {
     if (initialSymbol) return initialSymbol;
@@ -219,6 +221,10 @@ export const AnalyzerView: React.FC<AnalyzerViewProps> = ({
       setMode('single');
     }
   }, [initialSymbol]);
+
+  useEffect(() => {
+    if (symbol) onSymbolChange?.(symbol);
+  }, [symbol, onSymbolChange]);
 
   useEffect(() => {
     if (!replayActive && dates.length > 0) {

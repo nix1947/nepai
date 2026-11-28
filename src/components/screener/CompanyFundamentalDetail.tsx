@@ -12,6 +12,7 @@ import {
   FileSpreadsheet,
   HelpCircle,
   RefreshCw,
+  Scale,
   ShieldCheck,
   XCircle,
 } from 'lucide-react';
@@ -31,6 +32,7 @@ interface CompanyFundamentalDetailProps {
   onBack: () => void;
   onInspectSymbol: (symbol: string) => void;
   onInspectInAnalyzer: (symbol: string) => void;
+  onOpenValuation?: (symbol: string) => void;
   onDataUpdated: () => void;
 }
 
@@ -99,6 +101,7 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
   onBack,
   onInspectSymbol,
   onInspectInAnalyzer,
+  onOpenValuation,
   onDataUpdated,
 }) => {
   const [detail, setDetail] = useState<CompanyFundamentalDetailResponse | null>(null);
@@ -305,6 +308,16 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
             <CandlestickChart className="w-3.5 h-3.5" />
             <span>Chart</span>
           </button>
+          {onOpenValuation && (
+            <button
+              type="button"
+              onClick={() => onOpenValuation(summary.symbol)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 whitespace-nowrap"
+            >
+              <Scale className="w-3.5 h-3.5" />
+              <span>Pricing &amp; Valuation</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onInspectInAnalyzer(summary.symbol)}

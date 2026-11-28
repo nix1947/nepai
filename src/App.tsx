@@ -1,18 +1,23 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   AlertOctagon,
   ArrowLeft,
   Award,
   BarChart3,
+  Bell,
   BookOpen,
   CalendarClock,
   CandlestickChart,
+  ChevronDown,
+  ChevronRight,
   Compass,
   Crosshair,
   FileWarning,
   Gauge,
+  GitCompare,
   Globe,
+  Home,
   Menu,
   Moon,
   Radar,
@@ -21,22 +26,32 @@ import {
   Search,
   Settings,
   ShieldAlert,
+  SlidersHorizontal,
   Sparkles,
-  Star,
   Sun,
   TrendingUp,
   X,
 } from 'lucide-react';
+import {
+  CommandPaletteModal,
+  type PaletteNavTarget,
+} from './components/CommandPaletteModal';
+import { CompareStocksDrawer } from './components/CompareStocksDrawer';
 import { InfoTip } from './components/InfoTip';
+import { Stock360Bar, type Stock360Tab } from './components/Stock360Bar';
+import { WatchlistAlertsDrawer } from './components/WatchlistAlertsDrawer';
 import { useTradingSettings } from './hooks/useTradingSettings';
-import { useWatchlist } from './hooks/useWatchlist';
+import { useCompareList, useWatchlist } from './hooks/useWatchlist';
+import type { MasterScreenerResponse } from './types/fundamental';
 import type { DailyAggregate, SchedulerStatus, SymbolInfo } from './types/market';
 import { formatTimeUntil } from './utils/format';
+import { evaluateWatchlistAlerts } from './utils/plainEnglish';
 import { AlgorithmsView } from './views/AlgorithmsView';
 import { AnalyzerView } from './views/AnalyzerView';
 import { FundamentalScreenerView } from './views/FundamentalScreenerView';
 import { MacroRisksView } from './views/MacroRisksView';
 import { MarketPulseView } from './views/MarketPulseView';
+import { MasterScreenerView } from './views/MasterScreenerView';
 import { OpportunityRadarView } from './views/OpportunityRadarView';
 import { OverviewView } from './views/OverviewView';
 import {
@@ -49,12 +64,17 @@ import { ScannersView } from './views/ScannersView';
 import { SchedulerView } from './views/SchedulerView';
 import { SettingsView } from './views/SettingsView';
 import { StockExplorerView } from './views/StockExplorerView';
+import { TodayBriefingView } from './views/TodayBriefingView';
 import { TopTurnoverView } from './views/TopTurnoverView';
 import { TurnoverDirectionView } from './views/TurnoverDirectionView';
+import { ValuationView } from './views/ValuationView';
 
 type NavTab =
-  | 'overview'
+  | 'today'
+  | 'master-screener'
   | 'screener'
+  | 'valuation'
+  | 'overview'
   | 'pulse'
   | 'turnover'
   | 'radar'
@@ -71,39 +91,97 @@ type NavTab =
   | 'settings'
   | 'scheduler';
 
-const NAV_ITEMS: Array<{
-  id: NavTab;
+type NavGroupId = 'start' | 'valuation' | 'market' | 'risk' | 'system';
+
+interface NavGroupConfig {
+  id: NavGroupId;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}> = [
-  { id: 'overview', label: 'Overview', icon: BarChart3 },
-  { id: 'screener', label: 'Fundamental Screener', icon: Award },
-  { id: 'pulse', label: 'Market Pulse', icon: Gauge },
-  { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
-  { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
-  { id: 'direction', label: 'Turnover × Direction', icon: Activity },
-  { id: 'scanners', label: 'Scanners', icon: Radar },
-  { id: 'explorer', label: 'Stock Explorer', icon: CandlestickChart },
-  { id: 'analyzer', label: 'Auto Analyzer', icon: Crosshair },
-  { id: 'macro', label: 'Macro & Risks', icon: Globe },
-  { id: 'fundamentally-risky', label: 'Fundamentally Risky Stocks', icon: FileWarning },
-  { id: 'technically-risky', label: 'Technically Risky Stocks', icon: ShieldAlert },
-  { id: 'do-not-buy', label: 'DO NOT BUY – High Risk Stocks', icon: AlertOctagon },
-  { id: 'opportunity-vs-risk', label: 'Market Opportunity vs Risk', icon: Scale },
-  { id: 'algorithms', label: 'Algorithms', icon: BookOpen },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'scheduler', label: 'Scheduler & Data', icon: CalendarClock },
+  items: Array<{
+    id: NavTab;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }>;
+}
+
+const NAV_GROUPS: NavGroupConfig[] = [
+  {
+    id: 'start',
+    label: 'Start & Discovery',
+    items: [
+      { id: 'today', label: 'Today Briefing', icon: Home },
+      { id: 'master-screener', label: 'Master Screener', icon: SlidersHorizontal },
+    ],
+  },
+  {
+    id: 'valuation',
+    label: 'Valuation & Fundamentals',
+    items: [
+      { id: 'valuation', label: 'Pricing & Valuation', icon: Scale },
+      { id: 'screener', label: 'Fundamental Screener', icon: Award },
+      { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
+    ],
+  },
+  {
+    id: 'market',
+    label: 'Market Flow & Charts',
+    items: [
+      { id: 'overview', label: 'Overview', icon: BarChart3 },
+      { id: 'pulse', label: 'Market Pulse', icon: Gauge },
+      { id: 'turnover', label: 'Top Turnover', icon: TrendingUp },
+      { id: 'direction', label: 'Turnover × Direction', icon: Activity },
+      { id: 'scanners', label: 'Scanners', icon: Radar },
+      { id: 'explorer', label: 'Stock Explorer', icon: CandlestickChart },
+      { id: 'analyzer', label: 'Auto Analyzer', icon: Crosshair },
+    ],
+  },
+  {
+    id: 'risk',
+    label: 'Risk & Macro',
+    items: [
+      { id: 'macro', label: 'Macro & Risks', icon: Globe },
+      { id: 'fundamentally-risky', label: 'Fundamentally Risky Stocks', icon: FileWarning },
+      { id: 'technically-risky', label: 'Technically Risky Stocks', icon: ShieldAlert },
+      { id: 'do-not-buy', label: 'DO NOT BUY – High Risk Stocks', icon: AlertOctagon },
+      { id: 'opportunity-vs-risk', label: 'Market Opportunity vs Risk', icon: Scale },
+    ],
+  },
+  {
+    id: 'system',
+    label: 'Methodology & System',
+    items: [
+      { id: 'algorithms', label: 'Algorithms', icon: BookOpen },
+      { id: 'settings', label: 'Settings', icon: Settings },
+      { id: 'scheduler', label: 'Scheduler & Data', icon: CalendarClock },
+    ],
+  },
 ];
 
+const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+
+const PALETTE_NAV_ITEMS: PaletteNavTarget[] = NAV_GROUPS.flatMap((g) =>
+  g.items.map((item) => ({ id: item.id, label: item.label, group: g.label }))
+);
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<NavTab>('overview');
+  const [activeTab, setActiveTab] = useState<NavTab>('today');
+  const [expandedGroups, setExpandedGroups] = useState<Record<NavGroupId, boolean>>({
+    start: true,
+    valuation: true,
+    market: false,
+    risk: false,
+    system: false,
+  });
+
   const [dates, setDates] = useState<string[]>([]);
   const [daily, setDaily] = useState<DailyAggregate[]>([]);
   const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus | null>(null);
   const [equityOnly, setEquityOnly] = useState<boolean>(true);
   const [explorerSymbol, setExplorerSymbol] = useState<string | null>(null);
+  const [valuationSymbol, setValuationSymbol] = useState<string | null>(null);
+  const [screenerTarget, setScreenerTarget] = useState<{ symbol: string; tick: number } | null>(null);
   const [quantSymbol, setQuantSymbol] = useState<string | null>(null);
   const [quantNavTick, setQuantNavTick] = useState<number>(0);
+  const [activeTicker, setActiveTicker] = useState<string | null>(null);
   const [navHistory, setNavHistory] = useState<
     Array<{ tab: NavTab; explorerSymbol: string | null; quantSymbol: string | null }>
   >([]);
@@ -113,10 +191,16 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [allSymbols, setAllSymbols] = useState<SymbolInfo[]>([]);
-  const [quickQuery, setQuickQuery] = useState<string>('');
-  const [quickOpen, setQuickOpen] = useState<boolean>(false);
-  const quickInputRef = useRef<HTMLInputElement | null>(null);
-  const { watchlist, hasSymbol, toggleSymbol } = useWatchlist();
+
+  const [masterData, setMasterData] = useState<MasterScreenerResponse | null>(null);
+  const [loadingMaster, setLoadingMaster] = useState<boolean>(true);
+
+  const [paletteOpen, setPaletteOpen] = useState<boolean>(false);
+  const [watchlistOpen, setWatchlistOpen] = useState<boolean>(false);
+  const [compareOpen, setCompareOpen] = useState<boolean>(false);
+
+  const { watchlist, alertRules } = useWatchlist();
+  const { compareSymbols } = useCompareList();
   const { settings } = useTradingSettings();
 
   useEffect(() => {
@@ -124,6 +208,14 @@ export default function App() {
     if (darkMode) root.classList.add('dark');
     else root.classList.remove('dark');
   }, [darkMode]);
+
+  // Auto-expand sidebar group containing activeTab
+  useEffect(() => {
+    const parent = NAV_GROUPS.find((g) => g.items.some((i) => i.id === activeTab));
+    if (parent) {
+      setExpandedGroups((prev) => (prev[parent.id] ? prev : { ...prev, [parent.id]: true }));
+    }
+  }, [activeTab]);
 
   const loadMeta = useCallback(async (attempt = 0) => {
     try {
@@ -155,9 +247,28 @@ export default function App() {
     }
   }, []);
 
+  const loadMasterData = useCallback(async () => {
+    setLoadingMaster(true);
+    try {
+      const res = await fetch(`/api/master-screener?equityOnly=${equityOnly}&annualWeightPct=70`);
+      if (res.ok) {
+        const body = (await res.json()) as MasterScreenerResponse;
+        setMasterData(body);
+      }
+    } catch {
+      // Non-fatal; individual views can also fetch their own datasets
+    } finally {
+      setLoadingMaster(false);
+    }
+  }, [equityOnly]);
+
   useEffect(() => {
     void loadMeta();
   }, [loadMeta]);
+
+  useEffect(() => {
+    void loadMasterData();
+  }, [loadMasterData]);
 
   useEffect(() => {
     const latest = dates[dates.length - 1];
@@ -172,29 +283,12 @@ export default function App() {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        quickInputRef.current?.focus();
-        setQuickOpen(true);
-      } else if (e.key === 'Escape') {
-        setQuickOpen(false);
-        quickInputRef.current?.blur();
+        setPaletteOpen((v) => !v);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
-
-  const quickMatches = useMemo(() => {
-    const q = quickQuery.trim().toLowerCase();
-    if (!q) return [];
-    return allSymbols
-      .filter((s) => s.symbol.toLowerCase().includes(q) || s.name.toLowerCase().includes(q))
-      .sort((a, b) => {
-        const ae = a.symbol.toLowerCase().startsWith(q) ? 0 : 1;
-        const be = b.symbol.toLowerCase().startsWith(q) ? 0 : 1;
-        return ae - be || a.symbol.localeCompare(b.symbol);
-      })
-      .slice(0, 8);
-  }, [allSymbols, quickQuery]);
 
   const handleQuickPull = async () => {
     setPulling(true);
@@ -204,7 +298,7 @@ export default function App() {
       const data = await res.json();
       if (data.entry?.status === 'success') {
         setToast({ kind: 'success', text: data.entry.message });
-        await loadMeta();
+        await Promise.all([loadMeta(), loadMasterData()]);
       } else {
         setToast({ kind: 'error', text: data.entry?.message || 'Pull failed' });
       }
@@ -256,16 +350,60 @@ export default function App() {
   }, []);
 
   const inspectSymbol = (symbol: string) => {
-    navigateTo('explorer', { explorerSymbol: symbol });
+    const clean = symbol.toUpperCase();
+    setActiveTicker(clean);
+    navigateTo('explorer', { explorerSymbol: clean });
   };
 
   const inspectInQuant = (symbol: string) => {
-    navigateTo('scanners', { quantSymbol: symbol, bumpQuantTick: true });
+    const clean = symbol.toUpperCase();
+    setActiveTicker(clean);
+    navigateTo('scanners', { quantSymbol: clean, bumpQuantTick: true });
   };
 
   const inspectInAnalyzer = (symbol: string) => {
-    navigateTo('analyzer', { explorerSymbol: symbol });
+    const clean = symbol.toUpperCase();
+    setActiveTicker(clean);
+    navigateTo('analyzer', { explorerSymbol: clean });
   };
+
+  const inspectInValuation = (symbol?: string) => {
+    if (symbol) {
+      const clean = symbol.toUpperCase();
+      setActiveTicker(clean);
+      setValuationSymbol(clean);
+    }
+    navigateTo('valuation');
+  };
+
+  const inspectInScreener = (symbol: string) => {
+    const clean = symbol.toUpperCase();
+    setActiveTicker(clean);
+    setScreenerTarget({ symbol: clean, tick: Date.now() });
+    navigateTo('screener');
+  };
+
+  const handleStock360Switch = (view: Stock360Tab, sym: string) => {
+    const clean = sym.toUpperCase();
+    if (view === 'valuation') inspectInValuation(clean);
+    else if (view === 'screener') inspectInScreener(clean);
+    else if (view === 'explorer') inspectSymbol(clean);
+    else inspectInAnalyzer(clean);
+  };
+
+  const masterRowMap = useMemo(() => {
+    const m = new Map<string, NonNullable<typeof masterData>['rows'][number]>();
+    for (const r of masterData?.rows ?? []) m.set(r.symbol, r);
+    return m;
+  }, [masterData]);
+
+  const watchlistAlertCount = useMemo(() => {
+    let count = 0;
+    for (const sym of watchlist) {
+      count += evaluateWatchlistAlerts(masterRowMap.get(sym), alertRules[sym]).length;
+    }
+    return count;
+  }, [watchlist, masterRowMap, alertRules]);
 
   const previousNavItem =
     navHistory.length > 0
@@ -274,21 +412,44 @@ export default function App() {
 
   const currentNav = NAV_ITEMS.find((n) => n.id === activeTab)!;
   const needsMarketData =
+    activeTab !== 'today' &&
     activeTab !== 'algorithms' &&
     activeTab !== 'scheduler' &&
     activeTab !== 'macro' &&
+    activeTab !== 'master-screener' &&
     activeTab !== 'screener' &&
+    activeTab !== 'valuation' &&
     activeTab !== 'settings';
+
+  const stock360View: Stock360Tab | null =
+    activeTab === 'valuation' ||
+    activeTab === 'screener' ||
+    activeTab === 'explorer' ||
+    activeTab === 'analyzer'
+      ? activeTab
+      : null;
+
+  const resolved360Ticker =
+    activeTicker ||
+    (activeTab === 'valuation' ? valuationSymbol : null) ||
+    (activeTab === 'explorer' || activeTab === 'analyzer' ? explorerSymbol : null);
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <div className="flex items-center gap-2.5 min-w-0">
+        <button
+          type="button"
+          onClick={() => {
+            navigateTo('today');
+            setMobileMenuOpen(false);
+          }}
+          className="flex items-center gap-2.5 min-w-0 text-left"
+        >
           <Compass className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
           <span className="font-display font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap">
             NEPSE Workbench
           </span>
-        </div>
+        </button>
         <button
           type="button"
           onClick={() => setMobileMenuOpen(false)}
@@ -299,32 +460,61 @@ export default function App() {
         </button>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const active = activeTab === item.id;
+      <nav className="flex-1 px-3 py-3 space-y-2 overflow-y-auto">
+        {NAV_GROUPS.map((group) => {
+          const isOpen = expandedGroups[group.id];
+          const hasActive = group.items.some((i) => i.id === activeTab);
           return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                navigateTo(item.id);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                active
-                  ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
-            </button>
+            <div key={group.id} className="space-y-0.5">
+              <button
+                type="button"
+                onClick={() =>
+                  setExpandedGroups((prev) => ({ ...prev, [group.id]: !prev[group.id] }))
+                }
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+              >
+                <span className={hasActive ? 'text-blue-600 dark:text-blue-400' : ''}>
+                  {group.label}
+                </span>
+                {isOpen ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                )}
+              </button>
+
+              {isOpen && (
+                <div className="space-y-0.5 pl-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          navigateTo(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                          active
+                            ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300'
+                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-slate-100'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-4 text-xs">
+      <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3 text-xs">
         <label className="flex items-start gap-2.5 cursor-pointer text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
@@ -377,12 +567,6 @@ export default function App() {
             </div>
           )}
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 pt-1">
-            <span>Watchlist</span>
-            <span className="font-mono font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
-              {watchlist.length}
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 pt-1">
             <span>Daily pull</span>
             <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300">
               {schedulerStatus?.config.enabled
@@ -429,7 +613,7 @@ export default function App() {
                 type="button"
                 onClick={handleBack}
                 title={previousNavItem ? `Back to ${previousNavItem.label}` : 'Go back'}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 whitespace-nowrap"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">
@@ -447,92 +631,63 @@ export default function App() {
                 {currentNav.label}
               </h1>
               {dates.length > 0 && (
-                <span className="hidden md:inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                  EOD: {dates[dates.length - 1]}
+                <span className="hidden md:inline text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                  · EOD {dates[dates.length - 1]}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
-            {allSymbols.length > 0 && (
-              <div className="relative hidden sm:block">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  ref={quickInputRef}
-                  type="text"
-                  value={quickQuery}
-                  onFocus={() => setQuickOpen(true)}
-                  onBlur={() => setTimeout(() => setQuickOpen(false), 160)}
-                  onChange={(e) => {
-                    setQuickQuery(e.target.value);
-                    setQuickOpen(true);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && quickMatches.length > 0) {
-                      inspectSymbol(quickMatches[0].symbol);
-                      setQuickQuery('');
-                      setQuickOpen(false);
-                    }
-                  }}
-                  placeholder="Jump ticker (⌘K)…"
-                  className="w-44 lg:w-56 pl-8 pr-2.5 py-1.5 text-xs rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                />
-                {quickOpen && quickMatches.length > 0 && (
-                  <div className="absolute right-0 mt-1 w-72 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
-                    {quickMatches.map((m) => {
-                      const starred = hasSymbol(m.symbol);
-                      return (
-                        <div
-                          key={m.symbol}
-                          className="flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/70"
-                        >
-                          <button
-                            type="button"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              inspectSymbol(m.symbol);
-                              setQuickQuery('');
-                              setQuickOpen(false);
-                            }}
-                            className="flex-1 min-w-0 text-left flex items-center gap-2"
-                          >
-                            <span className="font-semibold text-blue-600 dark:text-blue-400 shrink-0">
-                              {m.symbol}
-                            </span>
-                            <span className="text-slate-500 dark:text-slate-400 truncate">
-                              {m.name}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              toggleSymbol(m.symbol);
-                            }}
-                            aria-label={`Star ${m.symbol}`}
-                            className="p-0.5 text-slate-400 hover:text-amber-500 shrink-0"
-                          >
-                            <Star
-                              className={`w-3.5 h-3.5 ${starred ? 'fill-amber-500 text-amber-500' : ''}`}
-                            />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
+            >
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <span className="hidden sm:inline">Jump ticker or screen…</span>
+              <span className="sm:hidden">Jump</span>
+              <span className="hidden md:inline font-mono text-[10px] text-slate-400">⌘K</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setWatchlistOpen(true)}
+              title="Open Watchlist & Smart Alerts"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">Watchlist</span>
+              <span className="font-mono tabular-nums text-[11px] text-slate-500 dark:text-slate-400">
+                {watchlist.length}
+                {watchlistAlertCount > 0 ? ` (${watchlistAlertCount})` : ''}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCompareOpen(true)}
+              title="Compare 2 to 4 stocks side by side"
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border whitespace-nowrap shrink-0 ${
+                compareSymbols.length >= 2
+                  ? 'border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300'
+                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <GitCompare className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Compare</span>
+              <span className="font-mono tabular-nums text-[11px]">{compareSymbols.length}</span>
+            </button>
 
             <button
               type="button"
               onClick={() => setDarkMode((v) => !v)}
               aria-label="Toggle theme"
-              className="p-2 rounded-md border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-md border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
+
             <button
               type="button"
               onClick={handleQuickPull}
@@ -563,6 +718,16 @@ export default function App() {
                 Dismiss
               </button>
             </div>
+          )}
+
+          {stock360View && resolved360Ticker && (
+            <Stock360Bar
+              symbol={resolved360Ticker}
+              activeView={stock360View}
+              row={masterRowMap.get(resolved360Ticker)}
+              onSwitchView={handleStock360Switch}
+              onOpenCompareDrawer={() => setCompareOpen(true)}
+            />
           )}
 
           {loadingMeta ? (
@@ -608,6 +773,20 @@ export default function App() {
             </div>
           ) : (
             <>
+              {activeTab === 'today' && (
+                <TodayBriefingView
+                  daily={daily}
+                  masterData={masterData}
+                  loadingMaster={loadingMaster}
+                  onOpenMasterScreener={() => navigateTo('master-screener')}
+                  onOpenValuation={inspectInValuation}
+                  onInspectSymbol={inspectSymbol}
+                  onInspectInAnalyzer={inspectInAnalyzer}
+                  onInspectInScreener={inspectInScreener}
+                  onOpenWatchlistDrawer={() => setWatchlistOpen(true)}
+                  onOpenCompareDrawer={() => setCompareOpen(true)}
+                />
+              )}
               {activeTab === 'overview' && (
                 <OverviewView
                   dates={dates}
@@ -619,11 +798,36 @@ export default function App() {
                   onOpenScheduler={() => navigateTo('scheduler')}
                 />
               )}
-              {activeTab === 'screener' && (
-                <FundamentalScreenerView
+              {activeTab === 'master-screener' && (
+                <MasterScreenerView
                   equityOnly={equityOnly}
                   onInspectSymbol={inspectSymbol}
                   onInspectInAnalyzer={inspectInAnalyzer}
+                  onOpenValuation={inspectInValuation}
+                  onInspectInScreener={inspectInScreener}
+                />
+              )}
+              {activeTab === 'screener' && (
+                <FundamentalScreenerView
+                  equityOnly={equityOnly}
+                  initialTarget={screenerTarget}
+                  onInspectSymbol={inspectSymbol}
+                  onInspectInAnalyzer={inspectInAnalyzer}
+                  onOpenValuation={inspectInValuation}
+                  onSymbolChange={(sym) => setActiveTicker(sym)}
+                />
+              )}
+              {activeTab === 'valuation' && (
+                <ValuationView
+                  equityOnly={equityOnly}
+                  initialSymbol={valuationSymbol || explorerSymbol}
+                  onInspectSymbol={inspectSymbol}
+                  onInspectInAnalyzer={inspectInAnalyzer}
+                  onInspectInScreener={inspectInScreener}
+                  onSymbolChange={(sym) => {
+                    setActiveTicker(sym);
+                    setValuationSymbol(sym);
+                  }}
                 />
               )}
               {activeTab === 'pulse' && (
@@ -673,6 +877,10 @@ export default function App() {
                   equityOnly={equityOnly}
                   initialSymbol={explorerSymbol}
                   onInspectInQuant={inspectInQuant}
+                  onSymbolChange={(sym) => {
+                    setActiveTicker(sym);
+                    setExplorerSymbol(sym);
+                  }}
                 />
               )}
               {activeTab === 'analyzer' && (
@@ -681,6 +889,10 @@ export default function App() {
                   equityOnly={equityOnly}
                   allSymbols={allSymbols}
                   initialSymbol={explorerSymbol}
+                  onSymbolChange={(sym) => {
+                    setActiveTicker(sym);
+                    setExplorerSymbol(sym);
+                  }}
                 />
               )}
               {activeTab === 'macro' && (
@@ -731,6 +943,35 @@ export default function App() {
           )}
         </main>
       </div>
+
+      <CommandPaletteModal
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        symbols={allSymbols}
+        navItems={PALETTE_NAV_ITEMS}
+        onNavigateTab={(id) => navigateTo(id as NavTab)}
+        onOpenValuation={inspectInValuation}
+        onInspectInScreener={inspectInScreener}
+        onInspectSymbol={inspectSymbol}
+        onInspectInAnalyzer={inspectInAnalyzer}
+      />
+
+      <WatchlistAlertsDrawer
+        open={watchlistOpen}
+        onClose={() => setWatchlistOpen(false)}
+        rows={masterData?.rows ?? []}
+        onOpenValuation={inspectInValuation}
+        onInspectSymbol={inspectSymbol}
+        onOpenCompareDrawer={() => setCompareOpen(true)}
+      />
+
+      <CompareStocksDrawer
+        open={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        rows={masterData?.rows ?? []}
+        onOpenValuation={inspectInValuation}
+        onInspectSymbol={inspectSymbol}
+      />
     </div>
   );
 }

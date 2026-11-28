@@ -16,6 +16,7 @@ interface StockExplorerViewProps {
   equityOnly: boolean;
   initialSymbol?: string | null;
   onInspectInQuant?: (symbol: string) => void;
+  onSymbolChange?: (symbol: string) => void;
 }
 
 export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
@@ -23,6 +24,7 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
   equityOnly,
   initialSymbol,
   onInspectInQuant,
+  onSymbolChange,
 }) => {
   const { settings, updateSettings } = useTradingSettings();
   const [symbols, setSymbols] = useState<SymbolInfo[]>([]);
@@ -66,6 +68,7 @@ export const StockExplorerView: React.FC<StockExplorerViewProps> = ({
 
   useEffect(() => {
     if (!selectedSymbol) return;
+    onSymbolChange?.(selectedSymbol);
     let cancelled = false;
     setLoading(true);
     fetch(`/api/symbol/${encodeURIComponent(selectedSymbol)}`)

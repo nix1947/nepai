@@ -7,9 +7,11 @@ import {
   Download,
   FileSpreadsheet,
   Filter,
+  Gem,
   GitCompare,
   RefreshCw,
   RotateCcw,
+  Scale,
   Search,
   ShieldCheck,
   Sliders,
@@ -27,6 +29,7 @@ import {
   CompositeGrowthTrendCell,
   MetricTrendCell,
 } from '../components/screener/GrowthTrendCell';
+import { HiddenGemsKnowledgePanel } from '../components/screener/HiddenGemsKnowledgePanel';
 import { ReportingMonitorPanel } from '../components/screener/ReportingMonitorPanel';
 import {
   PeerComparisonArena,
@@ -47,8 +50,11 @@ import type {
 
 interface FundamentalScreenerViewProps {
   equityOnly: boolean;
+  initialTarget?: { symbol: string; tick: number } | null;
   onInspectSymbol: (symbol: string) => void;
   onInspectInAnalyzer: (symbol: string) => void;
+  onOpenValuation?: (symbol?: string) => void;
+  onSymbolChange?: (symbol: string) => void;
 }
 
 type TableLens = 'overview' | 'growth' | 'valuation' | 'investors';
@@ -233,11 +239,24 @@ function renderInvestorCell(score: number, hasData: boolean): React.ReactNode {
 
 export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = ({
   equityOnly,
+  initialTarget,
   onInspectSymbol,
   onInspectInAnalyzer,
+  onOpenValuation,
+  onSymbolChange,
 }) => {
-  const [subView, setSubView] = useState<'screener' | 'monitor'>('screener');
+  const [subView, setSubView] = useState<'screener' | 'gems' | 'monitor'>('screener');
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialTarget?.symbol) {
+      setSelectedSymbol(initialTarget.symbol);
+    }
+  }, [initialTarget?.symbol, initialTarget?.tick]);
+
+  useEffect(() => {
+    if (selectedSymbol) onSymbolChange?.(selectedSymbol);
+  }, [selectedSymbol, onSymbolChange]);
 
   const [overview, setOverview] = useState<ScreenerOverviewResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -249,6 +268,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
   const [sectorFilter, setSectorFilter] = useState<string>('All');
   const [fiscalYearFilter, setFiscalYearFilter] = useState<string>('');
   const [quarterFilter, setQuarterFilter] = useState<'' | QuarterCode>('');
+  const [annualWeightPct, setAnnualWeightPct] = useState<number>(70);
   const [onlyEvaluated, setOnlyEvaluated] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('overallScore');
@@ -275,6 +295,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
       const qs = new URLSearchParams({
         equityOnly: String(equityOnly),
         sortBy,
+        annualWeightPct: String(annualWeightPct),
       });
       if (fiscalYearFilter) qs.set('fiscalYear', fiscalYearFilter);
       if (quarterFilter) qs.set('quarter', quarterFilter);
@@ -288,7 +309,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
     } finally {
       setLoading(false);
     }
-  }, [equityOnly, fiscalYearFilter, quarterFilter, sortBy]);
+  }, [annualWeightPct, equityOnly, fiscalYearFilter, quarterFilter, sortBy]);
 
   useEffect(() => {
     void loadOverview();
@@ -1158,14 +1179,27 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
       },
       {
         key: 'period',
-        label: 'Period · Source',
+        label: 'Period · Report Weight',
         align: 'left',
         sortValue: (r) => r.latestPeriod.periodLabel,
         render: (r) => (
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400">
-              {r.latestPeriod.periodLabel} · {r.latestPeriod.validationStatus}
-            </span>
+            <div>
+              <span className="block text-[11px] font-mono text-slate-600 dark:text-slate-400">
+                {r.latestPeriod.periodLabel} · {r.latestPeriod.validationStatus}
+              </span>
+              {r.hasFundamentalData && (
+                <span className="block text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                  {r.reportWeighting.basis === 'blended'
+                    ? `${r.reportWeighting.annualWeightPct}% Annual (${r.reportWeighting.annualPeriodLabel}) · ${r.reportWeighting.interimWeightPct}% Qtr`
+                    : r.reportWeighting.basis === 'annual_only'
+                      ? 'Annual / Q4 Report'
+                      : r.reportWeighting.basis === 'quarterly_only'
+                        ? 'Interim Qtr Only'
+                        : 'Selected Period'}
+                </span>
+              )}
+            </div>
             {r.hasFundamentalData && r.market.ltp !== null && (
               <button
                 type="button"
@@ -1200,6 +1234,7 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
         onBack={() => setSelectedSymbol(null)}
         onInspectSymbol={onInspectSymbol}
         onInspectInAnalyzer={onInspectInAnalyzer}
+        onOpenValuation={onOpenValuation}
         onDataUpdated={() => void loadOverview()}
       />
     );
@@ -1238,6 +1273,18 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
             </button>
             <button
               type="button"
+              onClick={() => setSubView('gems')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-medium whitespace-nowrap ${
+                subView === 'gems'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <Gem className="w-3.5 h-3.5" />
+              <span>Hidden Gems &amp; Regulatory KB</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setSubView('monitor')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded font-medium whitespace-nowrap ${
                 subView === 'monitor'
@@ -1250,15 +1297,26 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
             </button>
           </div>
 
+          {onOpenValuation && (
+            <button
+              type="button"
+              onClick={() => onOpenValuation()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 whitespace-nowrap"
+            >
+              <Scale className="w-3.5 h-3.5" />
+              <span>Pricing &amp; Valuation</span>
+            </button>
+          )}
+
           <a
-            href={`/api/screener/export?format=csv&equityOnly=${equityOnly}`}
+            href={`/api/screener/export?format=csv&equityOnly=${equityOnly}&annualWeightPct=${annualWeightPct}`}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap"
           >
             <Download className="w-3.5 h-3.5" />
             <span>CSV</span>
           </a>
           <a
-            href={`/api/screener/export?format=excel&equityOnly=${equityOnly}`}
+            href={`/api/screener/export?format=excel&equityOnly=${equityOnly}&annualWeightPct=${annualWeightPct}`}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -1273,7 +1331,16 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
         </div>
       )}
 
-      {subView === 'monitor' ? (
+      {subView === 'gems' ? (
+        <HiddenGemsKnowledgePanel
+          equityOnly={equityOnly}
+          annualWeightPct={annualWeightPct}
+          onChangeAnnualWeightPct={setAnnualWeightPct}
+          onSelectCompanyDossier={(sym) => setSelectedSymbol(sym)}
+          onInspectSymbol={onInspectSymbol}
+          onInspectInAnalyzer={onInspectInAnalyzer}
+        />
+      ) : subView === 'monitor' ? (
         <ReportingMonitorPanel
           equityOnly={equityOnly}
           onSelectSymbol={(sym) => setSelectedSymbol(sym)}
@@ -1454,29 +1521,56 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
             </div>
           )}
 
-          {/* 1-Click Strategy Presets */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mr-1">
-              Presets:
-            </span>
-            {STRATEGY_PRESETS.map((preset) => {
-              const isSelected = activePreset === preset.id;
-              return (
+          {/* 1-Click Strategy Presets + Annual Report Weighting */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mr-1">
+                Presets:
+              </span>
+              {STRATEGY_PRESETS.map((preset) => {
+                const isSelected = activePreset === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    title={preset.hint}
+                    onClick={() => applyPreset(preset)}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
+                        : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Report Weight:
+              </span>
+              {[
+                { val: 70, label: '70% Annual / 30% Qtr' },
+                { val: 100, label: '100% Annual' },
+                { val: 50, label: '50 / 50' },
+                { val: 0, label: 'Latest Qtr' },
+              ].map((opt) => (
                 <button
-                  key={preset.id}
+                  key={opt.val}
                   type="button"
-                  title={preset.hint}
-                  onClick={() => applyPreset(preset)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
-                    isSelected
-                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
-                      : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  onClick={() => setAnnualWeightPct(opt.val)}
+                  className={`px-2 py-1 rounded text-[11px] font-mono font-medium transition-colors whitespace-nowrap ${
+                    annualWeightPct === opt.val
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {preset.label}
+                  {opt.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
           {/* 8 Ranking Tabs */}

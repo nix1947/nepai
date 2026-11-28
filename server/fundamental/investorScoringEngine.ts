@@ -15,6 +15,7 @@ import type {
   RankingCategory,
   RecommendationVerdict,
   ReportMonitorStatus,
+  ReportWeightingInfo,
   ScreenedCompanyRow,
   SectorPeerBenchmark,
   SectorPeerSnapshot,
@@ -36,6 +37,35 @@ function round1(n: number): number {
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+function blendOpt(
+  annualVal: number | null | undefined,
+  interimVal: number | null | undefined,
+  annualRatio: number,
+  decimals = 2
+): number | null {
+  const aOk = annualVal !== null && annualVal !== undefined && Number.isFinite(annualVal);
+  const iOk = interimVal !== null && interimVal !== undefined && Number.isFinite(interimVal);
+  if (aOk && iOk) {
+    const raw = annualVal * annualRatio + interimVal * (1 - annualRatio);
+    const factor = Math.pow(10, decimals);
+    return Math.round(raw * factor) / factor;
+  }
+  if (aOk) return annualVal;
+  if (iOk) return interimVal;
+  return null;
+}
+
+function pickLatestAnnualRecord(records: QuarterlyStatementRecord[]): QuarterlyStatementRecord | null {
+  const annuals = records.filter((r) => r.quarter === 'Annual' || r.quarter === 'Q4');
+  if (annuals.length === 0) return null;
+  const topFy = annuals[0].fiscalYear;
+  return annuals.find((r) => r.fiscalYear === topFy && r.quarter === 'Annual') ?? annuals[0];
+}
+
+function pickLatestInterimRecord(records: QuarterlyStatementRecord[]): QuarterlyStatementRecord | null {
+  return records.find((r) => r.quarter === 'Q1' || r.quarter === 'Q2' || r.quarter === 'Q3') ?? null;
 }
 
 interface CriterionSpec {
@@ -1413,6 +1443,7 @@ function buildRecommendation(params: {
 
 export interface EvaluatedUniverseResult {
   marketDate: string | null;
+  annualWeightPct: number;
   rows: ScreenedCompanyRow[];
   bySymbol: Map<string, CompanyFundamentalDetailResponse>;
 }
@@ -1420,6 +1451,7 @@ export interface EvaluatedUniverseResult {
 /**
  * Evaluates the full NEPSE equity universe by combining MarketStore price/turnover/momentum
  * with FundamentalVault multi-period financial ledgers across all 9 investor frameworks.
+ * Defaults to 70% Annual/Q4 Report weight and 30% Quarterly/Interim Report weight when both exist.
  */
 export function evaluateScreenerUniverse(
   store: MarketStore,
@@ -1430,10 +1462,19 @@ export function evaluateScreenerUniverse(
     quarter?: QuarterCode;
     monitorStatusMap?: Map<string, ReportMonitorStatus>;
     benchmarkFdRatePct?: number;
+    annualWeightPct?: number;
   } = {}
 ): EvaluatedUniverseResult {
   vault.initIfNeeded();
   const equityOnly = options.equityOnly !== false;
+  const rawWeight =
+    options.annualWeightPct !== undefined && Number.isFinite(options.annualWeightPct)
+      ? options.annualWeightPct
+      : 70;
+  const annualWeightPct = Math.round(clip(rawWeight, 0, 100));
+  const annualRatio = annualWeightPct / 100;
+  const interimWeightPct = 100 - annualWeightPct;
+  const isCustomPeriod = Boolean(options.fiscalYear || options.quarter);
   const dates = store.getDates();
   const marketDate = dates[dates.length - 1] ?? null;
   const pulse = marketDate ? store.getMarketPulse(marketDate, equityOnly, { nDays: 20 }) : null;
@@ -1472,11 +1513,17 @@ export function evaluateScreenerUniverse(
     sectorGroup: ReturnType<typeof classifySectorGroup>['sectorGroup'];
     ledger: CompanyLedgerFile | null;
     record: QuarterlyStatementRecord | null;
+    annualRecord: QuarterlyStatementRecord | null;
+    interimRecord: QuarterlyStatementRecord | null;
     prevRecord: QuarterlyStatementRecord | null;
     yoyRecord: QuarterlyStatementRecord | null;
     trendRecords: QuarterlyStatementRecord[];
     growth: GrowthComparisons;
+    annualGrowth: GrowthComparisons | null;
+    interimGrowth: GrowthComparisons | null;
     valuation: ValuationBreakdown | null;
+    annualValuation: ValuationBreakdown | null;
+    interimValuation: ValuationBreakdown | null;
     market: MarketOverlay;
     thresholds: SectorThresholds;
     roicOrRoe: number | null;
@@ -1493,6 +1540,11 @@ export function evaluateScreenerUniverse(
     const record = ledger
       ? vault.selectRecordForPeriod(ledger, options.fiscalYear, options.quarter)
       : null;
+
+    const annualRecord =
+      ledger && !isCustomPeriod ? pickLatestAnnualRecord(ledger.records) : null;
+    const interimRecord =
+      ledger && !isCustomPeriod ? pickLatestInterimRecord(ledger.records) : null;
 
     const recIdx =
       record && ledger ? ledger.records.findIndex((r) => r.id === record.id) : -1;
@@ -1560,6 +1612,44 @@ export function evaluateScreenerUniverse(
       liquidityTier,
     };
 
+    const hasDualReports = Boolean(!isCustomPeriod && annualRecord && interimRecord);
+
+    const annualIdx =
+      hasDualReports && ledger && annualRecord
+        ? ledger.records.findIndex((r) => r.id === annualRecord.id)
+        : -1;
+    const annualGrowth =
+      hasDualReports && ledger && annualIdx >= 0
+        ? computeGrowthComparisons(ledger.records.slice(annualIdx))
+        : null;
+    const annualValuation =
+      hasDualReports && annualRecord && annualGrowth
+        ? computeSectorValuation({
+            record: annualRecord,
+            growth: annualGrowth,
+            currentPrice: market.ltp,
+            benchmarkFdRatePct,
+          })
+        : null;
+
+    const interimIdx =
+      hasDualReports && ledger && interimRecord
+        ? ledger.records.findIndex((r) => r.id === interimRecord.id)
+        : -1;
+    const interimGrowth =
+      hasDualReports && ledger && interimIdx >= 0
+        ? computeGrowthComparisons(ledger.records.slice(interimIdx))
+        : null;
+    const interimValuation =
+      hasDualReports && interimRecord && interimGrowth
+        ? computeSectorValuation({
+            record: interimRecord,
+            growth: interimGrowth,
+            currentPrice: market.ltp,
+            benchmarkFdRatePct,
+          })
+        : null;
+
     const valuation = record
       ? computeSectorValuation({
           record,
@@ -1573,11 +1663,25 @@ export function evaluateScreenerUniverse(
       sectorGroup === 'Banking' ||
       sectorGroup === 'Microfinance' ||
       sectorGroup === 'Insurance';
-    const roicOrRoe = record
-      ? isFin
-        ? record.metrics.roePct.value
-        : record.metrics.roicPct.value ?? record.metrics.roePct.value
-      : null;
+    const extractRoicOrRoe = (rec: QuarterlyStatementRecord | null): number | null =>
+      rec
+        ? isFin
+          ? rec.metrics.roePct.value
+          : rec.metrics.roicPct.value ?? rec.metrics.roePct.value
+        : null;
+
+    const roicOrRoe = hasDualReports
+      ? blendOpt(extractRoicOrRoe(annualRecord), extractRoicOrRoe(interimRecord), annualRatio, 2)
+      : extractRoicOrRoe(record);
+
+    const earningsYield = hasDualReports
+      ? blendOpt(
+          annualValuation?.earningsYieldPct ?? null,
+          interimValuation?.earningsYieldPct ?? null,
+          annualRatio,
+          2
+        )
+      : valuation?.earningsYieldPct ?? null;
 
     preList.push({
       symbol: sym,
@@ -1586,15 +1690,21 @@ export function evaluateScreenerUniverse(
       sectorGroup,
       ledger,
       record,
+      annualRecord,
+      interimRecord,
       prevRecord,
       yoyRecord,
       trendRecords,
       growth,
+      annualGrowth,
+      interimGrowth,
       valuation,
+      annualValuation,
+      interimValuation,
       market,
       thresholds,
       roicOrRoe,
-      earningsYield: valuation?.earningsYieldPct ?? null,
+      earningsYield,
     });
   }
 
@@ -1744,6 +1854,16 @@ export function evaluateScreenerUniverse(
           combinedRank: null,
           totalRanked: totalMagic,
         },
+        reportWeighting: {
+          annualWeightPct,
+          interimWeightPct,
+          basis: 'pending',
+          annualPeriodLabel: null,
+          interimPeriodLabel: null,
+          annualOverallScore: null,
+          interimOverallScore: null,
+          hasAnnualReport: false,
+        },
         recommendation: rec,
       };
       rows.push(row);
@@ -1765,23 +1885,200 @@ export function evaluateScreenerUniverse(
           ? 85
           : null;
 
-    const invDetails = evaluateNineInvestors({
-      record: item.record,
-      growth: item.growth,
-      valuation: item.valuation,
-      market: item.market,
-      thresholds: item.thresholds,
-      benchmarkFdRatePct,
-      greenblattPreRank: {
-        eyRank,
-        roicRank,
-        total: totalMagic,
-        eyScore,
-        roicScore,
-      },
-    });
+    const hasDualReports = Boolean(
+      !isCustomPeriod &&
+        item.annualRecord &&
+        item.interimRecord &&
+        item.annualValuation &&
+        item.interimValuation &&
+        item.annualGrowth &&
+        item.interimGrowth
+    );
 
-    const scores = computeCompositeScores(invDetails, item.valuation);
+    const greenblattPreRank = {
+      eyRank,
+      roicRank,
+      total: totalMagic,
+      eyScore,
+      roicScore,
+    };
+
+    let invDetails: Record<InvestorId, InvestorScoreResult>;
+    let scores: CompositeScores;
+    let effectiveValuation: ValuationBreakdown;
+    let effectiveRecord: QuarterlyStatementRecord;
+    let reportWeighting: ReportWeightingInfo;
+
+    if (
+      hasDualReports &&
+      item.annualRecord &&
+      item.interimRecord &&
+      item.annualValuation &&
+      item.interimValuation &&
+      item.annualGrowth &&
+      item.interimGrowth
+    ) {
+      const annualInv = evaluateNineInvestors({
+        record: item.annualRecord,
+        growth: item.annualGrowth,
+        valuation: item.annualValuation,
+        market: item.market,
+        thresholds: item.thresholds,
+        benchmarkFdRatePct,
+        greenblattPreRank,
+      });
+      const interimInv = evaluateNineInvestors({
+        record: item.interimRecord,
+        growth: item.interimGrowth,
+        valuation: item.interimValuation,
+        market: item.market,
+        thresholds: item.thresholds,
+        benchmarkFdRatePct,
+        greenblattPreRank,
+      });
+      const annualScores = computeCompositeScores(annualInv, item.annualValuation);
+      const interimScores = computeCompositeScores(interimInv, item.interimValuation);
+
+      const baseInv = annualRatio >= 0.5 ? annualInv : interimInv;
+      invDetails = { ...baseInv };
+      for (const k of Object.keys(baseInv) as InvestorId[]) {
+        const blendedScore = round1(
+          annualInv[k].score * annualRatio + interimInv[k].score * (1 - annualRatio)
+        );
+        const blendedCov = round1(
+          annualInv[k].dataCoveragePct * annualRatio +
+            interimInv[k].dataCoveragePct * (1 - annualRatio)
+        );
+        invDetails[k] = {
+          ...baseInv[k],
+          score: blendedScore,
+          dataCoveragePct: blendedCov,
+          qualified: blendedScore >= 62 && blendedCov >= 50,
+          summary: `${baseInv[k].summary} [Weighted ${annualWeightPct}% Annual (${item.annualRecord.periodLabel}: ${annualInv[k].score}) + ${interimWeightPct}% Interim (${item.interimRecord.periodLabel}: ${interimInv[k].score})]`,
+        };
+      }
+
+      scores = {
+        fundamentalQualityScore: round1(
+          annualScores.fundamentalQualityScore * annualRatio +
+            interimScores.fundamentalQualityScore * (1 - annualRatio)
+        ),
+        valueScore: round1(
+          annualScores.valueScore * annualRatio + interimScores.valueScore * (1 - annualRatio)
+        ),
+        growthScore: round1(
+          annualScores.growthScore * annualRatio + interimScores.growthScore * (1 - annualRatio)
+        ),
+        riskManagementScore: round1(
+          annualScores.riskManagementScore * annualRatio +
+            interimScores.riskManagementScore * (1 - annualRatio)
+        ),
+        valuationAttractivenessScore: round1(
+          annualScores.valuationAttractivenessScore * annualRatio +
+            interimScores.valuationAttractivenessScore * (1 - annualRatio)
+        ),
+        longTermCompoundingScore: round1(
+          annualScores.longTermCompoundingScore * annualRatio +
+            interimScores.longTermCompoundingScore * (1 - annualRatio)
+        ),
+        overallScore: round1(
+          annualScores.overallScore * annualRatio + interimScores.overallScore * (1 - annualRatio)
+        ),
+      };
+
+      effectiveRecord = annualRatio >= 0.5 ? item.annualRecord : item.interimRecord;
+      const baseVal = annualRatio >= 0.5 ? item.annualValuation : item.interimValuation;
+      effectiveValuation = {
+        ...baseVal,
+        intrinsicValue: blendOpt(
+          item.annualValuation.intrinsicValue,
+          item.interimValuation.intrinsicValue,
+          annualRatio,
+          2
+        ),
+        intrinsicValueLow: blendOpt(
+          item.annualValuation.intrinsicValueLow,
+          item.interimValuation.intrinsicValueLow,
+          annualRatio,
+          2
+        ),
+        intrinsicValueHigh: blendOpt(
+          item.annualValuation.intrinsicValueHigh,
+          item.interimValuation.intrinsicValueHigh,
+          annualRatio,
+          2
+        ),
+        marginOfSafetyPct: blendOpt(
+          item.annualValuation.marginOfSafetyPct,
+          item.interimValuation.marginOfSafetyPct,
+          annualRatio,
+          1
+        ),
+        livePe: blendOpt(item.annualValuation.livePe, item.interimValuation.livePe, annualRatio, 2),
+        livePb: blendOpt(item.annualValuation.livePb, item.interimValuation.livePb, annualRatio, 2),
+        livePeg: blendOpt(
+          item.annualValuation.livePeg,
+          item.interimValuation.livePeg,
+          annualRatio,
+          2
+        ),
+        earningsYieldPct: blendOpt(
+          item.annualValuation.earningsYieldPct,
+          item.interimValuation.earningsYieldPct,
+          annualRatio,
+          2
+        ),
+      };
+
+      reportWeighting = {
+        annualWeightPct,
+        interimWeightPct,
+        basis: 'blended',
+        annualPeriodLabel: item.annualRecord.periodLabel,
+        interimPeriodLabel: item.interimRecord.periodLabel,
+        annualOverallScore: annualScores.overallScore,
+        interimOverallScore: interimScores.overallScore,
+        hasAnnualReport: true,
+      };
+    } else {
+      invDetails = evaluateNineInvestors({
+        record: item.record,
+        growth: item.growth,
+        valuation: item.valuation,
+        market: item.market,
+        thresholds: item.thresholds,
+        benchmarkFdRatePct,
+        greenblattPreRank,
+      });
+      scores = computeCompositeScores(invDetails, item.valuation);
+      effectiveRecord = item.record;
+      effectiveValuation = item.valuation;
+
+      const isAnnualRec =
+        item.record.quarter === 'Annual' || item.record.quarter === 'Q4';
+      const ledgerHasAnnual = Boolean(
+        item.ledger && pickLatestAnnualRecord(item.ledger.records)
+      );
+      reportWeighting = {
+        annualWeightPct,
+        interimWeightPct,
+        basis: isCustomPeriod
+          ? 'custom_period'
+          : isAnnualRec
+            ? 'annual_only'
+            : 'quarterly_only',
+        annualPeriodLabel: isAnnualRec
+          ? item.record.periodLabel
+          : item.annualRecord?.periodLabel ?? null,
+        interimPeriodLabel: !isAnnualRec
+          ? item.record.periodLabel
+          : item.interimRecord?.periodLabel ?? null,
+        annualOverallScore: isAnnualRec ? scores.overallScore : null,
+        interimOverallScore: !isAnnualRec ? scores.overallScore : null,
+        hasAnnualReport: isCustomPeriod ? ledgerHasAnnual : isAnnualRec,
+      };
+    }
+
     const consensus = buildConsensusMatches(invDetails);
     const passedInvestors = (Object.keys(invDetails) as InvestorId[]).filter(
       (k) => invDetails[k].qualified
@@ -1805,7 +2102,7 @@ export function evaluateScreenerUniverse(
     if (scores.growthScore >= 58) rankingQualifiers.push('high_growth');
     if (
       scores.valuationAttractivenessScore >= 58 ||
-      (item.valuation.marginOfSafetyPct ?? -100) >= 15
+      (effectiveValuation.marginOfSafetyPct ?? -100) >= 15
     ) {
       rankingQualifiers.push('undervalued');
     }
@@ -1835,15 +2132,27 @@ export function evaluateScreenerUniverse(
     }
 
     const recommendation = buildRecommendation({
-      record: item.record,
-      valuation: item.valuation,
+      record: effectiveRecord,
+      valuation: effectiveValuation,
       scores,
       inv: invDetails,
       consensus,
       market: item.market,
     });
+    if (reportWeighting.basis === 'blended') {
+      recommendation.whyQualifies = `${recommendation.whyQualifies} Weighted ${annualWeightPct}% Annual (${reportWeighting.annualPeriodLabel}: ${reportWeighting.annualOverallScore}/100) + ${interimWeightPct}% Interim (${reportWeighting.interimPeriodLabel}: ${reportWeighting.interimOverallScore}/100).`;
+    }
 
     const m = item.record.metrics;
+    const mA = item.annualRecord?.metrics;
+    const mI = item.interimRecord?.metrics;
+    const metricVal = (
+      getter: (mm: QuarterlyStatementRecord['metrics']) => number | null
+    ): number | null =>
+      hasDualReports && mA && mI
+        ? blendOpt(getter(mA), getter(mI), annualRatio, 2)
+        : getter(m);
+
     const freshnessDays = computeFreshnessDays(item.record.collectionDate);
 
     const row: ScreenedCompanyRow = {
@@ -1865,27 +2174,27 @@ export function evaluateScreenerUniverse(
         dataQualityFlags: item.record.dataQualityFlags,
       },
       keyMetrics: {
-        eps: m.eps.value,
+        eps: metricVal((x) => x.eps.value),
         netProfitCr: m.netProfit.value !== null ? round2(m.netProfit.value / 1e7) : null,
         revenueCr: m.revenue.value !== null ? round2(m.revenue.value / 1e7) : null,
-        netMarginPct: m.netProfitMarginPct.value,
-        roePct: m.roePct.value,
-        roaPct: m.roaPct.value,
-        roicPct: m.roicPct.value,
-        pe: item.valuation.livePe,
-        pb: item.valuation.livePb,
-        peg: item.valuation.livePeg,
-        bvps: m.bvps.value,
-        debtToEquity: m.debtToEquity.value,
-        nplPct: m.nplPct.value,
-        carPct: m.carPct.value,
+        netMarginPct: metricVal((x) => x.netProfitMarginPct.value),
+        roePct: metricVal((x) => x.roePct.value),
+        roaPct: metricVal((x) => x.roaPct.value),
+        roicPct: metricVal((x) => x.roicPct.value),
+        pe: effectiveValuation.livePe,
+        pb: effectiveValuation.livePb,
+        peg: effectiveValuation.livePeg,
+        bvps: metricVal((x) => x.bvps.value),
+        debtToEquity: metricVal((x) => x.debtToEquity.value),
+        nplPct: metricVal((x) => x.nplPct.value),
+        carPct: metricVal((x) => x.carPct.value),
         ocfCr: m.operatingCashFlow.value !== null ? round2(m.operatingCashFlow.value / 1e7) : null,
         fcfCr: m.freeCashFlow.value !== null ? round2(m.freeCashFlow.value / 1e7) : null,
-        intrinsicValue: item.valuation.intrinsicValue,
-        intrinsicValueLow: item.valuation.intrinsicValueLow,
-        intrinsicValueHigh: item.valuation.intrinsicValueHigh,
-        marginOfSafetyPct: item.valuation.marginOfSafetyPct,
-        earningsYieldPct: item.valuation.earningsYieldPct,
+        intrinsicValue: effectiveValuation.intrinsicValue,
+        intrinsicValueLow: effectiveValuation.intrinsicValueLow,
+        intrinsicValueHigh: effectiveValuation.intrinsicValueHigh,
+        marginOfSafetyPct: effectiveValuation.marginOfSafetyPct,
+        earningsYieldPct: effectiveValuation.earningsYieldPct,
         epsQoqPct: item.growth.epsQoqPct,
         epsYoyPct: item.growth.epsYoyPct,
         epsCagr3yPct: item.growth.epsCagr3yPct,
@@ -1971,13 +2280,14 @@ export function evaluateScreenerUniverse(
         combinedRank: eyRank !== null && roicRank !== null ? eyRank + roicRank : null,
         totalRanked: totalMagic,
       },
+      reportWeighting,
       recommendation,
     };
 
     rows.push(row);
     bySymbol.set(item.symbol, {
       summary: row,
-      valuation: item.valuation,
+      valuation: effectiveValuation,
       growth: item.growth,
       investorDetails: invDetails,
       statements: item.ledger!.records,
@@ -1998,6 +2308,7 @@ export function evaluateScreenerUniverse(
 
   return {
     marketDate,
+    annualWeightPct,
     rows,
     bySymbol,
   };

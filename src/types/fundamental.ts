@@ -423,12 +423,32 @@ export interface ScreenedCompanyRow {
   consensusMatches: ConsensusMatch[];
   rankingQualifiers: RankingCategory[];
   greenblatt: GreenblattRankInfo;
+  reportWeighting: ReportWeightingInfo;
   recommendation: StockRecommendationExplanation;
+}
+
+export type ReportWeightingBasis =
+  | 'blended'
+  | 'annual_only'
+  | 'quarterly_only'
+  | 'custom_period'
+  | 'pending';
+
+export interface ReportWeightingInfo {
+  annualWeightPct: number;
+  interimWeightPct: number;
+  basis: ReportWeightingBasis;
+  annualPeriodLabel: string | null;
+  interimPeriodLabel: string | null;
+  annualOverallScore: number | null;
+  interimOverallScore: number | null;
+  hasAnnualReport: boolean;
 }
 
 export interface ScreenerOverviewResponse {
   generatedAt: string;
   marketDate: string | null;
+  annualWeightPct: number;
   activeFiscalQuarter: {
     fiscalYear: string;
     quarter: QuarterCode;
@@ -440,6 +460,7 @@ export interface ScreenerOverviewResponse {
   universeStats: {
     totalSymbols: number;
     withFundamentals: number;
+    withAnnualReports: number;
     publishedActiveQuarter: number;
     pendingActiveQuarter: number;
     retryingCount: number;
@@ -656,3 +677,598 @@ export interface FundamentalMonitorResponse {
   symbols: MonitorSymbolEntry[];
   logs: MonitorCollectionLog[];
 }
+
+export type RegulatoryAgency =
+  | 'ICRA'
+  | 'CARE'
+  | 'NRB'
+  | 'NIA'
+  | 'SEBON'
+  | 'NEPSE'
+  | 'CDSC';
+
+export type RegulatoryStanding = 'Clean' | 'Positive' | 'Watch' | 'Alert' | 'Unknown';
+
+export type RatingOutlook = 'Positive' | 'Stable' | 'Negative' | 'Watch' | 'Not Rated';
+
+export interface RegulatoryKbCitation {
+  title: string;
+  uri: string;
+  agency: RegulatoryAgency;
+}
+
+export interface RegulatoryKbNotice {
+  id: string;
+  agency: RegulatoryAgency;
+  title: string;
+  publishedDate: string;
+  summary: string;
+  url: string | null;
+  symbols: string[];
+  sectorGroups: SectorGroup[];
+  impact: 'Positive' | 'Neutral' | 'Negative' | 'Mixed';
+  ratingGrade: string | null;
+  ratingOutlook: RatingOutlook;
+  retrievedAt: string;
+  method: 'Direct Scrape' | 'Search Grounded' | 'Cached Macro';
+}
+
+export interface CompanyCreditRatingInfo {
+  agency: 'ICRA' | 'CARE' | null;
+  ratingGrade: string | null;
+  outlook: RatingOutlook;
+  ratingAction: string | null;
+  rationale: string | null;
+  lastRatedDate: string | null;
+}
+
+export interface CompanyKnowledgeBaseEntry {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  sectorGroup: SectorGroup;
+  updatedAt: string;
+  dataStatus: 'Live' | 'Cached' | 'Unavailable';
+  creditRating: CompanyCreditRatingInfo;
+  regulatoryStanding: RegulatoryStanding;
+  nrbAssessment: string | null;
+  niaAssessment: string | null;
+  sebonStatus: string | null;
+  nepseDisclosures: string | null;
+  cdscStatus: string | null;
+  lockInOverhangFlag: boolean;
+  tailwinds: string[];
+  riskFlags: string[];
+  citations: RegulatoryKbCitation[];
+}
+
+export interface KnowledgeBaseSummary {
+  totalCompaniesIndexed: number;
+  totalNotices: number;
+  byAgency: Record<RegulatoryAgency, number>;
+  lastHarvestAt: string | null;
+  agencyLastFetch: Partial<Record<RegulatoryAgency, string>>;
+}
+
+export interface KnowledgeBaseResponse {
+  summary: KnowledgeBaseSummary;
+  notices: RegulatoryKbNotice[];
+  companies: CompanyKnowledgeBaseEntry[];
+}
+
+export type HiddenGemArchetype =
+  | 'undiscovered_quality'
+  | 'deep_value_mos'
+  | 'earnings_inflection'
+  | 'clean_bfi_yield'
+  | 'insurance_float'
+  | 'kb_tailwind';
+
+export interface HiddenGemSubScores {
+  valuationMispricing: number; // max 30
+  qualityMoat: number; // max 25
+  earningsInflection: number; // max 20
+  crowdNeglectAlpha: number; // max 15
+  knowledgeBaseConviction: number; // max 10
+}
+
+export interface HiddenGemCandidate {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  sectorGroup: SectorGroup;
+  hiddenGemScore: number;
+  subScores: HiddenGemSubScores;
+  archetypes: HiddenGemArchetype[];
+  primaryArchetype: HiddenGemArchetype;
+  convictionTier: 'Tier 1 Gem' | 'Tier 2 Gem' | 'Emerging Watch';
+  whyHiddenGem: string[];
+  riskWatchouts: string[];
+  turnoverRank: number | null;
+  totalRankedByTurnover: number;
+  earningsYieldSpreadPct: number | null;
+  kbEntry: CompanyKnowledgeBaseEntry | null;
+  screenerRow: ScreenedCompanyRow;
+}
+
+export interface HiddenGemsResponse {
+  generatedAt: string;
+  marketDate: string | null;
+  benchmarkFdRatePct: number;
+  annualWeightPct: number;
+  totalEvaluated: number;
+  totalGems: number;
+  annualBackedCount: number;
+  kbCoveredCount: number;
+  archetypeCounts: Record<HiddenGemArchetype, number>;
+  kbSummary: KnowledgeBaseSummary;
+  gems: HiddenGemCandidate[];
+}
+
+export interface ValuationModelEstimate {
+  id: string;
+  name: string;
+  category: 'Intrinsic' | 'Relative' | 'Earnings Power' | 'Dividend & Capital';
+  price: number | null;
+  upsidePct: number | null;
+  weightPct: number;
+  formula: string;
+  inputsSummary: string;
+  note: string;
+  available: boolean;
+}
+
+export interface FutureWorthScenario {
+  horizon: '1Y' | '3Y' | '5Y';
+  bearPrice: number | null;
+  basePrice: number | null;
+  bullPrice: number | null;
+  bearCagrPct: number | null;
+  baseCagrPct: number | null;
+  bullCagrPct: number | null;
+  assumptions: string;
+}
+
+export interface ValuationSensitivityCell {
+  kePct: number;
+  growthPct: number;
+  fairValue: number | null;
+  mosPct: number | null;
+}
+
+export interface AnnualReportForensics {
+  annualWeightPct: number;
+  interimWeightPct: number;
+  hasAnnualReport: boolean;
+  annualPeriodLabel: string | null;
+  interimPeriodLabel: string | null;
+  annualEps: number | null;
+  interimEps: number | null;
+  annualRoePct: number | null;
+  interimRoePct: number | null;
+  annualBvps: number | null;
+  interimBvps: number | null;
+  annualNetProfitCr: number | null;
+  interimNetProfitCr: number | null;
+  annualVsInterimDivergence: {
+    epsRunRateDiffPct: number | null;
+    roeDiffPp: number | null;
+    flag: 'Normal' | 'Interim Elevated' | 'Interim Soft' | 'Annual Only' | 'Interim Only';
+    explanation: string;
+  };
+  capitalStructure: {
+    shareCapitalCr: number | null;
+    reservesCr: number | null;
+    retainedEarningsCr: number | null;
+    netWorthCr: number | null;
+    totalAssetsCr: number | null;
+    totalDebtCr: number | null;
+    cashCr: number | null;
+    reserveToCapitalRatio: number | null;
+    dividendBonusCapacityRating:
+      | 'High Bonus/Dividend Cushion'
+      | 'Moderate Cushion'
+      | 'Tight Reserves'
+      | 'Unavailable';
+    operatingCashFlowCr: number | null;
+    netProfitToOcfPct: number | null;
+    creditRatingLabel: string | null;
+    regulatoryStanding: RegulatoryStanding;
+  };
+  historicalPeriods: Array<{
+    periodLabel: string;
+    fiscalYear: string;
+    quarter: QuarterCode;
+    isAnnual: boolean;
+    eps: number | null;
+    roePct: number | null;
+    bvps: number | null;
+    netProfitCr: number | null;
+    revenueCr: number | null;
+    nplPct: number | null;
+    debtToEquity: number | null;
+  }>;
+}
+
+export interface SwotAndFutureWorth {
+  strengths: string[];
+  weaknesses: string[];
+  opportunities: string[];
+  risks: string[];
+  futureWorthVerdict: {
+    convictionTier:
+      | 'Core Long-Term Allocation'
+      | 'Opportunistic Value Allocation'
+      | 'Hold / Wait for Entry Zone'
+      | 'Avoid / Capital Preservation';
+    considerableInvestmentScore: number;
+    headline: string;
+    rationale: string;
+    fairValueRangeLabel: string;
+    idealEntryZoneLabel: string;
+    opportunityCostVsFdSpreadPct: number | null;
+  };
+}
+
+export interface AnnualReportAiDeepDive {
+  symbol: string;
+  generatedAt: string;
+  model: string;
+  cached: boolean;
+  annualReportYear: string | null;
+  executiveSummary: string;
+  managementGuidanceAndCatalysts: string[];
+  auditorAndGovernanceFindings: string[];
+  dividendAndBonusHistory: string[];
+  annualReportStrengths: string[];
+  annualReportWeaknesses: string[];
+  annualReportOpportunities: string[];
+  annualReportRisks: string[];
+  futureWorthOutlook: string;
+  considerableInvestmentVerdict: string;
+  citations: Array<{ title: string; uri: string }>;
+}
+
+export type HealthSignalStatus = 'Strong' | 'Solid' | 'Watch' | 'Fragile' | 'Unavailable';
+
+export interface ValuationHealthMetricContribution {
+  key: string;
+  label: string;
+  pillar: 'safety' | 'quality' | 'growth' | 'valuation';
+  unit: string;
+  companyValue: number | null;
+  annualReportValue: number | null;
+  industryAverage: number | null;
+  weightPct: number;
+  score: number | null;
+  status: HealthSignalStatus;
+  higherIsBetter: boolean;
+  sourceBasis: string;
+  note: string;
+}
+
+export interface ValuationHealthPillar {
+  id: 'safety' | 'quality' | 'growth' | 'valuation';
+  label: string;
+  weightPct: number;
+  score: number;
+  status: Exclude<HealthSignalStatus, 'Unavailable'>;
+  summary: string;
+}
+
+export interface ValuationHealthScore {
+  overallScore: number;
+  safetyScore: number;
+  growthScore: number;
+  valuationCushionScore: number;
+  band: 'Fortress Value' | 'Healthy Compounder' | 'Balanced / Watch' | 'Elevated Risk';
+  annualWeightPct: number;
+  hasAnnualReport: boolean;
+  annualPeriodLabel: string | null;
+  interimPeriodLabel: string | null;
+  dataCoveragePct: number;
+  dataBasisNote: string;
+  headline: string;
+  pillars: ValuationHealthPillar[];
+  metricsBreakdown: ValuationHealthMetricContribution[];
+}
+
+export interface AnnualDissectorMetricRow {
+  key: string;
+  label: string;
+  unit: string;
+  higherIsBetter: boolean;
+  companyValue: number | null;
+  annualReportValue: number | null;
+  interimValue: number | null;
+  industryAverage: number | null;
+  industryMedian: number | null;
+  topQuartileValue: number | null;
+  deltaVsIndustry: number | null;
+  isBetterVsIndustry: boolean | null;
+  percentileInIndustry: number | null;
+  verdict: 'Outperforming' | 'In Line' | 'Lagging' | 'Unavailable';
+}
+
+export interface AnnualDissectorSection {
+  id: 'profitability' | 'growth' | 'capital_solvency' | 'valuation';
+  title: string;
+  subtitle: string;
+  metrics: AnnualDissectorMetricRow[];
+}
+
+export interface IndustryAverageMetrics {
+  sector: string;
+  sectorGroup: SectorGroup;
+  peerCount: number;
+  annualVerifiedPeerCount: number;
+  healthScore: number | null;
+  safetyScore: number | null;
+  growthScore: number | null;
+  eps: number | null;
+  roePct: number | null;
+  roaPct: number | null;
+  netMarginPct: number | null;
+  bvps: number | null;
+  pe: number | null;
+  pb: number | null;
+  earningsYieldPct: number | null;
+  marginOfSafetyPct: number | null;
+  epsGrowthPct: number | null;
+  revenueGrowthPct: number | null;
+  reserveToCapitalRatio: number | null;
+  nplPct: number | null;
+  debtToEquity: number | null;
+  carPct: number | null;
+  ocfToProfitPct: number | null;
+}
+
+export interface AnnualDissectorPeerRow {
+  symbol: string;
+  companyName: string;
+  isTarget: boolean;
+  hasAnnualReport: boolean;
+  annualPeriodLabel: string | null;
+  ltp: number | null;
+  healthScore: number;
+  healthBand: ValuationHealthScore['band'];
+  safetyScore: number;
+  growthScore: number;
+  eps: number | null;
+  roePct: number | null;
+  netMarginPct: number | null;
+  pe: number | null;
+  pb: number | null;
+  reserveToCapitalRatio: number | null;
+  epsGrowthPct: number | null;
+  marginOfSafetyPct: number | null;
+  nplPct: number | null;
+  debtToEquity: number | null;
+}
+
+export interface AnnualReportDissector {
+  sector: string;
+  sectorGroup: SectorGroup;
+  scopeLabel: string;
+  peerCount: number;
+  annualVerifiedPeerCount: number;
+  companyRankByHealth: number | null;
+  annualWeightPct: number;
+  industryAverages: IndustryAverageMetrics;
+  sections: AnnualDissectorSection[];
+  peerMatrix: AnnualDissectorPeerRow[];
+}
+
+export interface CompanyValuationDossierResponse {
+  generatedAt: string;
+  marketDate: string | null;
+  annualWeightPct: number;
+  benchmarkFdRatePct: number;
+  summary: ScreenedCompanyRow;
+  valuation: ValuationBreakdown;
+  compositeFairValue: number | null;
+  fairValueLow: number | null;
+  fairValueHigh: number | null;
+  marginOfSafetyPct: number | null;
+  pricingVerdict:
+    | 'Deeply Undervalued'
+    | 'Undervalued / Attractive'
+    | 'Fairly Valued'
+    | 'Richly Priced'
+    | 'Insufficient Data';
+  entryZones: {
+    deepValuePrice: number | null;
+    buyZonePrice: number | null;
+    fairValuePrice: number | null;
+    trimZonePrice: number | null;
+  };
+  valuationHealthScore: ValuationHealthScore;
+  annualReportDissector: AnnualReportDissector;
+  models: ValuationModelEstimate[];
+  scenarios: FutureWorthScenario[];
+  sensitivityGrid: {
+    keValues: number[];
+    growthValues: number[];
+    cells: ValuationSensitivityCell[][];
+  };
+  forensics: AnnualReportForensics;
+  swot: SwotAndFutureWorth;
+  kbEntry: CompanyKnowledgeBaseEntry | null;
+  peerBenchmark: SectorPeerBenchmark | null;
+  aiDeepDive: AnnualReportAiDeepDive | null;
+}
+
+export interface ValuationUniverseCandidate {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  sectorGroup: SectorGroup;
+  ltp: number | null;
+  compositeFairValue: number | null;
+  marginOfSafetyPct: number | null;
+  pricingVerdict: CompanyValuationDossierResponse['pricingVerdict'];
+  considerableInvestmentScore: number;
+  convictionTier: SwotAndFutureWorth['futureWorthVerdict']['convictionTier'];
+  valuationHealthScore: number;
+  healthBand: ValuationHealthScore['band'];
+  safetyScore: number;
+  growthScore: number;
+  hasAnnualReport: boolean;
+  reportBasis: ReportWeightingBasis;
+  reserveToCapitalRatio: number | null;
+  overallScore: number;
+  roePct: number | null;
+  pe: number | null;
+  pb: number | null;
+  creditRatingLabel: string | null;
+  hasAiDeepDive: boolean;
+}
+
+export interface ValuationUniverseResponse {
+  generatedAt: string;
+  marketDate: string | null;
+  annualWeightPct: number;
+  benchmarkFdRatePct: number;
+  totalEvaluated: number;
+  withAnnualReports: number;
+  undervaluedCount: number;
+  coreAllocationCount: number;
+  candidates: ValuationUniverseCandidate[];
+}
+
+export type MasterScreenerPreset =
+  | 'master_all'
+  | 'player_liquidity'
+  | 'best_valuation'
+  | 'annual_gems'
+  | 'fundamental_titans'
+  | 'earnings_accelerators'
+  | 'technical_breakouts'
+  | 'future_10x';
+
+export type MasterTechnicalTrend =
+  | 'Strong Uptrend'
+  | 'Uptrend'
+  | 'Pullback in Uptrend'
+  | 'Base / Accumulation'
+  | 'Downtrend';
+
+export interface MasterTechnicalSnapshot {
+  technicalScore: number;
+  trendState: MasterTechnicalTrend;
+  rsi14: number | null;
+  ema20: number | null;
+  aboveEma20: boolean;
+  vsD120Pct: number | null;
+  vsD180Pct: number | null;
+  goldenCross: boolean;
+  vwapPct: number | null;
+  gap52hPct: number | null;
+  pos52wPct: number | null;
+  breakout20d: boolean;
+  return5dPct: number | null;
+  return20dPct: number | null;
+  signals: string[];
+}
+
+export interface MasterLiquiditySnapshot {
+  playerInterestScore: number;
+  latestTurnoverCr: number;
+  avgTurnover20Cr: number;
+  turnoverSpikeMult: number | null;
+  latestVolume: number;
+  avgVolume20: number;
+  volumeSpikeMult: number | null;
+  avgTicketNpr: number | null;
+  playerTier: 'Institutional / HNI Flow' | 'Active High Liquidity' | 'Moderate Retail' | 'Thin Liquidity';
+  upDownVolRatio: number | null;
+  accumulationFlag: boolean;
+  turnoverRank: number | null;
+}
+
+export interface MasterTenXSnapshot {
+  tenXScore: number;
+  tier: 'High 10x Runway' | 'Emerging Multi-Bagger' | 'Steady Compounder' | 'Mature / Low Runway';
+  marketCapCr: number | null;
+  bull5yPrice: number | null;
+  bull5yMultiple: number | null;
+  bull5yCagrPct: number | null;
+  catalysts: string[];
+}
+
+export interface MasterScreenerRow {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  sectorGroup: SectorGroup;
+  ltp: number | null;
+  changePct: number | null;
+  hasFundamentalData: boolean;
+  hasAnnualReport: boolean;
+  annualPeriodLabel: string | null;
+  masterScore: number;
+  technical: MasterTechnicalSnapshot;
+  liquidity: MasterLiquiditySnapshot;
+  tenX: MasterTenXSnapshot;
+  valuation: {
+    compositeFairValue: number | null;
+    marginOfSafetyPct: number | null;
+    pricingVerdict: CompanyValuationDossierResponse['pricingVerdict'];
+    inBuyZone: boolean;
+    buyZonePrice: number | null;
+    pe: number | null;
+    pb: number | null;
+    peg: number | null;
+    earningsYieldPct: number | null;
+    fdSpreadPct: number | null;
+    valuationHealthScore: number | null;
+    healthBand: ValuationHealthScore['band'] | null;
+    safetyScore: number | null;
+    growthScore: number | null;
+  };
+  fundamentals: {
+    overallScore: number;
+    qualityScore: number;
+    passedInvestorCount: number;
+    verdict: RecommendationVerdict;
+    roePct: number | null;
+    netMarginPct: number | null;
+    reserveToCapitalRatio: number | null;
+    nplPct: number | null;
+    debtToEquity: number | null;
+    carPct: number | null;
+    creditRatingLabel: string | null;
+    regulatoryStanding: RegulatoryStanding;
+    lockInOverhangFlag: boolean;
+  };
+  earnings: {
+    eps: number | null;
+    bvps: number | null;
+    epsYoyPct: number | null;
+    epsCagr3yPct: number | null;
+    revenueGrowthPct: number | null;
+    netProfitYoyPct: number | null;
+    epsVsQ4Avg3yPct: number | null;
+    earningsMomentumScore: number;
+  };
+  gems: {
+    hiddenGemScore: number | null;
+    convictionTier: HiddenGemCandidate['convictionTier'] | null;
+    archetypes: HiddenGemArchetype[];
+    whyGem: string[];
+  };
+  actionTags: string[];
+}
+
+export interface MasterScreenerResponse {
+  generatedAt: string;
+  marketDate: string | null;
+  annualWeightPct: number;
+  benchmarkFdRatePct: number;
+  totalSymbols: number;
+  presetCounts: Record<MasterScreenerPreset, number>;
+  sectors: string[];
+  sectorGroups: SectorGroup[];
+  rows: MasterScreenerRow[];
+}
+

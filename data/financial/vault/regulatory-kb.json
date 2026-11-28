@@ -1,0 +1,158 @@
+{
+  "notices": [
+    {
+      "id": "sebon_fc888e53c9162f",
+      "agency": "SEBON",
+      "title": "Margin Lending Limit Adjustments",
+      "publishedDate": "2024-11",
+      "summary": "Increased the margin loan cap for institutional investors to enhance market depth.",
+      "url": null,
+      "symbols": [],
+      "sectorGroups": [
+        "Other"
+      ],
+      "impact": "Positive",
+      "ratingGrade": null,
+      "ratingOutlook": "Not Rated",
+      "retrievedAt": "2026-11-27T05:52:00.242Z",
+      "method": "Cached Macro"
+    },
+    {
+      "id": "nrb_61e2b45dc297b7",
+      "agency": "NRB",
+      "title": "Monetary Policy First Quarterly Review",
+      "publishedDate": "2024-10",
+      "summary": "Maintained existing interest rate corridor and relaxed some working capital loan classifications.",
+      "url": null,
+      "symbols": [],
+      "sectorGroups": [
+        "Other"
+      ],
+      "impact": "Positive",
+      "ratingGrade": null,
+      "ratingOutlook": "Not Rated",
+      "retrievedAt": "2026-11-27T05:52:00.242Z",
+      "method": "Cached Macro"
+    }
+  ],
+  "companies": {
+    "CYCL": {
+      "symbol": "CYCL",
+      "companyName": "CYC Nepal Laghubitta Bittiya Sanstha Limited",
+      "sector": "Microfinance",
+      "sectorGroup": "Microfinance",
+      "updatedAt": "2026-11-26T13:21:26.591Z",
+      "dataStatus": "Cached",
+      "creditRating": {
+        "agency": null,
+        "ratingGrade": null,
+        "outlook": "Not Rated",
+        "ratingAction": null,
+        "rationale": null,
+        "lastRatedDate": null
+      },
+      "regulatoryStanding": "Watch",
+      "nrbAssessment": null,
+      "niaAssessment": null,
+      "sebonStatus": null,
+      "nepseDisclosures": null,
+      "cdscStatus": null,
+      "lockInOverhangFlag": false,
+      "tailwinds": [],
+      "riskFlags": [
+        "Rising NPL percentage compared to previous fiscal year",
+        "High volatility in earnings performance"
+      ],
+      "citations": []
+    },
+    "JSLBB": {
+      "symbol": "JSLBB",
+      "companyName": "Janautthan Samudayic Laghubitta Bittiya Sanstha Limited",
+      "sector": "Microfinance",
+      "sectorGroup": "Microfinance",
+      "updatedAt": "2026-11-26T13:21:33.107Z",
+      "dataStatus": "Cached",
+      "creditRating": {
+        "agency": null,
+        "ratingGrade": null,
+        "outlook": "Not Rated",
+        "ratingAction": null,
+        "rationale": null,
+        "lastRatedDate": null
+      },
+      "regulatoryStanding": "Watch",
+      "nrbAssessment": null,
+      "niaAssessment": null,
+      "sebonStatus": null,
+      "nepseDisclosures": null,
+      "cdscStatus": null,
+      "lockInOverhangFlag": false,
+      "tailwinds": [],
+      "riskFlags": [
+        "Elevated NPL levels common to the microfinance sector per NRB's recent assessment",
+        "Declining trend in net interest income growth compared to previous fiscal years"
+      ],
+      "citations": []
+    },
+    "SMATA": {
+      "symbol": "SMATA",
+      "companyName": "Samata Gharelu Laghubitta Bittiya Sanstha Limited",
+      "sector": "Microfinance",
+      "sectorGroup": "Microfinance",
+      "updatedAt": "2026-11-26T13:21:40.304Z",
+      "dataStatus": "Cached",
+      "creditRating": {
+        "agency": null,
+        "ratingGrade": null,
+        "outlook": "Not Rated",
+        "ratingAction": null,
+        "rationale": null,
+        "lastRatedDate": null
+      },
+      "regulatoryStanding": "Watch",
+      "nrbAssessment": null,
+      "niaAssessment": null,
+      "sebonStatus": null,
+      "nepseDisclosures": null,
+      "cdscStatus": null,
+      "lockInOverhangFlag": false,
+      "tailwinds": [],
+      "riskFlags": [
+        "Elevated Non-Performing Loan (NPL) levels typical of the current microfinance cycle.",
+        "Downside technical pressure with price trading significantly below 120-day and 180-day moving averages."
+      ],
+      "citations": []
+    },
+    "SHLB": {
+      "symbol": "SHLB",
+      "companyName": "Shrijanshil Laghubitta Bittiya Sanstha Limited",
+      "sector": "Microfinance",
+      "sectorGroup": "Microfinance",
+      "updatedAt": "2026-11-26T13:21:46.561Z",
+      "dataStatus": "Cached",
+      "creditRating": {
+        "agency": null,
+        "ratingGrade": null,
+        "outlook": "Not Rated",
+        "ratingAction": null,
+        "rationale": null,
+        "lastRatedDate": null
+      },
+      "regulatoryStanding": "Watch",
+      "nrbAssessment": null,
+      "niaAssessment": null,
+      "sebonStatus": null,
+      "nepseDisclosures": null,
+      "cdscStatus": null,
+      "lockInOverhangFlag": false,
+      "tailwinds": [],
+      "riskFlags": [
+        "Elevated NPL levels common to the microfinance sector impacting provision expenses",
+        "Declining technical momentum (trading below MA120 and MA180)"
+      ],
+      "citations": []
+    }
+  },
+  "agencyLastFetch": {},
+  "lastHarvestAt": null
+}

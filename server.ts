@@ -37,13 +37,23 @@ import {
   FundamentalVault,
   normalizeShareSansarSnapshot,
 } from './server/fundamental/fundamentalVault.ts';
+import {
+  buildCompanyValuationDossier,
+  getValuationUniverseSummary,
+  runAnnualReportDeepDive,
+} from './server/fundamental/annualValuationEngine.ts';
 import { FundamentalMonitorService } from './server/fundamental/fundamentalCollector.ts';
+import { evaluateHiddenGems } from './server/fundamental/hiddenGemsEngine.ts';
 import { evaluateScreenerUniverse } from './server/fundamental/investorScoringEngine.ts';
+import { computeMasterScreener } from './server/fundamental/masterScreenerEngine.ts';
 import { getActiveNepalFiscalQuarter } from './server/fundamental/nepalCalendar.ts';
+import { ALL_AGENCIES, RegulatoryKnowledgeBase } from './server/fundamental/regulatoryKnowledgeBase.ts';
 import type {
   ConsensusTag,
+  HiddenGemArchetype,
   QuarterCode,
   RankingCategory,
+  RegulatoryAgency,
   ScreenedCompanyRow,
 } from './src/types/fundamental.ts';
 import type { ScannerKind } from './src/types/market.ts';
@@ -116,6 +126,7 @@ async function startServer() {
   const scheduler = new DailyScheduler(store);
   const fundamentalVault = new FundamentalVault(DATA_DIR);
   const fundamentalMonitor = new FundamentalMonitorService(store, fundamentalVault);
+  const regulatoryKb = new RegulatoryKnowledgeBase(DATA_DIR);
 
   function parseBenchmarkFdRate(): number {
     const macro = loadMacroSnapshot(store);
@@ -714,6 +725,14 @@ async function startServer() {
           ? (req.query.quarter.trim() as QuarterCode)
           : undefined;
 
+      const annualWeightRaw =
+        typeof req.query.annualWeightPct === 'string' && req.query.annualWeightPct.trim()
+          ? Number(req.query.annualWeightPct)
+          : 70;
+      const annualWeightPct = Number.isFinite(annualWeightRaw)
+        ? Math.max(0, Math.min(100, Math.round(annualWeightRaw)))
+        : 70;
+
       fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
       const statusMap = fundamentalMonitor.getStatusMap();
       const evaluated = evaluateScreenerUniverse(store, fundamentalVault, {
@@ -722,6 +741,7 @@ async function startServer() {
         quarter,
         monitorStatusMap: statusMap,
         benchmarkFdRatePct: parseBenchmarkFdRate(),
+        annualWeightPct,
       });
 
       const activeQ = getActiveNepalFiscalQuarter(
@@ -936,10 +956,12 @@ async function startServer() {
       res.json({
         generatedAt: new Date().toISOString(),
         marketDate: evaluated.marketDate,
+        annualWeightPct: evaluated.annualWeightPct,
         activeFiscalQuarter: activeQ,
         universeStats: {
           totalSymbols: evaluated.rows.length,
           withFundamentals: withFun.length,
+          withAnnualReports: withFun.filter((r) => r.reportWeighting.hasAnnualReport).length,
           publishedActiveQuarter: evaluated.rows.filter((r) => r.reportingStatus === 'Published').length,
           pendingActiveQuarter: evaluated.rows.filter((r) => r.reportingStatus === 'Pending').length,
           retryingCount: evaluated.rows.filter((r) => r.reportingStatus === 'Retrying').length,
@@ -982,12 +1004,21 @@ async function startServer() {
           ? (req.query.quarter.trim() as QuarterCode)
           : undefined;
 
+      const annualWeightRaw =
+        typeof req.query.annualWeightPct === 'string' && req.query.annualWeightPct.trim()
+          ? Number(req.query.annualWeightPct)
+          : 70;
+      const annualWeightPct = Number.isFinite(annualWeightRaw)
+        ? Math.max(0, Math.min(100, Math.round(annualWeightRaw)))
+        : 70;
+
       const evaluated = evaluateScreenerUniverse(store, fundamentalVault, {
         equityOnly,
         fiscalYear,
         quarter,
         monitorStatusMap: fundamentalMonitor.getStatusMap(),
         benchmarkFdRatePct: parseBenchmarkFdRate(),
+        annualWeightPct,
       });
 
       const detail = evaluated.bySymbol.get(symbol);
@@ -1020,10 +1051,19 @@ async function startServer() {
           ? req.query.symbol.trim().toUpperCase()
           : null;
 
+      const annualWeightRaw =
+        typeof req.query.annualWeightPct === 'string' && req.query.annualWeightPct.trim()
+          ? Number(req.query.annualWeightPct)
+          : 70;
+      const annualWeightPct = Number.isFinite(annualWeightRaw)
+        ? Math.max(0, Math.min(100, Math.round(annualWeightRaw)))
+        : 70;
+
       const evaluated = evaluateScreenerUniverse(store, fundamentalVault, {
         equityOnly,
         monitorStatusMap: fundamentalMonitor.getStatusMap(),
         benchmarkFdRatePct: parseBenchmarkFdRate(),
+        annualWeightPct,
       });
 
       if (symbolParam) {
@@ -1280,6 +1320,242 @@ async function startServer() {
     } catch (err) {
       res.status(400).json({
         error: err instanceof Error ? err.message : 'Failed to start batch fundamental refresh',
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- Master Multi-Factor Screener Route
+  app.get('/api/master-screener', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      const annualWeightRaw =
+        typeof req.query.annualWeightPct === 'string' && req.query.annualWeightPct.trim()
+          ? Number(req.query.annualWeightPct)
+          : 70;
+      const annualWeightPct = Number.isFinite(annualWeightRaw)
+        ? Math.max(0, Math.min(100, Math.round(annualWeightRaw)))
+        : 70;
+
+      fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
+      res.json(
+        computeMasterScreener(store, fundamentalVault, regulatoryKb, {
+          equityOnly,
+          benchmarkFdRatePct: parseBenchmarkFdRate(),
+          annualWeightPct,
+          monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        })
+      );
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to compute master screener',
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- Pricing & Annual Report Valuation Lab Routes
+  app.get('/api/valuation/universe', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      const annualWeightRaw =
+        typeof req.query.annualWeightPct === 'string' && req.query.annualWeightPct.trim()
+          ? Number(req.query.annualWeightPct)
+          : 70;
+      const annualWeightPct = Number.isFinite(annualWeightRaw)
+        ? Math.max(0, Math.min(100, Math.round(annualWeightRaw)))
+        : 70;
+
+      fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
+      res.json(
+        getValuationUniverseSummary(store, fundamentalVault, regulatoryKb, {
+          equityOnly,
+          benchmarkFdRatePct: parseBenchmarkFdRate(),
+          annualWeightPct,
+          monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        })
+      );
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to build valuation universe',
+      });
+    }
+  });
+
+  app.get('/api/valuation/company/:symbol', (req, res) => {
+    try {
+      const symbol = String(req.params.symbol || '').trim().toUpperCase();
+      if (!isValidSymbol(symbol)) {
+        res.status(400).json({ error: 'Invalid ticker symbol' });
+        return;
+      }
+      const equityOnly = req.query.equityOnly !== 'false';
+      const annualWeightRaw =
+        typeof req.query.annualWeightPct === 'string' && req.query.annualWeightPct.trim()
+          ? Number(req.query.annualWeightPct)
+          : 70;
+      const annualWeightPct = Number.isFinite(annualWeightRaw)
+        ? Math.max(0, Math.min(100, Math.round(annualWeightRaw)))
+        : 70;
+
+      const dossier = buildCompanyValuationDossier(store, fundamentalVault, regulatoryKb, symbol, {
+        equityOnly,
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+        annualWeightPct,
+        monitorStatusMap: fundamentalMonitor.getStatusMap(),
+      });
+      if (!dossier) {
+        res.status(404).json({
+          error: `No fundamental statement ledger loaded yet for ${symbol}. Refresh statements first.`,
+        });
+        return;
+      }
+      res.json(dossier);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to compute company valuation dossier',
+      });
+    }
+  });
+
+  app.post('/api/valuation/annual-deep-dive', async (req, res) => {
+    const symbol = String(req.body?.symbol || '').trim().toUpperCase();
+    if (!isValidSymbol(symbol)) {
+      res.status(400).json({ error: 'Valid symbol required' });
+      return;
+    }
+    try {
+      const force = Boolean(req.body?.force);
+      const out = await runAnnualReportDeepDive(
+        store,
+        fundamentalVault,
+        regulatoryKb,
+        symbol,
+        force,
+        parseBenchmarkFdRate()
+      );
+      res.json(out);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : `Annual report deep-dive failed for ${symbol}`,
+      });
+    }
+  });
+
+  // ---------------------------------------------------------------- Hidden Gems & Regulatory Knowledge Base Routes
+  app.get('/api/screener/hidden-gems', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      const archetypeRaw =
+        typeof req.query.archetype === 'string' && req.query.archetype.trim()
+          ? req.query.archetype.trim()
+          : 'all';
+      const numOpt = (key: string): number | null => {
+        const raw = req.query[key];
+        if (typeof raw !== 'string' || !raw.trim()) return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      };
+
+      const annualWeightRaw = numOpt('annualWeightPct');
+      const annualWeightPct =
+        annualWeightRaw !== null ? Math.max(0, Math.min(100, Math.round(annualWeightRaw))) : 70;
+
+      fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
+      const result = evaluateHiddenGems(store, fundamentalVault, regulatoryKb, {
+        equityOnly,
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+        annualWeightPct,
+        monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        archetype: archetypeRaw as HiddenGemArchetype | 'all',
+        sector: typeof req.query.sector === 'string' ? req.query.sector : 'All',
+        search: typeof req.query.search === 'string' ? req.query.search : '',
+        minScore: numOpt('minScore'),
+        minMos: numOpt('minMos'),
+        maxPe: numOpt('maxPe'),
+        maxPb: numOpt('maxPb'),
+        minRoe: numOpt('minRoe'),
+        maxNpl: numOpt('maxNpl'),
+        beatsFdOnly: req.query.beatsFdOnly === 'true',
+        onlyWithKb: req.query.onlyWithKb === 'true',
+        investmentGradeOnly: req.query.investmentGradeOnly === 'true',
+        excludeAlertsAndLockIn: req.query.excludeAlertsAndLockIn === 'true',
+        requireAnnualReport: req.query.requireAnnualReport === 'true',
+      });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to evaluate hidden gems',
+      });
+    }
+  });
+
+  app.get('/api/screener/knowledge-base', (req, res) => {
+    try {
+      const agencyRaw =
+        typeof req.query.agency === 'string' ? req.query.agency.trim().toUpperCase() : 'ALL';
+      const agency =
+        agencyRaw === 'ALL' || ALL_AGENCIES.includes(agencyRaw as RegulatoryAgency)
+          ? (agencyRaw as RegulatoryAgency | 'ALL')
+          : 'ALL';
+      const symbol = typeof req.query.symbol === 'string' ? req.query.symbol.trim() : undefined;
+      const q = typeof req.query.q === 'string' ? req.query.q.trim() : undefined;
+      res.json(regulatoryKb.queryKnowledgeBase({ agency, symbol, q }));
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to query regulatory knowledge base',
+      });
+    }
+  });
+
+  app.post('/api/screener/knowledge-base/harvest', async (req, res) => {
+    try {
+      const rawAgencies = Array.isArray(req.body?.agencies)
+        ? req.body.agencies
+            .map((a: unknown) => String(a || '').trim().toUpperCase())
+            .filter((a: string): a is RegulatoryAgency => ALL_AGENCIES.includes(a as RegulatoryAgency))
+        : ALL_AGENCIES;
+      const out = await regulatoryKb.harvestAgencies(
+        rawAgencies.length > 0 ? rawAgencies : ALL_AGENCIES,
+        store
+      );
+      res.json(out);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to harvest regulatory knowledge base',
+      });
+    }
+  });
+
+  app.post('/api/screener/knowledge-base/enrich', async (req, res) => {
+    try {
+      let symbols: string[] = Array.isArray(req.body?.symbols)
+        ? req.body.symbols
+            .map((s: unknown) => String(s || '').trim().toUpperCase())
+            .filter(isValidSymbol)
+        : [];
+
+      if (symbols.length === 0) {
+        const equityOnly = req.body?.equityOnly !== false;
+        const gemsResp = evaluateHiddenGems(store, fundamentalVault, regulatoryKb, {
+          equityOnly,
+          benchmarkFdRatePct: parseBenchmarkFdRate(),
+          monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        });
+        const withoutKb = gemsResp.gems.filter((g) => !g.kbEntry).slice(0, 5);
+        symbols = (withoutKb.length > 0 ? withoutKb : gemsResp.gems.slice(0, 5)).map(
+          (g) => g.symbol
+        );
+      }
+
+      if (symbols.length === 0) {
+        res.status(400).json({ error: 'No eligible symbols found to enrich' });
+        return;
+      }
+
+      const out = await regulatoryKb.enrichCompanies(symbols, store, fundamentalVault);
+      res.json(out);
+    } catch (err) {
+      res.status(500).json({
+        error: err instanceof Error ? err.message : 'Failed to enrich companies from regulatory KB',
       });
     }
   });

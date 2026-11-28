@@ -3,6 +3,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import {
+  buildCompanyValuationDossier,
+  getValuationUniverseSummary,
+} from '../server/fundamental/annualValuationEngine.ts';
 import { FundamentalMonitorService } from '../server/fundamental/fundamentalCollector.ts';
 import {
   buildSpreadsheetExport,
@@ -10,12 +14,15 @@ import {
   FundamentalVault,
   normalizeShareSansarSnapshot,
 } from '../server/fundamental/fundamentalVault.ts';
+import { evaluateHiddenGems } from '../server/fundamental/hiddenGemsEngine.ts';
 import { evaluateScreenerUniverse } from '../server/fundamental/investorScoringEngine.ts';
+import { computeMasterScreener } from '../server/fundamental/masterScreenerEngine.ts';
 import {
   getActiveNepalFiscalQuarter,
   getUpcomingNepalFiscalQuarter,
   parseNepalPeriodLabel,
 } from '../server/fundamental/nepalCalendar.ts';
+import { RegulatoryKnowledgeBase } from '../server/fundamental/regulatoryKnowledgeBase.ts';
 import { computeSectorValuation } from '../server/fundamental/sectorMethodology.ts';
 import { MarketStore } from '../server/marketStore.ts';
 import {
@@ -499,3 +506,487 @@ test('evaluateLatestHtml handles market holidays and zero-data days without thro
     assert.equal(active.rows[0].symbol, 'NABIL');
   }
 });
+
+test('RegulatoryKnowledgeBase seeds from existing macro/intel caches without duplicating and supports filtering', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-kb-test-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '.macro-rates-cache.json'),
+      JSON.stringify({
+        generatedAt: '2026-11-20T00:00:00Z',
+        regulatoryUpdates: [
+          {
+            authority: 'NRB',
+            date: '2026-11-18',
+            title: 'NRB eases working capital guidelines for BFIs',
+            summary: 'Nepal Rastra Bank circular supports credit growth and NPL recovery across Class A banks.',
+            impact: 'Positive',
+            impactedSectors: ['Commercial Banks'],
+          },
+          {
+            authority: 'NIA',
+            date: '2026-11-19',
+            title: 'Nepal Insurance Authority solvency directive Q1 2083/84',
+            summary: 'NIA reinforces minimum solvency margin compliance for life and non-life insurers.',
+            impact: 'Neutral',
+            impactedSectors: ['Life Insurance', 'Non Life Insurance'],
+          },
+        ],
+      }),
+      'utf8'
+    );
+
+    fs.writeFileSync(
+      path.join(tmpDir, '.fundamental-intel.json'),
+      JSON.stringify({
+        EBL: {
+          symbol: 'EBL',
+          companyName: 'Everest Bank Limited',
+          sector: 'Commercial Banks',
+          generatedAt: '2026-11-20T00:00:00Z',
+          governanceRegulatoryFlags: ['NRB clean supervisory compliance with low NPL'],
+          fundamentalRedFlags: [],
+          macroLinkage: 'Beneficiary of easing credit rates.',
+          sources: [{ title: 'ICRA Nepal Rating', uri: 'https://www.icranepal.com/ebl' }],
+        },
+      }),
+      'utf8'
+    );
+
+    const kb1 = new RegulatoryKnowledgeBase(tmpDir);
+    kb1.initIfNeeded();
+    const initial = kb1.queryKnowledgeBase();
+    assert.ok(initial.notices.length >= 2);
+    assert.ok(initial.summary.totalCompaniesIndexed >= 1);
+    assert.equal(kb1.getCompanyEntry('EBL')?.symbol, 'EBL');
+    assert.equal(kb1.getCompanyEntry('EBL')?.citations[0]?.agency, 'ICRA');
+
+    const nrbOnly = kb1.queryKnowledgeBase({ agency: 'NRB' });
+    assert.equal(nrbOnly.notices.length, 1);
+    assert.equal(nrbOnly.notices[0].agency, 'NRB');
+
+    const eblOnly = kb1.queryKnowledgeBase({ symbol: 'ebl' });
+    assert.equal(eblOnly.companies.length, 1);
+    assert.equal(eblOnly.companies[0].symbol, 'EBL');
+
+    // Re-loading from disk must not duplicate seeded notices or company records
+    const kb2 = new RegulatoryKnowledgeBase(tmpDir);
+    kb2.initIfNeeded();
+    assert.equal(kb2.queryKnowledgeBase().notices.length, initial.notices.length);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('evaluateHiddenGems scores, classifies archetypes, and applies KB rating & lock-in filters', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-gems-test-'));
+  try {
+    // Two companies: EBL (clean high-ROE bank, low turnover rank, ICRA AA-) and HBL (flagged lock-in/alert)
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      [
+        'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low',
+        'EBL,Everest Bank Limited,540,548,536,545,540,5,0.93,12000,6540000,545,700,490',
+        'HBL,Himalayan Bank Limited,215,218,210,212,216,-4,-1.85,18000,3816000,212,290,195',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+
+    const makeBankSnap = (
+      symbol: string,
+      companyName: string,
+      fy: string,
+      qLabel: string,
+      eps: number,
+      bvps: number,
+      roe: number,
+      npl: number
+    ): CompanyFinancialSnapshot => ({
+      symbol,
+      companyName,
+      sector: 'Commercial Banks',
+      companyId: symbol === 'EBL' ? '10' : '11',
+      scrapedAt: '2026-11-27T06:00:00.000Z',
+      sourceUrl: `https://www.sharesansar.com/company/${symbol.toLowerCase()}`,
+      periods: [`${qLabel} ${fy}`],
+      tabs: [
+        {
+          key: 'balance_sheet',
+          title: "Balance Sheet (Rs. in '000)",
+          headers: ["Particulars (Rs. in '000)", `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Equity', isSectionHeader: false, particulars: "Total Shareholder's Equity", values: ['25000000'], numericValues: [25_000_000] },
+            { section: 'Assets', isSectionHeader: false, particulars: 'Total Assets', values: ['260000000'], numericValues: [260_000_000] },
+            { section: 'Liabilities', isSectionHeader: false, particulars: 'Total Liabilities', values: ['235000000'], numericValues: [235_000_000] },
+          ],
+        },
+        {
+          key: 'profit_loss',
+          title: "Profit and Loss (Rs. in '000)",
+          headers: ["Particulars (Rs. in '000)", `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Profit', isSectionHeader: false, particulars: 'Profit for the period', values: ['1200000'], numericValues: [1_200_000] },
+          ],
+        },
+        {
+          key: 'key_metrics',
+          title: 'Key Metrics',
+          headers: ['Particulars', `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: [String(eps)], numericValues: [eps] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Net Worth Per Share', values: [String(bvps)], numericValues: [bvps] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Return on Equity', values: [String(roe)], numericValues: [roe] },
+            { section: 'Quality', isSectionHeader: false, particulars: 'Non-Performing Loan (NPL) Ratio', values: [String(npl)], numericValues: [npl] },
+            { section: 'Quality', isSectionHeader: false, particulars: 'Capital Adequacy Ratio', values: ['13.5'], numericValues: [13.5] },
+          ],
+        },
+      ],
+    });
+
+    for (const [fy, qLabel, eps] of [
+      ['2081/82', '1st Quarter', 34],
+      ['2082/83', '1st Quarter', 41],
+      ['2082/83', '4th Quarter', 45],
+      ['2083/84', '1st Quarter', 52],
+    ] as const) {
+      for (const rec of normalizeShareSansarSnapshot(
+        makeBankSnap('EBL', 'Everest Bank Limited', fy, qLabel, eps, 340, 17.8, 0.7)
+      )) {
+        vault.upsertStatementRecord(rec);
+      }
+      for (const rec of normalizeShareSansarSnapshot(
+        makeBankSnap('HBL', 'Himalayan Bank Limited', fy, qLabel, 14, 175, 8.2, 4.9)
+      )) {
+        vault.upsertStatementRecord(rec);
+      }
+    }
+
+    // Seed KB with strong ICRA AA- rating for EBL and CDSC lock-in + negative watch for HBL
+    const vaultDir = path.join(tmpDir, 'financial', 'vault');
+    fs.mkdirSync(vaultDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(vaultDir, 'regulatory-kb.json'),
+      JSON.stringify({
+        notices: [],
+        lastHarvestAt: '2026-11-27T07:00:00Z',
+        agencyLastFetch: { ICRA: '2026-11-27T07:00:00Z', CDSC: '2026-11-27T07:00:00Z' },
+        companies: {
+          EBL: {
+            symbol: 'EBL',
+            companyName: 'Everest Bank Limited',
+            sector: 'Commercial Banks',
+            sectorGroup: 'Banking',
+            updatedAt: '2026-11-27T07:00:00Z',
+            dataStatus: 'Live',
+            creditRating: {
+              agency: 'ICRA',
+              ratingGrade: '[ICRANP-IR] AA-',
+              outlook: 'Positive',
+              ratingAction: 'Reaffirmed',
+              rationale: 'Best-in-class asset quality and strong CASA franchise.',
+              lastRatedDate: '2026-11-15',
+            },
+            regulatoryStanding: 'Positive',
+            nrbAssessment: 'Lowest NPL in peer group with comfortable CAR.',
+            niaAssessment: null,
+            sebonStatus: 'Compliant',
+            nepseDisclosures: 'Consistent dividend track record.',
+            cdscStatus: 'No promoter lock-in overhang.',
+            lockInOverhangFlag: false,
+            tailwinds: ['ICRA AA- Positive outlook with sub-1% NPL'],
+            riskFlags: [],
+            citations: [{ title: 'ICRA Nepal EBL', uri: 'https://www.icranepal.com/ebl', agency: 'ICRA' }],
+          },
+          HBL: {
+            symbol: 'HBL',
+            companyName: 'Himalayan Bank Limited',
+            sector: 'Commercial Banks',
+            sectorGroup: 'Banking',
+            updatedAt: '2026-11-27T07:00:00Z',
+            dataStatus: 'Live',
+            creditRating: {
+              agency: 'CARE',
+              ratingGrade: 'CARE-NP BB+',
+              outlook: 'Negative',
+              ratingAction: 'Downgraded',
+              rationale: 'Elevated NPL pressure.',
+              lastRatedDate: '2026-11-10',
+            },
+            regulatoryStanding: 'Alert',
+            nrbAssessment: 'Elevated NPL near 5%.',
+            niaAssessment: null,
+            sebonStatus: null,
+            nepseDisclosures: null,
+            cdscStatus: 'Upcoming promoter share unlock supply.',
+            lockInOverhangFlag: true,
+            tailwinds: [],
+            riskFlags: ['CDSC lock-in unlock pending'],
+            citations: [{ title: 'CDSC Notice', uri: 'https://cdsc.com.np/notice', agency: 'CDSC' }],
+          },
+        },
+      }),
+      'utf8'
+    );
+
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    const gemsAll = evaluateHiddenGems(store, vault, kb, {
+      equityOnly: true,
+      benchmarkFdRatePct: 6.5,
+    });
+    const ebl = gemsAll.gems.find((c) => c.symbol === 'EBL');
+    assert.ok(ebl, 'EBL should qualify as a hidden gem');
+    assert.ok(ebl.archetypes.includes('clean_bfi_yield'));
+    assert.ok(ebl.archetypes.includes('kb_tailwind'));
+    assert.ok(ebl.subScores.knowledgeBaseConviction >= 8);
+    assert.ok(ebl.whyHiddenGem.length >= 2);
+
+    const igClean = evaluateHiddenGems(store, vault, kb, {
+      equityOnly: true,
+      onlyWithKb: true,
+      investmentGradeOnly: true,
+      excludeAlertsAndLockIn: true,
+      beatsFdOnly: true,
+    });
+    assert.ok(igClean.gems.some((c) => c.symbol === 'EBL'));
+    assert.equal(igClean.gems.some((c) => c.symbol === 'HBL'), false);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('70% Annual / 30% Quarterly weighting blends metrics, scores, and Hidden Gems annual filter accurately', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-annual-weight-test-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      [
+        'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low',
+        'ADBL,Agricultural Development Bank Limited,300,305,298,302,300,2,0.67,10000,3020000,302,360,260',
+        'NBL,Nepal Bank Limited,240,244,238,242,240,2,0.83,12000,2904000,242,280,210',
+        'QONLY,Quarterly Only Hydro Limited,250,255,248,250,250,0,0,8000,2000000,250,310,210',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+
+    const makeSnap = (
+      symbol: string,
+      companyName: string,
+      sector: string,
+      fy: string,
+      qLabel: string,
+      eps: number,
+      roe: number,
+      bvps: number
+    ): CompanyFinancialSnapshot => ({
+      symbol,
+      companyName,
+      sector,
+      companyId: symbol,
+      scrapedAt: '2026-11-27T06:00:00.000Z',
+      sourceUrl: `https://www.sharesansar.com/company/${symbol.toLowerCase()}`,
+      periods: [`${qLabel} ${fy}`],
+      tabs: [
+        {
+          key: 'balance_sheet',
+          title: "Balance Sheet (Rs. in '000)",
+          headers: ["Particulars (Rs. in '000)", `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Equity', isSectionHeader: false, particulars: "Total Shareholder's Equity", values: ['18000000'], numericValues: [18_000_000] },
+            { section: 'Assets', isSectionHeader: false, particulars: 'Total Assets', values: ['200000000'], numericValues: [200_000_000] },
+            { section: 'Liabilities', isSectionHeader: false, particulars: 'Total Liabilities', values: ['182000000'], numericValues: [182_000_000] },
+          ],
+        },
+        {
+          key: 'profit_loss',
+          title: "Profit and Loss (Rs. in '000)",
+          headers: ["Particulars (Rs. in '000)", `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Profit', isSectionHeader: false, particulars: 'Profit for the period', values: ['1500000'], numericValues: [1_500_000] },
+          ],
+        },
+        {
+          key: 'key_metrics',
+          title: 'Key Metrics',
+          headers: ['Particulars', `${qLabel} ${fy}`],
+          rows: [
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: [String(eps)], numericValues: [eps] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Net Worth Per Share', values: [String(bvps)], numericValues: [bvps] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Return on Equity', values: [String(roe)], numericValues: [roe] },
+            { section: 'Quality', isSectionHeader: false, particulars: 'Non-Performing Loan (NPL) Ratio', values: ['1.8'], numericValues: [1.8] },
+            { section: 'Quality', isSectionHeader: false, particulars: 'Capital Adequacy Ratio', values: ['13.0'], numericValues: [13.0] },
+          ],
+        },
+      ],
+    });
+
+    // ADBL has both Q4 (Annual) and newer Q1 interim report
+    for (const rec of normalizeShareSansarSnapshot(
+      makeSnap('ADBL', 'Agricultural Development Bank Limited', 'Commercial Banks', '2082/83', '4th Quarter', 20, 12, 220)
+    )) {
+      vault.upsertStatementRecord(rec);
+    }
+    for (const rec of normalizeShareSansarSnapshot(
+      makeSnap('ADBL', 'Agricultural Development Bank Limited', 'Commercial Banks', '2083/84', '1st Quarter', 40, 22, 240)
+    )) {
+      vault.upsertStatementRecord(rec);
+    }
+
+    // NBL peer bank with Q1 interim report (so Commercial Banks has 2 peers for industry averages)
+    for (const rec of normalizeShareSansarSnapshot(
+      makeSnap('NBL', 'Nepal Bank Limited', 'Commercial Banks', '2083/84', '1st Quarter', 18, 11, 260)
+    )) {
+      vault.upsertStatementRecord(rec);
+    }
+
+    // QONLY only has a Q1 interim report (no Annual/Q4 record)
+    for (const rec of normalizeShareSansarSnapshot(
+      makeSnap('QONLY', 'Quarterly Only Hydro Limited', 'Hydro Power', '2083/84', '1st Quarter', 30, 18, 160)
+    )) {
+      vault.upsertStatementRecord(rec);
+    }
+
+    const res70 = evaluateScreenerUniverse(store, vault, { equityOnly: true });
+    assert.equal(res70.annualWeightPct, 70);
+    const adbl70 = res70.rows.find((r) => r.symbol === 'ADBL')!;
+    const qonly70 = res70.rows.find((r) => r.symbol === 'QONLY')!;
+
+    assert.equal(adbl70.reportWeighting.basis, 'blended');
+    assert.equal(adbl70.reportWeighting.hasAnnualReport, true);
+    assert.equal(adbl70.reportWeighting.annualWeightPct, 70);
+    assert.equal(adbl70.reportWeighting.interimWeightPct, 30);
+    assert.equal(adbl70.reportWeighting.annualPeriodLabel, 'Q4 FY 2082/83');
+    assert.equal(adbl70.reportWeighting.interimPeriodLabel, 'Q1 FY 2083/84');
+    assert.equal(adbl70.keyMetrics.eps, 26); // 0.7 * 20 + 0.3 * 40
+    assert.equal(adbl70.keyMetrics.roePct, 15); // 0.7 * 12 + 0.3 * 22
+    assert.ok(adbl70.reportWeighting.annualOverallScore !== null);
+    assert.ok(adbl70.reportWeighting.interimOverallScore !== null);
+    const expectedOverall70 =
+      Math.round(
+        (adbl70.reportWeighting.annualOverallScore! * 0.7 +
+          adbl70.reportWeighting.interimOverallScore! * 0.3) *
+          10
+      ) / 10;
+    assert.equal(adbl70.scores.overallScore, expectedOverall70);
+    assert.match(adbl70.recommendation.whyQualifies, /Weighted 70% Annual/i);
+
+    assert.equal(qonly70.reportWeighting.basis, 'quarterly_only');
+    assert.equal(qonly70.reportWeighting.hasAnnualReport, false);
+    assert.equal(qonly70.keyMetrics.eps, 30);
+
+    // Switching weight to 100% Annual vs 0% Annual (Latest Quarter) shifts blended EPS & ROE cleanly
+    const res100 = evaluateScreenerUniverse(store, vault, { equityOnly: true, annualWeightPct: 100 });
+    const adbl100 = res100.rows.find((r) => r.symbol === 'ADBL')!;
+    assert.equal(adbl100.keyMetrics.eps, 20);
+    assert.equal(adbl100.keyMetrics.roePct, 12);
+
+    const res0 = evaluateScreenerUniverse(store, vault, { equityOnly: true, annualWeightPct: 0 });
+    const adbl0 = res0.rows.find((r) => r.symbol === 'ADBL')!;
+    assert.equal(adbl0.keyMetrics.eps, 40);
+    assert.equal(adbl0.keyMetrics.roePct, 22);
+
+    // Hidden Gems annual report filter & weighting
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+    const gemsAnnualOnly = evaluateHiddenGems(store, vault, kb, {
+      equityOnly: true,
+      annualWeightPct: 70,
+      requireAnnualReport: true,
+    });
+    assert.equal(gemsAnnualOnly.annualWeightPct, 70);
+    assert.ok(gemsAnnualOnly.gems.every((g) => g.screenerRow.reportWeighting.hasAnnualReport));
+    assert.equal(gemsAnnualOnly.gems.some((g) => g.symbol === 'QONLY'), false);
+
+    // Annual Report Pricing & Valuation Lab Dossier verification
+    const valUniverse = getValuationUniverseSummary(store, vault, kb, {
+      equityOnly: true,
+      annualWeightPct: 70,
+    });
+    assert.equal(valUniverse.annualWeightPct, 70);
+    assert.equal(valUniverse.withAnnualReports, 1);
+    assert.ok(valUniverse.candidates.some((c) => c.symbol === 'ADBL' && c.hasAnnualReport));
+
+    const dossier = buildCompanyValuationDossier(store, vault, kb, 'ADBL', {
+      equityOnly: true,
+      annualWeightPct: 70,
+    });
+    assert.ok(dossier, 'Valuation dossier should be built for ADBL');
+    assert.equal(dossier.annualWeightPct, 70);
+    assert.equal(dossier.forensics.hasAnnualReport, true);
+    assert.equal(dossier.forensics.annualEps, 20);
+    assert.equal(dossier.forensics.interimEps, 40);
+    assert.equal(dossier.forensics.annualVsInterimDivergence.flag, 'Interim Elevated');
+    assert.ok(dossier.models.filter((m) => m.available).length >= 4);
+    assert.ok(dossier.compositeFairValue !== null && dossier.compositeFairValue > 0);
+    assert.equal(dossier.scenarios.length, 3);
+    assert.equal(dossier.sensitivityGrid.keValues.length, 5);
+    assert.equal(dossier.sensitivityGrid.cells.length, 5);
+    assert.ok(dossier.swot.strengths.length >= 1);
+    assert.ok(dossier.swot.opportunities.length >= 1);
+    assert.ok(dossier.swot.risks.length >= 1);
+    assert.ok(dossier.swot.futureWorthVerdict.considerableInvestmentScore > 0);
+
+    // Valuation Health Score & Annual Report Dissector vs Industry Peers
+    const adblCand = valUniverse.candidates.find((c) => c.symbol === 'ADBL')!;
+    assert.ok(adblCand.valuationHealthScore >= 0 && adblCand.valuationHealthScore <= 100);
+    assert.ok(adblCand.safetyScore >= 0 && adblCand.growthScore >= 0);
+
+    const hs = dossier.valuationHealthScore;
+    assert.ok(hs.overallScore > 0 && hs.overallScore <= 100);
+    assert.ok(hs.safetyScore > 0 && hs.safetyScore <= 100);
+    assert.ok(hs.growthScore > 0 && hs.growthScore <= 100);
+    assert.equal(hs.pillars.length, 4);
+    assert.equal(
+      hs.pillars.reduce((s, p) => s + p.weightPct, 0),
+      100
+    );
+    assert.ok(hs.metricsBreakdown.length >= 8);
+    assert.equal(hs.hasAnnualReport, true);
+
+    const diss = dossier.annualReportDissector;
+    assert.equal(diss.peerCount, 2); // ADBL + NBL in Commercial Banks
+    assert.equal(diss.annualVerifiedPeerCount, 1);
+    assert.equal(diss.sections.length, 4);
+    assert.equal(diss.peerMatrix.length, 2);
+    assert.equal(diss.industryAverages.roePct, 13); // avg of ADBL (15%) and NBL (11%)
+    assert.equal(diss.industryAverages.eps, 22); // avg of ADBL (26) and NBL (18)
+    const roeDissect = diss.sections
+      .flatMap((s) => s.metrics)
+      .find((m) => m.key === 'roePct');
+    assert.ok(roeDissect);
+    assert.equal(roeDissect.annualReportValue, 12);
+    assert.equal(roeDissect.interimValue, 22);
+    assert.equal(roeDissect.companyValue, 15);
+
+    // Master Multi-Factor Screener verification
+    const master = computeMasterScreener(store, vault, kb, {
+      equityOnly: true,
+      annualWeightPct: 70,
+    });
+    assert.equal(master.annualWeightPct, 70);
+    assert.equal(master.totalSymbols, 3);
+    assert.equal(master.presetCounts.master_all, 3);
+    assert.ok(master.sectors.includes('Commercial Banks'));
+    const adblMaster = master.rows.find((r) => r.symbol === 'ADBL')!;
+    assert.ok(adblMaster);
+    assert.equal(adblMaster.hasAnnualReport, true);
+    assert.ok(adblMaster.masterScore >= 0 && adblMaster.masterScore <= 100);
+    assert.ok(adblMaster.liquidity.playerInterestScore >= 0);
+    assert.ok(adblMaster.liquidity.avgTurnover20Cr > 0);
+    assert.ok(adblMaster.technical.technicalScore >= 0);
+    assert.ok(adblMaster.valuation.valuationHealthScore !== null);
+    assert.ok(adblMaster.tenX.tenXScore >= 0 && adblMaster.tenX.tenXScore <= 100);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+

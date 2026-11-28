@@ -5,6 +5,7 @@ import {
   Database,
   FileText,
   Gem,
+  LayoutGrid,
   Scale,
 } from 'lucide-react';
 
@@ -14,6 +15,7 @@ export type FundamentalMenuId =
   | 'gems'
   | 'monitor'
   | 'annual-reports'
+  | 'strategic-outlook'
   | 'financials-vault';
 
 interface FundamentalMenuBarProps {
@@ -46,6 +48,7 @@ export const FundamentalMenuBar: React.FC<FundamentalMenuBarProps> = ({
       icon: CalendarClock,
     },
     { id: 'annual-reports', label: 'Annual Reports', icon: FileText },
+    { id: 'strategic-outlook', label: 'Strategic Heat Map', icon: LayoutGrid },
     { id: 'financials-vault', label: 'Quarterly Financials Vault', icon: Database },
   ];
 

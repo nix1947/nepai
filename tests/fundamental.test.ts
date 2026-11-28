@@ -31,6 +31,7 @@ import {
 } from '../server/fundamental/nepalCalendar.ts';
 import { RegulatoryKnowledgeBase } from '../server/fundamental/regulatoryKnowledgeBase.ts';
 import { computeSectorValuation } from '../server/fundamental/sectorMethodology.ts';
+import { buildStrategicOutlookHeatmap } from '../server/fundamental/strategicOutlookEngine.ts';
 import { MarketStore } from '../server/marketStore.ts';
 import {
   buildFinancialCsv,
@@ -1507,6 +1508,170 @@ test('computeComingQuarterOutlook identifies Blow Up vs Blow Down catalysts with
   assert.ok(bearOutlook.reasons.every((r) => r.includes('[Ref:')));
   assert.ok(bearOutlook.references.length >= 1);
 });
+
+test('buildStrategicOutlookHeatmap categorizes management quality, growth potential, and historical outperformance while sanitizing outliers', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-strategic-heatmap-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      [
+        'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low',
+        'COMP,Compounder Bank Limited,500,510,495,505,500,5,1.0,15000,7575000,505,560,410',
+        'LAGG,Lagging Microfinance Limited,320,324,315,316,320,-4,-1.25,5000,1580000,316,420,290',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    const makeSnapshot = (
+      symbol: string,
+      companyName: string,
+      sector: string,
+      periodLabel: string,
+      roe: number,
+      eps: number,
+      np: number,
+      rev: number,
+      npl: number,
+      reserves: number,
+      sc: number
+    ): CompanyFinancialSnapshot => ({
+      symbol,
+      companyName,
+      sector,
+      companyId: symbol,
+      periods: [periodLabel],
+      scrapedAt: '2026-11-27T00:00:00Z',
+      sourceUrl: 'https://www.sharesansar.com',
+      tabs: [
+        {
+          key: 'ratios',
+          title: 'Key Metrics',
+          headers: ['Particulars', periodLabel],
+          rows: [
+            { section: 'Ratios', particulars: 'Basic Earnings Per Share', isSectionHeader: false, values: [String(eps)], numericValues: [eps] },
+            { section: 'Ratios', particulars: 'Return on Equity', isSectionHeader: false, values: [String(roe)], numericValues: [roe] },
+            { section: 'Ratios', particulars: 'Return on Assets', isSectionHeader: false, values: ['1.8'], numericValues: [1.8] },
+            { section: 'Ratios', particulars: 'Non-Performing Loan (NPL) Ratio', isSectionHeader: false, values: [String(npl)], numericValues: [npl] },
+            { section: 'Ratios', particulars: 'Capital Adequacy Ratio', isSectionHeader: false, values: ['13.5'], numericValues: [13.5] },
+          ],
+        },
+        {
+          key: 'balance',
+          title: "Balance Sheet (Rs. in '000)",
+          headers: ["Particulars (Rs. in '000)", periodLabel],
+          rows: [
+            { section: 'Equity', particulars: 'Paid Up Capital', isSectionHeader: false, values: [String(sc / 1000)], numericValues: [sc / 1000] },
+            { section: 'Equity', particulars: 'Reserves', isSectionHeader: false, values: [String(reserves / 1000)], numericValues: [reserves / 1000] },
+          ],
+        },
+        {
+          key: 'pnl',
+          title: "Profit and Loss (Rs. in '000)",
+          headers: ["Particulars (Rs. in '000)", periodLabel],
+          rows: [
+            { section: 'Income', particulars: 'Total Operating Income', isSectionHeader: false, values: [String(rev / 1000)], numericValues: [rev / 1000] },
+            { section: 'Profit', particulars: 'Profit for the period', isSectionHeader: false, values: [String(np / 1000)], numericValues: [np / 1000] },
+          ],
+        },
+      ],
+    });
+
+    const snapshots = [
+      makeSnapshot(
+        'COMP',
+        'Compounder Bank Limited',
+        'Commercial Banks',
+        'Annual Report 2081/2082',
+        11.0,
+        18.0,
+        2_200_000_000,
+        8_000_000_000,
+        1.4,
+        9_500_000_000,
+        10_000_000_000
+      ),
+      makeSnapshot(
+        'COMP',
+        'Compounder Bank Limited',
+        'Commercial Banks',
+        'Annual Report 2082/2083',
+        21.0,
+        28.5,
+        3_200_000_000,
+        10_500_000_000,
+        0.95,
+        11_500_000_000,
+        10_000_000_000
+      ),
+      makeSnapshot(
+        'LAGG',
+        'Lagging Microfinance Limited',
+        'Microfinance',
+        'Annual Report 2081/2082',
+        5833333333.33,
+        24.0,
+        400_000_000,
+        1_200_000_000,
+        3.2,
+        250_000_000,
+        1_000_000_000
+      ),
+      makeSnapshot(
+        'LAGG',
+        'Lagging Microfinance Limited',
+        'Microfinance',
+        'Annual Report 2082/2083',
+        2.5,
+        4.0,
+        120_000_000,
+        800_000_000,
+        7.8,
+        180_000_000,
+        1_000_000_000
+      ),
+    ];
+    for (const snap of snapshots) {
+      for (const rec of normalizeShareSansarSnapshot(snap)) {
+        vault.upsertStatementRecord(rec);
+      }
+    }
+
+    const res = buildStrategicOutlookHeatmap(store, vault, kb, {
+      equityOnly: true,
+      now: new Date('2026-11-28T00:00:00Z'),
+    });
+
+    assert.equal(res.totalCompanies, 2);
+    assert.equal(res.multiFyCompanies, 2);
+
+    const comp = res.rows.find((r) => r.symbol === 'COMP');
+    const lagg = res.rows.find((r) => r.symbol === 'LAGG');
+    assert.ok(comp && lagg);
+
+    assert.equal(comp.baselineMode, 'self-multi-fy');
+    assert.equal(comp.outperformanceStatus, 'Outperforming');
+    assert.equal(comp.quadrant, 'Compounders');
+    assert.ok(comp.managementQualityScore >= 65);
+    assert.ok(comp.growthPotentialScore >= 60);
+    assert.ok(comp.outperformanceScore > 15);
+    assert.equal(comp.histRoePct, 11);
+
+    // Corrupt ROE 5833333333.33 must be filtered out from LAGG's historical average
+    assert.equal(lagg.histRoePct, null);
+    assert.equal(lagg.outperformanceStatus, 'Lagging');
+    assert.equal(lagg.quadrant, 'Restructuring Watch');
+    assert.ok(lagg.outperformanceScore < -15);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 
 
 

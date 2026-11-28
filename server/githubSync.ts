@@ -45,6 +45,14 @@ export interface GitHubPushProjectResult {
   createdRepo: boolean;
 }
 
+export interface GitHubPushDataResult {
+  committed: boolean;
+  commitSha: string | null;
+  filesChanged: number;
+  totalDataFiles: number;
+  message: string;
+}
+
 export function validateGitHubConfig(cfg: GitHubSyncConfig): {
   owner: string;
   repoName: string;
@@ -638,6 +646,263 @@ export async function pushDayCsvToGitHub(
     committed: true,
     message: `Committed ${cleanPath}/${dateStr}.csv to ${owner}/${repoName}@${branch}.`,
   };
+}
+
+export function collectDataFiles(
+  dataDir: string,
+  cleanPath = 'data'
+): Array<{ repoPath: string; contentBase64: string; gitSha: string }> {
+  const root = path.resolve(dataDir);
+  if (!fs.existsSync(root)) return [];
+  const normalizedPrefix = cleanPath.replace(/^\/+|\/+$/g, '') || 'data';
+  const ignoredFiles = new Set(['.DS_Store', 'scheduler.json']);
+  const ignoredDirs = new Set(['.git', 'node_modules']);
+  const files: Array<{ repoPath: string; contentBase64: string; gitSha: string }> = [];
+
+  const walk = (dir: string) => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = path.resolve(dir, entry.name);
+      if (!full.startsWith(root + path.sep)) continue;
+      if (entry.isDirectory()) {
+        if (ignoredDirs.has(entry.name)) continue;
+        walk(full);
+      } else if (entry.isFile()) {
+        if (ignoredFiles.has(entry.name)) continue;
+        if (entry.name.startsWith('.env') || entry.name.endsWith('.log')) continue;
+        const stat = fs.statSync(full);
+        if (stat.size > 5 * 1024 * 1024) continue;
+        const buf = fs.readFileSync(full);
+        const rel = path.relative(root, full).replace(/\\/g, '/');
+        if (!rel || rel.startsWith('..')) continue;
+        const gitSha = crypto
+          .createHash('sha1')
+          .update(`blob ${buf.length}\0`)
+          .update(buf)
+          .digest('hex');
+        files.push({
+          repoPath: `${normalizedPrefix}/${rel}`,
+          contentBase64: buf.toString('base64'),
+          gitSha,
+        });
+      }
+    }
+  };
+
+  walk(root);
+  return files.sort((a, b) => a.repoPath.localeCompare(b.repoPath));
+}
+
+let dataPushChain: Promise<unknown> = Promise.resolve();
+
+function enqueueDataPush<T>(task: () => Promise<T>): Promise<T> {
+  const next = dataPushChain.then(task, task);
+  dataPushChain = next.catch(() => undefined);
+  return next;
+}
+
+export async function pushDataDirectoryToGitHub(
+  dataDir: string,
+  cfg: GitHubSyncConfig,
+  commitMessage?: string
+): Promise<GitHubPushDataResult> {
+  return enqueueDataPush(async () => {
+    const headers = authHeaders(true);
+    const { owner, repoName, branch, cleanPath } = validateGitHubConfig(cfg);
+    const localFiles = collectDataFiles(dataDir, cleanPath);
+
+    if (localFiles.length === 0) {
+      return {
+        committed: false,
+        commitSha: null,
+        filesChanged: 0,
+        totalDataFiles: 0,
+        message: 'No data files found to push.',
+      };
+    }
+
+    const refRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+        repoName
+      )}/git/ref/heads/${encodeURIComponent(branch)}`,
+      { headers }
+    );
+    if (!refRes.ok) {
+      const errText = await refRes.text();
+      throw new Error(
+        `Branch ${owner}/${repoName}@${branch} lookup failed (${refRes.status}): ${errText.slice(0, 160)}`
+      );
+    }
+    const refData = (await refRes.json()) as { object?: { sha?: string } };
+    const parentCommitSha = refData.object?.sha;
+    if (!parentCommitSha) {
+      throw new Error(`Could not resolve HEAD commit for ${owner}/${repoName}@${branch}.`);
+    }
+
+    const commitMetaRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+        repoName
+      )}/git/commits/${encodeURIComponent(parentCommitSha)}`,
+      { headers }
+    );
+    if (!commitMetaRes.ok) {
+      const errText = await commitMetaRes.text();
+      throw new Error(`Commit lookup failed (${commitMetaRes.status}): ${errText.slice(0, 160)}`);
+    }
+    const commitMeta = (await commitMetaRes.json()) as { tree?: { sha?: string } };
+    const parentTreeSha = commitMeta.tree?.sha;
+    if (!parentTreeSha) {
+      throw new Error(`Could not resolve base tree SHA for ${owner}/${repoName}@${branch}.`);
+    }
+
+    const existingBlobShas = new Map<string, string>();
+    const prevTreeRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+        repoName
+      )}/git/trees/${encodeURIComponent(parentTreeSha)}?recursive=1`,
+      { headers }
+    );
+    if (prevTreeRes.ok) {
+      const prevTreeData = (await prevTreeRes.json()) as {
+        truncated?: boolean;
+        tree?: Array<{ path?: string; type?: string; sha?: string }>;
+      };
+      if (!prevTreeData.truncated && Array.isArray(prevTreeData.tree)) {
+        for (const entry of prevTreeData.tree) {
+          if (entry.type === 'blob' && entry.path && entry.sha) {
+            existingBlobShas.set(entry.path, entry.sha);
+          }
+        }
+      }
+    }
+
+    const changedFiles = localFiles.filter(
+      (file) => existingBlobShas.get(file.repoPath) !== file.gitSha
+    );
+
+    if (changedFiles.length === 0) {
+      return {
+        committed: false,
+        commitSha: parentCommitSha,
+        filesChanged: 0,
+        totalDataFiles: localFiles.length,
+        message: `GitHub ${cleanPath}/ is already up to date (${localFiles.length} file(s) matched).`,
+      };
+    }
+
+    const uploadedEntries: Array<{ path: string; mode: '100644'; type: 'blob'; sha: string }> = [];
+    const batchSize = 4;
+    for (let i = 0; i < changedFiles.length; i += batchSize) {
+      const batch = changedFiles.slice(i, i + batchSize);
+      const created = await Promise.all(
+        batch.map(async (file) => {
+          let blobRes: Response | null = null;
+          for (let attempt = 0; attempt < 4; attempt++) {
+            blobRes = await fetch(
+              `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+                repoName
+              )}/git/blobs`,
+              {
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  content: file.contentBase64,
+                  encoding: 'base64',
+                }),
+              }
+            );
+            if (blobRes.status !== 409 && blobRes.status !== 403 && blobRes.status !== 429) break;
+            const retryAfter = Number(blobRes.headers.get('retry-after') || '0');
+            const waitMs =
+              Number.isFinite(retryAfter) && retryAfter > 0
+                ? Math.min(30_000, retryAfter * 1000)
+                : 1500 * Math.pow(2, attempt);
+            await new Promise((r) => setTimeout(r, waitMs));
+          }
+          if (!blobRes || !blobRes.ok) {
+            const errText = blobRes ? await blobRes.text() : 'no response';
+            throw new Error(
+              `Blob upload failed for ${file.repoPath} (${blobRes?.status ?? 0}): ${errText.slice(0, 140)}`
+            );
+          }
+          const blob = (await blobRes.json()) as { sha: string };
+          return {
+            path: file.repoPath,
+            mode: '100644' as const,
+            type: 'blob' as const,
+            sha: blob.sha,
+          };
+        })
+      );
+      uploadedEntries.push(...created);
+    }
+
+    const treeRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+        repoName
+      )}/git/trees`,
+      {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          base_tree: parentTreeSha,
+          tree: uploadedEntries,
+        }),
+      }
+    );
+    if (!treeRes.ok) {
+      const errText = await treeRes.text();
+      throw new Error(`Tree update failed (${treeRes.status}): ${errText.slice(0, 180)}`);
+    }
+    const treeData = (await treeRes.json()) as { sha: string };
+
+    const msg =
+      commitMessage?.trim() ||
+      `chore(data): update ${changedFiles.length} NEPSE data & knowledge base file(s)`;
+
+    const commitRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+        repoName
+      )}/git/commits`,
+      {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: msg,
+          tree: treeData.sha,
+          parents: [parentCommitSha],
+        }),
+      }
+    );
+    if (!commitRes.ok) {
+      const errText = await commitRes.text();
+      throw new Error(`Commit creation failed (${commitRes.status}): ${errText.slice(0, 180)}`);
+    }
+    const commitData = (await commitRes.json()) as { sha: string };
+
+    const patchRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+        repoName
+      )}/git/refs/heads/${encodeURIComponent(branch)}`,
+      {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sha: commitData.sha, force: false }),
+      }
+    );
+    if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      throw new Error(`Branch update failed (${patchRes.status}): ${errText.slice(0, 180)}`);
+    }
+
+    return {
+      committed: true,
+      commitSha: commitData.sha,
+      filesChanged: changedFiles.length,
+      totalDataFiles: localFiles.length,
+      message: `Pushed ${changedFiles.length} updated file(s) under ${cleanPath}/ to ${owner}/${repoName}@${branch}.`,
+    };
+  });
 }
 
 const WORKFLOW_FILE_RE = /^[A-Za-z0-9_.-]+\.ya?ml$/;

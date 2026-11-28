@@ -139,6 +139,7 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
 
   // Harvest / Enrichment actions
   const [harvesting, setHarvesting] = useState<string | null>(null);
+  const [crawlingAll, setCrawlingAll] = useState<boolean>(false);
   const [enrichingSymbol, setEnrichingSymbol] = useState<string | null>(null);
   const [enrichingBatch, setEnrichingBatch] = useState<boolean>(false);
   const [actionBanner, setActionBanner] = useState<{
@@ -256,6 +257,54 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
       });
     } finally {
       setHarvesting(null);
+    }
+  };
+
+  const handleCrawlAllWithGemini = async () => {
+    setCrawlingAll(true);
+    setActionBanner(null);
+    try {
+      const res = await fetch('/api/knowledge-base/crawl-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agencies: ['ICRA', 'CARE', 'NRB', 'NIA', 'SEBON', 'NEPSE', 'CDSC'],
+          enrichLimit: 6,
+          annualDistillLimit: 2,
+          includeQuarterly: true,
+          equityOnly,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Full Gemini KB crawl failed');
+      const details = [
+        `${json.addedNotices ?? 0} notice(s) across NRB/NIA/SEBON/CDSC/ICRA/CARE/NEPSE`,
+      ];
+      if (json.enrichedSymbols?.length) {
+        details.push(`enriched ${json.enrichedSymbols.join(', ')}`);
+      }
+      if (json.annualDistilledSymbols?.length) {
+        details.push(`annual reports (${json.annualDistilledSymbols.join(', ')})`);
+      }
+      if (json.quarterlyRefreshed?.length) {
+        details.push(`quarterly filings (${json.quarterlyRefreshed.join(', ')})`);
+      }
+      const warnText =
+        Array.isArray(json.warnings) && json.warnings.length > 0
+          ? ` Notes: ${json.warnings.slice(0, 2).join(' · ')}`
+          : '';
+      setActionBanner({
+        kind: json.geminiConfigured ? 'info' : 'warning',
+        text: `Gemini KB crawl complete: ${details.join(' · ')}.${warnText}`,
+      });
+      await loadAll();
+    } catch (err) {
+      setActionBanner({
+        kind: 'error',
+        text: err instanceof Error ? err.message : 'Full Gemini KB crawl failed',
+      });
+    } finally {
+      setCrawlingAll(false);
     }
   };
 
@@ -643,6 +692,23 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              disabled={crawlingAll || harvesting !== null}
+              onClick={() => void handleCrawlAllWithGemini()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+            >
+              {crawlingAll ? (
+                <RefreshCw className="w-3 h-3 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3" />
+              )}
+              <span>
+                {crawlingAll
+                  ? 'Crawling with Gemini…'
+                  : 'Crawl All with Gemini & Update KB'}
+              </span>
+            </button>
             {[
               { label: 'All Agencies', agencies: ['ICRA', 'CARE', 'NRB', 'NIA', 'SEBON', 'NEPSE', 'CDSC'] as RegulatoryAgency[] },
               { label: 'ICRA & CARE', agencies: ['ICRA', 'CARE'] as RegulatoryAgency[] },
@@ -653,9 +719,9 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
               <button
                 key={btn.label}
                 type="button"
-                disabled={harvesting !== null}
+                disabled={harvesting !== null || crawlingAll}
                 onClick={() => void handleHarvestAgencies(btn.label, btn.agencies)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 whitespace-nowrap transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
               >
                 <RefreshCw className={`w-3 h-3 ${harvesting === btn.label ? 'animate-spin text-blue-600' : ''}`} />
                 <span>{harvesting === btn.label ? `Pulling ${btn.label}…` : `Pull ${btn.label}`}</span>

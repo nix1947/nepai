@@ -54,6 +54,7 @@ import { evaluateScreenerUniverse } from './server/fundamental/investorScoringEn
 import { computeMasterScreener } from './server/fundamental/masterScreenerEngine.ts';
 import { getActiveNepalFiscalQuarter } from './server/fundamental/nepalCalendar.ts';
 import { ALL_AGENCIES, RegulatoryKnowledgeBase } from './server/fundamental/regulatoryKnowledgeBase.ts';
+import { buildStrategicOutlookHeatmap } from './server/fundamental/strategicOutlookEngine.ts';
 import type {
   ConsensusTag,
   HiddenGemArchetype,
@@ -1515,6 +1516,26 @@ async function startServer() {
     }
   });
 
+  app.get('/api/annual-reports/strategic-outlook', (req, res) => {
+    try {
+      const equityOnly = req.query.equityOnly !== 'false';
+      fundamentalMonitor.syncEntriesFromMarketAndVault(equityOnly);
+      res.json(
+        buildStrategicOutlookHeatmap(store, fundamentalVault, regulatoryKb, {
+          equityOnly,
+          benchmarkFdRatePct: parseBenchmarkFdRate(),
+        })
+      );
+    } catch (err) {
+      res.status(500).json({
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Failed to build Strategic Outlook Heat Map',
+      });
+    }
+  });
+
   app.get('/api/annual-reports/company/:symbol', (req, res) => {
     try {
       const symbol = String(req.params.symbol || '').trim().toUpperCase();
@@ -1716,6 +1737,167 @@ async function startServer() {
     } catch (err) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'Failed to enrich companies from regulatory KB',
+      });
+    }
+  });
+
+  app.post('/api/knowledge-base/crawl-all', async (req, res) => {
+    try {
+      const rawAgencies = Array.isArray(req.body?.agencies)
+        ? req.body.agencies
+            .map((a: unknown) => String(a || '').trim().toUpperCase())
+            .filter((a: string): a is RegulatoryAgency => ALL_AGENCIES.includes(a as RegulatoryAgency))
+        : ALL_AGENCIES;
+      const agencies = rawAgencies.length > 0 ? rawAgencies : ALL_AGENCIES;
+
+      const enrichLimit = Math.max(
+        0,
+        Math.min(12, Number.isFinite(Number(req.body?.enrichLimit)) ? Number(req.body.enrichLimit) : 6)
+      );
+      const annualDistillLimit = Math.max(
+        0,
+        Math.min(
+          6,
+          Number.isFinite(Number(req.body?.annualDistillLimit))
+            ? Number(req.body.annualDistillLimit)
+            : 2
+        )
+      );
+      const includeQuarterly = req.body?.includeQuarterly !== false;
+      const equityOnly = req.body?.equityOnly !== false;
+
+      const explicitSymbols: string[] = Array.isArray(req.body?.symbols)
+        ? req.body.symbols
+            .map((s: unknown) => String(s || '').trim().toUpperCase())
+            .filter(isValidSymbol)
+        : [];
+
+      // 1. Direct agency scrapes + Gemini Search Grounding across NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE (incl. Annual & Quarterly notices)
+      const harvest = await regulatoryKb.harvestAgencies(agencies, store);
+      const warnings = [...harvest.warnings];
+      const geminiConfigured = regulatoryKb.isGeminiConfigured();
+
+      // 2. Optionally check/pull due missing quarterly reports (up to 4 leaders so request completes briskly)
+      const quarterlyRefreshed: string[] = [];
+      if (includeQuarterly) {
+        const activeQ = getActiveNepalFiscalQuarter(new Date(), 15);
+        if (activeQ.isDueNow) {
+          const dates = store.getDates();
+          const latest = dates[dates.length - 1];
+          const ranked = latest
+            ? store
+                .getDayPrices(latest, equityOnly)
+                .sort((a, b) => b.turnover - a.turnover)
+                .map((r) => r.symbol.toUpperCase())
+            : fundamentalVault.getAllLedgers().map((l) => l.symbol);
+          const missingQ = ranked
+            .filter((sym) => !fundamentalVault.hasQuarterData(sym, activeQ.fiscalYear, activeQ.quarter))
+            .slice(0, 4);
+          for (const sym of missingQ) {
+            try {
+              const qRes = await fundamentalMonitor.refreshSymbol(sym, 'manual-batch', false, {
+                force: false,
+                fiscalYear: activeQ.fiscalYear,
+                quarter: activeQ.quarter,
+              });
+              if (!qRes.skipped && qRes.periodsAdded > 0) {
+                quarterlyRefreshed.push(sym);
+              }
+            } catch (qErr) {
+              warnings.push(
+                `Quarterly refresh skipped for ${sym}: ${qErr instanceof Error ? qErr.message : 'failed'}`
+              );
+            }
+          }
+          if (quarterlyRefreshed.length > 0) {
+            fundamentalVault.writeConsolidatedQuarterlyCsv();
+          }
+        }
+      }
+
+      // 3. Gemini Search Grounded Company KB Enrichment & Annual Report Distillation
+      const enrichedSymbols: string[] = [];
+      const annualDistilledSymbols: string[] = [];
+
+      if (geminiConfigured && (enrichLimit > 0 || annualDistillLimit > 0)) {
+        const gemsResp = evaluateHiddenGems(store, fundamentalVault, regulatoryKb, {
+          equityOnly,
+          benchmarkFdRatePct: parseBenchmarkFdRate(),
+          monitorStatusMap: fundamentalMonitor.getStatusMap(),
+        });
+        const rankedPool =
+          explicitSymbols.length > 0
+            ? explicitSymbols
+            : [
+                ...gemsResp.gems.filter((g) => !g.kbEntry).map((g) => g.symbol),
+                ...gemsResp.gems.map((g) => g.symbol),
+              ];
+        const uniquePool = Array.from(new Set(rankedPool));
+
+        if (enrichLimit > 0 && uniquePool.length > 0) {
+          const toEnrich = uniquePool.slice(0, Math.min(6, enrichLimit));
+          try {
+            const enrichOut = await regulatoryKb.enrichCompanies(toEnrich, store, fundamentalVault);
+            for (const entry of enrichOut.updated) enrichedSymbols.push(entry.symbol);
+            warnings.push(...enrichOut.warnings);
+          } catch (enrichErr) {
+            warnings.push(
+              `Company KB enrichment skipped: ${enrichErr instanceof Error ? enrichErr.message : 'failed'}`
+            );
+          }
+        }
+
+        if (annualDistillLimit > 0) {
+          const annualUniverse = getAnnualReportUniverse(store, fundamentalVault, regulatoryKb, {
+            equityOnly,
+          });
+          const annualPool =
+            explicitSymbols.length > 0
+              ? explicitSymbols
+              : [
+                  ...annualUniverse.candidates
+                    .filter((c) => c.aiDistilledFyCount === 0)
+                    .map((c) => c.symbol),
+                  ...annualUniverse.candidates.map((c) => c.symbol),
+                ];
+          for (const sym of Array.from(new Set(annualPool)).slice(0, annualDistillLimit)) {
+            try {
+              const distilled = await distillAnnualReportWithAi(
+                store,
+                fundamentalVault,
+                regulatoryKb,
+                sym,
+                undefined,
+                false
+              );
+              if (!distilled.cached) annualDistilledSymbols.push(sym);
+            } catch (distErr) {
+              warnings.push(
+                `Annual distillation skipped for ${sym}: ${distErr instanceof Error ? distErr.message : 'failed'}`
+              );
+            }
+          }
+        }
+      }
+
+      res.json({
+        geminiConfigured,
+        agencies,
+        addedNotices: harvest.addedNotices,
+        companiesUpdated: harvest.companiesUpdated + enrichedSymbols.length,
+        enrichedSymbols,
+        annualDistilledSymbols,
+        quarterlyRefreshed,
+        directResults: harvest.directResults,
+        warnings: Array.from(new Set(warnings)),
+        summary: regulatoryKb.getSummary(),
+      });
+    } catch (err) {
+      res.status(500).json({
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Failed to crawl regulatory, annual, and quarterly knowledge base',
       });
     }
   });

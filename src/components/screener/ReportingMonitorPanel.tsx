@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Search,
   Settings2,
+  Sparkles,
 } from 'lucide-react';
 import type {
   FundamentalMonitorResponse,
@@ -32,6 +33,7 @@ export const ReportingMonitorPanel: React.FC<ReportingMonitorPanelProps> = ({
   const [query, setQuery] = useState<string>('');
   const [refreshingSymbol, setRefreshingSymbol] = useState<string | null>(null);
   const [savingConfig, setSavingConfig] = useState<boolean>(false);
+  const [crawlingKb, setCrawlingKb] = useState<boolean>(false);
   const [message, setMessage] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
   const loadMonitor = async () => {
@@ -83,6 +85,46 @@ export const ReportingMonitorPanel: React.FC<ReportingMonitorPanelProps> = ({
         kind: 'err',
         text: err instanceof Error ? err.message : 'Batch pull failed',
       });
+    }
+  };
+
+  const triggerGeminiKbCrawl = async () => {
+    setCrawlingKb(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/knowledge-base/crawl-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agencies: ['ICRA', 'CARE', 'NRB', 'NIA', 'SEBON', 'NEPSE', 'CDSC'],
+          enrichLimit: 6,
+          annualDistillLimit: 2,
+          includeQuarterly: true,
+          equityOnly,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Gemini KB crawl failed');
+      const parts = [
+        `Crawled ${json.addedNotices ?? 0} notice(s) across NRB, NIA, SEBON, CDSC, ICRA, CARE & NEPSE`,
+      ];
+      if (json.enrichedSymbols?.length) parts.push(`enriched ${json.enrichedSymbols.join(', ')}`);
+      if (json.annualDistilledSymbols?.length) {
+        parts.push(`distilled Annuals (${json.annualDistilledSymbols.join(', ')})`);
+      }
+      if (json.quarterlyRefreshed?.length) {
+        parts.push(`pulled Qtrs (${json.quarterlyRefreshed.join(', ')})`);
+      }
+      setMessage({ kind: 'ok', text: `${parts.join(' · ')}.` });
+      await loadMonitor();
+      onDataUpdated();
+    } catch (err) {
+      setMessage({
+        kind: 'err',
+        text: err instanceof Error ? err.message : 'Gemini KB crawl failed',
+      });
+    } finally {
+      setCrawlingKb(false);
     }
   };
 
@@ -240,12 +282,29 @@ export const ReportingMonitorPanel: React.FC<ReportingMonitorPanelProps> = ({
             type="button"
             disabled={monitor.batch.active || missingActiveQuarterCount === 0}
             onClick={() => triggerBatch('all')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
           >
             <span>
               {missingActiveQuarterCount === 0
                 ? `${monitor.activeQuarter.quarter} Complete`
                 : `Pull Missing (${missingActiveQuarterCount})`}
+            </span>
+          </button>
+          <button
+            type="button"
+            disabled={crawlingKb || monitor.batch.active}
+            onClick={() => void triggerGeminiKbCrawl()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            {crawlingKb ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5" />
+            )}
+            <span>
+              {crawlingKb
+                ? 'Crawling KB…'
+                : 'Gemini Crawl (Annual + NRB/NIA/SEBON/CDSC)'}
             </span>
           </button>
         </div>

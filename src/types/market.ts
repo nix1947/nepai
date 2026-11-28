@@ -173,12 +173,15 @@ export interface SchedulerConfig {
   githubBranch: string;
   githubDataPath: string;
   pushToGitHub: boolean;
+  crawlKbDaily: boolean;
+  autoCrawlOnSearch: boolean;
+  autoPushOnSearchUpdate: boolean;
 }
 
 export interface SchedulerLogEntry {
   id: string;
   timestamp: string;
-  trigger: 'scheduled' | 'manual' | 'backfill' | 'upload' | 'github';
+  trigger: 'scheduled' | 'manual' | 'backfill' | 'upload' | 'github' | 'kb' | 'search';
   status: 'success' | 'skipped' | 'error';
   tradingDate: string | null;
   rowsSaved: number;
@@ -194,6 +197,10 @@ export interface SchedulerStatus {
   lastRun: SchedulerLogEntry | null;
   history: SchedulerLogEntry[];
   loadedDates: string[];
+  lastKbCrawlDate?: string | null;
+  lastGitHubPushDate?: string | null;
+  lastGitHubPushAt?: string | null;
+  todaySearchedSymbolsCount?: number;
 }
 
 export interface BackfillStatus {

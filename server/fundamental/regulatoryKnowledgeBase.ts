@@ -75,13 +75,13 @@ const AGENCY_SEARCH_SPEC: Record<
     label: 'Securities Board of Nepal (SEBON)',
     domainHint: 'site:sebon.gov.np',
     focus:
-      'Latest SEBON IPO/FPO/Right Share/Debenture pipeline approvals, regulatory circulars, margin lending or lock-in rules, and corporate governance/compliance enforcement notices.',
+      'Latest SEBON IPO/FPO/Right Share/Debenture pipeline approvals, audited annual report / financial filing rules, regulatory circulars, margin lending or lock-in rules, and corporate governance enforcement notices.',
   },
   NEPSE: {
     label: 'Nepal Stock Exchange (NEPSE)',
     domainHint: 'site:nepalstock.com',
     focus:
-      'Latest NEPSE corporate disclosures, book closure / dividend announcements, AGM notices, listing updates, and trading suspension or price-sensitive alerts.',
+      'Latest NEPSE audited Annual Reports, AGM & book closure / dividend announcements, quarterly financial report filings, listing updates, and price-sensitive disclosures.',
   },
   CDSC: {
     label: 'CDS and Clearing Ltd (CDSC)',
@@ -91,11 +91,23 @@ const AGENCY_SEARCH_SPEC: Record<
   },
 };
 
+export function getNepalDateStr(date: Date = new Date()): string {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kathmandu',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return fmt.format(date);
+}
+
 interface PersistedRegulatoryKb {
   notices: RegulatoryKbNotice[];
   companies: Record<string, CompanyKnowledgeBaseEntry>;
   agencyLastFetch: Partial<Record<RegulatoryAgency, string>>;
   lastHarvestAt: string | null;
+  lastDailyCrawlDate: string | null;
+  dailySearchDates: Record<string, string>;
 }
 
 function makeNoticeId(agency: RegulatoryAgency, title: string, url: string | null): string {
@@ -273,6 +285,8 @@ export class RegulatoryKnowledgeBase {
     companies: {},
     agencyLastFetch: {},
     lastHarvestAt: null,
+    lastDailyCrawlDate: null,
+    dailySearchDates: {},
   };
   private loaded = false;
 
@@ -283,6 +297,10 @@ export class RegulatoryKnowledgeBase {
       fs.mkdirSync(vaultDir, { recursive: true });
     }
     this.kbPath = path.join(vaultDir, 'regulatory-kb.json');
+  }
+
+  public isGeminiConfigured(): boolean {
+    return Boolean(process.env.GEMINI_API_KEY?.trim());
   }
 
   public initIfNeeded(): void {
@@ -299,6 +317,12 @@ export class RegulatoryKnowledgeBase {
               ? parsed.agencyLastFetch
               : {},
           lastHarvestAt: typeof parsed.lastHarvestAt === 'string' ? parsed.lastHarvestAt : null,
+          lastDailyCrawlDate:
+            typeof parsed.lastDailyCrawlDate === 'string' ? parsed.lastDailyCrawlDate : null,
+          dailySearchDates:
+            parsed.dailySearchDates && typeof parsed.dailySearchDates === 'object'
+              ? parsed.dailySearchDates
+              : {},
         };
       }
     } catch {
@@ -564,6 +588,147 @@ export class RegulatoryKnowledgeBase {
 
     companies.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     return { summary, notices, companies };
+  }
+
+  public getLastDailyCrawlDate(): string | null {
+    this.initIfNeeded();
+    return this.state.lastDailyCrawlDate ?? null;
+  }
+
+  public setLastDailyCrawlDate(dateStr: string): void {
+    this.initIfNeeded();
+    this.state.lastDailyCrawlDate = dateStr;
+    this.save();
+  }
+
+  public hasDailySearchForDate(symbol: string, dateStr: string = getNepalDateStr()): boolean {
+    this.initIfNeeded();
+    const sym = symbol.trim().toUpperCase();
+    return this.state.dailySearchDates[sym] === dateStr;
+  }
+
+  public getDailySearchCountForDate(dateStr: string = getNepalDateStr()): number {
+    this.initIfNeeded();
+    let count = 0;
+    for (const d of Object.values(this.state.dailySearchDates)) {
+      if (d === dateStr) count++;
+    }
+    return count;
+  }
+
+  public markDailySymbolSearched(symbol: string, dateStr: string = getNepalDateStr()): void {
+    this.initIfNeeded();
+    const sym = symbol.trim().toUpperCase();
+    if (!sym) return;
+    this.state.dailySearchDates[sym] = dateStr;
+    // Prune stale dates older than 30 days so state remains compact
+    const cutoffMs = Date.now() - 30 * 86400 * 1000;
+    const cutoffStr = getNepalDateStr(new Date(cutoffMs));
+    for (const [k, v] of Object.entries(this.state.dailySearchDates)) {
+      if (typeof v !== 'string' || v < cutoffStr) {
+        delete this.state.dailySearchDates[k];
+      }
+    }
+    this.save();
+  }
+
+  public ensureCompanySearchEntry(
+    symbol: string,
+    store: MarketStore,
+    vault: FundamentalVault,
+    dateStr: string = getNepalDateStr()
+  ): CompanyKnowledgeBaseEntry {
+    this.initIfNeeded();
+    const sym = symbol.trim().toUpperCase();
+    const existing = this.state.companies[sym];
+    const nowIso = new Date().toISOString();
+
+    const dates = store.getDates();
+    const latest = dates[dates.length - 1];
+    const priceRow = latest ? store.getDayPrices(latest, false).find((r) => r.symbol === sym) : null;
+    const ledger = vault.getCompanyLedger(sym);
+    const companyName = priceRow?.name || ledger?.companyName || existing?.companyName || sym;
+    const sector = ledger?.sector || existing?.sector || getNepseSector(sym, companyName);
+    const { sectorGroup } = classifySectorGroup(sector, companyName);
+
+    const matchingNotices = this.state.notices.filter(
+      (n) =>
+        n.symbols.includes(sym) ||
+        n.title.toUpperCase().includes(sym) ||
+        n.summary.toUpperCase().includes(sym)
+    );
+
+    const noticeCitations: RegulatoryKbCitation[] = matchingNotices
+      .filter((n) => Boolean(n.url))
+      .slice(0, 4)
+      .map((n) => ({
+        title: n.title,
+        uri: n.url!,
+        agency: n.agency,
+      }));
+
+    const existingCitations = existing?.citations || [];
+    const seenUris = new Set(existingCitations.map((c) => c.uri));
+    const mergedCitations = [...existingCitations];
+    for (const c of noticeCitations) {
+      if (!seenUris.has(c.uri)) {
+        seenUris.add(c.uri);
+        mergedCitations.push(c);
+      }
+    }
+
+    const latestStmt = ledger?.statements?.[ledger.statements.length - 1];
+    const extraDisclosures = latestStmt
+      ? `${latestStmt.fiscalYear} ${latestStmt.quarter}${
+          latestStmt.eps !== null && latestStmt.eps !== undefined ? ` · EPS Rs ${latestStmt.eps}` : ''
+        }${
+          latestStmt.roePct !== null && latestStmt.roePct !== undefined
+            ? ` · ROE ${latestStmt.roePct}%`
+            : ''
+        }`
+      : null;
+
+    const entry: CompanyKnowledgeBaseEntry = existing
+      ? {
+          ...existing,
+          companyName,
+          sector,
+          sectorGroup,
+          updatedAt: nowIso,
+          nepseDisclosures: existing.nepseDisclosures || extraDisclosures,
+          citations: mergedCitations.slice(0, 6),
+        }
+      : {
+          symbol: sym,
+          companyName,
+          sector,
+          sectorGroup,
+          updatedAt: nowIso,
+          dataStatus: 'Seeded',
+          creditRating: {
+            agency: null,
+            ratingGrade: null,
+            outlook: 'Not Rated',
+            ratingAction: null,
+            rationale: null,
+            lastRatedDate: null,
+          },
+          regulatoryStanding: 'Unknown',
+          nrbAssessment: null,
+          niaAssessment: null,
+          sebonStatus: null,
+          nepseDisclosures: extraDisclosures,
+          cdscStatus: null,
+          lockInOverhangFlag: false,
+          tailwinds: [],
+          riskFlags: [],
+          citations: mergedCitations.slice(0, 6),
+        };
+
+    this.state.companies[sym] = entry;
+    this.state.dailySearchDates[sym] = dateStr;
+    this.save();
+    return entry;
   }
 
   private buildUniverseLookup(store: MarketStore): Array<{
@@ -1162,8 +1327,10 @@ Return ONLY valid JSON matching this schema:
 
     // Supplement with Gemini Search Grounding targeting those official domains
     const grounded = await this.searchGroundedAgencyHarvest(agencies, universe);
+    let groundedCompaniesUpdated = 0;
     for (const n of grounded.notices) {
       this.upsertNotice(n);
+      groundedCompaniesUpdated += this.syncNoticeToCompanies(n, universe);
       addedNotices++;
       this.state.agencyLastFetch[n.agency] = nowIso;
     }
@@ -1176,7 +1343,10 @@ Return ONLY valid JSON matching this schema:
 
     return {
       addedNotices,
-      companiesUpdated: Math.max(directCompaniesUpdated, grounded.companiesUpdated),
+      companiesUpdated: Math.max(
+        directCompaniesUpdated + groundedCompaniesUpdated,
+        grounded.companiesUpdated
+      ),
       directResults,
       warnings,
       summary: this.getSummary(),

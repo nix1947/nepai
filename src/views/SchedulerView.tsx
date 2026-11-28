@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { CalendarClock, Download, GitBranch, Play, RefreshCw, Trash2, Upload } from 'lucide-react';
+import {
+  CalendarClock,
+  Database,
+  Download,
+  GitBranch,
+  Play,
+  RefreshCw,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { DataTable, type ColumnDef } from '../components/DataTable';
+import type { KnowledgeBaseSummary } from '../types/fundamental';
 import type {
   BackfillStatus,
   SchedulerLogEntry,
@@ -60,15 +71,24 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
   const [pushRepoName, setPushRepoName] = useState('nix1947/nepai');
   const [pushBranchName, setPushBranchName] = useState('main');
   const [pushPrivate, setPushPrivate] = useState(false);
+  const [kbSummary, setKbSummary] = useState<KnowledgeBaseSummary | null>(null);
+  const [crawlingKb, setCrawlingKb] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   const loadStatus = async () => {
     try {
-      const res = await fetch('/api/scheduler/status');
+      const [res, kbRes] = await Promise.all([
+        fetch('/api/scheduler/status'),
+        fetch('/api/screener/knowledge-base?agency=ALL'),
+      ]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setStatus(data);
       setBackfill(data.backfill ?? null);
+      if (kbRes.ok) {
+        const kbJson = await kbRes.json();
+        if (kbJson?.summary) setKbSummary(kbJson.summary as KnowledgeBaseSummary);
+      }
       if (data.config) {
         setEnabled(data.config.enabled);
         setTime(data.config.time);
@@ -239,6 +259,55 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
       setNotice({ kind: 'error', text: err instanceof Error ? err.message : 'Push failed' });
     } finally {
       setPushingProj(false);
+    }
+  };
+
+  const runGeminiKbCrawl = async () => {
+    setCrawlingKb(true);
+    setNotice(null);
+    try {
+      const res = await fetch('/api/knowledge-base/crawl-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agencies: ['ICRA', 'CARE', 'NRB', 'NIA', 'SEBON', 'NEPSE', 'CDSC'],
+          enrichLimit: 6,
+          annualDistillLimit: 2,
+          includeQuarterly: true,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Knowledge Base crawl failed');
+      if (json.summary) setKbSummary(json.summary as KnowledgeBaseSummary);
+
+      const parts = [
+        `Indexed ${json.addedNotices ?? 0} notice(s) across NRB, NIA, SEBON, CDSC, ICRA, CARE & NEPSE`,
+      ];
+      if (json.enrichedSymbols?.length) {
+        parts.push(`enriched ${json.enrichedSymbols.join(', ')}`);
+      }
+      if (json.annualDistilledSymbols?.length) {
+        parts.push(`distilled Annual Reports (${json.annualDistilledSymbols.join(', ')})`);
+      }
+      if (json.quarterlyRefreshed?.length) {
+        parts.push(`pulled quarterly filings (${json.quarterlyRefreshed.join(', ')})`);
+      }
+      const warnSuffix =
+        Array.isArray(json.warnings) && json.warnings.length > 0
+          ? ` Notes: ${json.warnings.slice(0, 2).join(' · ')}`
+          : '';
+      setNotice({
+        kind: json.geminiConfigured ? 'success' : 'info',
+        text: `${parts.join(' · ')}.${warnSuffix}`,
+      });
+      onDataChanged();
+    } catch (err) {
+      setNotice({
+        kind: 'error',
+        text: err instanceof Error ? err.message : 'Knowledge Base crawl failed',
+      });
+    } finally {
+      setCrawlingKb(false);
     }
   };
 
@@ -419,6 +488,86 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
           </div>
         </div>
       </div>
+
+      {/* Gemini Knowledge Base & Multi-Agency Daily Workflow Section */}
+      <section className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-5 space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Database className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Gemini Regulatory, Annual &amp; Quarterly Knowledge Base Crawler
+              </h3>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
+              One-click Gemini Search Grounding + direct portal crawl for{' '}
+              <span className="font-mono font-medium">NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE</span>,
+              audited Annual Reports, and due Quarterly ShareSansar statements. GitHub Actions also
+              runs this full pipeline daily at <span className="font-mono">18:08 NPT</span>.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            disabled={crawlingKb}
+            onClick={() => void runGeminiKbCrawl()}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            {crawlingKb ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5" />
+            )}
+            <span>
+              {crawlingKb
+                ? 'Crawling NRB, NIA, SEBON, CDSC & Annuals…'
+                : 'Crawl with Gemini & Update Knowledge Base'}
+            </span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div className="border border-slate-100 dark:border-slate-800 rounded p-3 space-y-1">
+            <div className="font-medium text-slate-800 dark:text-slate-200">
+              Daily KB &amp; Agency Crunch (GitHub)
+            </div>
+            <div className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+              knowledge-base-crawl.yml · Daily 18:08 NPT
+            </div>
+            <div className="text-[11px] text-slate-600 dark:text-slate-300">
+              Crawls NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE, due quarterly filings &amp; Gemini annual distillations.
+            </div>
+          </div>
+
+          <div className="border border-slate-100 dark:border-slate-800 rounded p-3 space-y-1">
+            <div className="font-medium text-slate-800 dark:text-slate-200">
+              Quarter-End +15d Fundamentals (GitHub)
+            </div>
+            <div className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+              quarterly-fundamentals.yml · Daily 17:12 NPT
+            </div>
+            <div className="text-[11px] text-slate-600 dark:text-slate-300">
+              Collects upcoming Q1–Q4/Annual reports once +15d post quarter-end opens &amp; updates ledgers.
+            </div>
+          </div>
+
+          <div className="border border-slate-100 dark:border-slate-800 rounded p-3 space-y-1">
+            <div className="font-medium text-slate-800 dark:text-slate-200">
+              Knowledge Base Index
+            </div>
+            <div className="font-mono text-[11px] tabular-nums text-slate-700 dark:text-slate-300">
+              {kbSummary
+                ? `${kbSummary.totalNotices} notices · ${kbSummary.totalCompaniesIndexed} companies`
+                : 'Loading index…'}
+            </div>
+            <div className="font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+              {kbSummary
+                ? `NRB ${kbSummary.byAgency.NRB} · NIA ${kbSummary.byAgency.NIA} · SEBON ${kbSummary.byAgency.SEBON} · CDSC ${kbSummary.byAgency.CDSC}`
+                : 'NRB · NIA · SEBON · CDSC'}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Daily Cron + GitHub Config Form */}

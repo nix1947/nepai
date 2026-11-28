@@ -1,9 +1,9 @@
-name: NEPSE Regulatory Knowledge Base Crawl
+name: NEPSE Daily Knowledge Base, Regulatory & Fundamentals Crawl
 
 on:
   schedule:
-    # Twice weekly at 18:08 NPT (12:23 UTC) Mon & Thu to crawl ICRA, CARE, NRB, NIA, SEBON, NEPSE, CDSC
-    - cron: '23 12 * * 1,4'
+    # Daily at 18:08 NPT (12:23 UTC) to crunch NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE, Annual & Quarterly reports
+    - cron: '23 12 * * *'
   workflow_dispatch:
     inputs:
       agencies:
@@ -15,6 +15,11 @@ on:
         description: 'Max company dossiers to refresh when GEMINI_API_KEY is configured'
         required: false
         default: '18'
+        type: string
+      distill_annual:
+        description: 'Max companies to distill latest Annual Report via Gemini when missing (0 to skip)'
+        required: false
+        default: '4'
         type: string
       symbols:
         description: 'Optional comma-separated ticker symbols (e.g., NABIL,SHIVM)'
@@ -53,16 +58,33 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps --no-audit --no-fund || npm install --legacy-peer-deps --no-audit --no-fund
 
-      - name: Crawl regulatory agencies & enrich NEPSE Knowledge Base
+      - name: Check & collect due Quarterly/Annual ShareSansar reports
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          SYMBOL="${{ github.event.inputs.symbols || '' }}"
+          FORCE="${{ github.event.inputs.force || 'false' }}"
+          Q_CMD="npx tsx scripts/pull-fundamentals.ts --mode=due --limit=60 --delay-days=15 --concurrency=3"
+          if [ -n "$SYMBOL" ]; then
+            Q_CMD="${Q_CMD} --symbol=${SYMBOL}"
+          fi
+          if [ "$FORCE" = "true" ]; then
+            Q_CMD="${Q_CMD} --force"
+          fi
+          echo "Running: $Q_CMD"
+          $Q_CMD || true
+
+      - name: Crawl NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE & enrich NEPSE Knowledge Base with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           AGENCIES="${{ github.event.inputs.agencies || 'ALL' }}"
           LIMIT="${{ github.event.inputs.enrich_limit || '18' }}"
+          DISTILL_ANNUAL="${{ github.event.inputs.distill_annual || '4' }}"
           SYMBOLS="${{ github.event.inputs.symbols || '' }}"
           FORCE="${{ github.event.inputs.force || 'false' }}"
 
-          CMD="npx tsx scripts/harvest-knowledge-base.ts --agencies=${AGENCIES} --enrich-limit=${LIMIT}"
+          CMD="npx tsx scripts/harvest-knowledge-base.ts --agencies=${AGENCIES} --enrich-limit=${LIMIT} --distill-annual=${DISTILL_ANNUAL}"
           if [ -n "$SYMBOLS" ]; then
             CMD="${CMD} --symbol=${SYMBOLS}"
           fi
@@ -73,16 +95,17 @@ jobs:
           echo "Running: $CMD"
           $CMD
 
-      - name: Commit and push updated Regulatory Knowledge Base
+      - name: Commit and push updated Knowledge Base & Financial Vault
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git status --porcelain -- 'data/financial/vault/regulatory-kb.json' | grep -q .; then
-            git add data/financial/vault/regulatory-kb.json
-            git commit -m "chore(kb): crawl NEPSE regulatory agencies & update knowledge base"
+          if git status --porcelain -- 'data/financial/*.json' 'data/financial/*.csv' 'data/financial/vault/ledgers/*.json' 'data/financial/vault/quarterly_metrics.csv' 'data/financial/vault/regulatory-kb.json' 'data/financial/vault/annual-report-ai-cache.json' | grep -q .; then
+            git add data/financial
+            git commit -m "chore(kb): daily regulatory, annual & quarterly knowledge base crawl"
             git pull --rebase origin ${{ github.event.repository.default_branch }} || true
             git push origin HEAD:${{ github.event.repository.default_branch }}
           else
-            echo "No new regulatory knowledge base updates to commit."
+            git checkout -- data/financial/vault/monitor-state.json 2>/dev/null || true
+            echo "No new knowledge base or financial statement updates to commit."
           fi

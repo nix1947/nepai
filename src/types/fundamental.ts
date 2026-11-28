@@ -1585,4 +1585,105 @@ export interface AnnualReportIngestResponse {
   distillation: AnnualReportAiFyDistillation;
 }
 
+export type StrategicOutlookQuadrant =
+  | 'Compounders'
+  | 'Scaling & Turnaround'
+  | 'Resilient Stewards'
+  | 'Restructuring Watch';
+
+export type OutperformanceStatus = 'Outperforming' | 'In-Line' | 'Lagging';
+
+export type StrategicOutlookBaselineMode = 'self-multi-fy' | 'sector-baseline';
+
+export interface StrategicOutlookMetricComparison {
+  key: string;
+  label: string;
+  unit: '%' | 'Rs' | 'Cr' | 'x';
+  currentVal: number | null;
+  historicalAvgVal: number | null;
+  deltaVal: number | null;
+  deltaDisplay: string;
+  outperforming: boolean | null;
+}
+
+export interface StrategicOutlookCompanyRow {
+  symbol: string;
+  companyName: string;
+  sector: string;
+  sectorGroup: SectorGroup;
+  ltp: number | null;
+  changePct: number | null;
+  latestFy: string;
+  recommendedAnnualFy: string | null;
+  latestBasis: FiscalYearReportAnalysis['basis'];
+  totalFyCount: number;
+  auditedFyCount: number;
+  aiDistilledFyCount: number;
+  hasAiDistillation: boolean;
+  managementQualityScore: number;
+  managementStatus: AnnualReportPillarStatus;
+  managementHeadline: string;
+  managementEvidence: string[];
+  growthPotentialScore: number;
+  growthStatus: AnnualReportPillarStatus;
+  growthHeadline: string;
+  growthEvidence: string[];
+  strategicCompositeScore: number;
+  quadrant: StrategicOutlookQuadrant;
+  baselineMode: StrategicOutlookBaselineMode;
+  baselineLabel: string;
+  historicalPeriodCount: number;
+  outperformanceScore: number;
+  outperformanceStatus: OutperformanceStatus;
+  primaryDeltaLabel: string;
+  historicalComparisons: StrategicOutlookMetricComparison[];
+  roePct: number | null;
+  histRoePct: number | null;
+  netMarginPct: number | null;
+  histNetMarginPct: number | null;
+  roaPct: number | null;
+  eps: number | null;
+  netProfitCr: number | null;
+  revenueCr: number | null;
+  reserveRatio: number | null;
+  nplPct: number | null;
+  carPct: number | null;
+  debtToEquity: number | null;
+  creditRatingLabel: string | null;
+  regulatoryStanding: RegulatoryStanding;
+  marginOfSafetyPct: number | null;
+  businessDirectionSummary: string;
+  upcomingPlans: string[];
+}
+
+export interface StrategicOutlookSectorBenchmark {
+  sector: string;
+  sectorGroup: SectorGroup;
+  count: number;
+  avgManagementScore: number;
+  avgGrowthScore: number;
+  avgOutperformanceScore: number;
+  outperformingCount: number;
+  laggingCount: number;
+  avgRoePct: number | null;
+  avgNetMarginPct: number | null;
+}
+
+export interface StrategicOutlookHeatmapResponse {
+  generatedAt: string;
+  marketDate: string | null;
+  fiscalContext: NepalFiscalYearContext;
+  managementThreshold: number;
+  growthThreshold: number;
+  totalCompanies: number;
+  multiFyCompanies: number;
+  aiDistilledCompanies: number;
+  quadrantCounts: Record<StrategicOutlookQuadrant, number>;
+  outperformanceCounts: Record<OutperformanceStatus, number>;
+  sectors: string[];
+  sectorBenchmarks: StrategicOutlookSectorBenchmark[];
+  rows: StrategicOutlookCompanyRow[];
+}
+
+
 

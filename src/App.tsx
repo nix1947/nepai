@@ -22,6 +22,7 @@ import {
   Globe,
   HelpCircle,
   Home,
+  LayoutGrid,
   Menu,
   Moon,
   Radar,
@@ -78,6 +79,7 @@ import { ScannersView } from './views/ScannersView';
 import { SchedulerView } from './views/SchedulerView';
 import { SettingsView } from './views/SettingsView';
 import { StockExplorerView } from './views/StockExplorerView';
+import { StrategicOutlookView } from './views/StrategicOutlookView';
 import { TodayBriefingView } from './views/TodayBriefingView';
 import { TopTurnoverView } from './views/TopTurnoverView';
 import { TurnoverDirectionView } from './views/TurnoverDirectionView';
@@ -89,6 +91,7 @@ type NavTab =
   | 'portfolio'
   | 'screener'
   | 'annual-reports'
+  | 'strategic-outlook'
   | 'financials-vault'
   | 'valuation'
   | 'overview'
@@ -137,6 +140,7 @@ const NAV_GROUPS: NavGroupConfig[] = [
       { id: 'valuation', label: 'Pricing & Valuation', icon: Scale },
       { id: 'screener', label: 'Fundamental Screener', icon: Award },
       { id: 'annual-reports', label: 'Annual Reports', icon: FileText },
+      { id: 'strategic-outlook', label: 'Strategic Outlook Heat Map', icon: LayoutGrid },
       { id: 'financials-vault', label: 'Quarterly Financials Vault', icon: Database },
       { id: 'radar', label: 'Opportunity Radar', icon: Sparkles },
     ],
@@ -447,6 +451,9 @@ export default function App() {
       inspectInValuation(clean);
     } else if (target === 'annual-reports') {
       inspectInAnnualReports(clean);
+    } else if (target === 'strategic-outlook') {
+      if (clean) setActiveTicker(clean);
+      navigateTo('strategic-outlook');
     } else if (target === 'financials-vault') {
       inspectInFinancialsVault(clean);
     } else {
@@ -509,6 +516,7 @@ export default function App() {
     activeTab !== 'portfolio' &&
     activeTab !== 'screener' &&
     activeTab !== 'annual-reports' &&
+    activeTab !== 'strategic-outlook' &&
     activeTab !== 'financials-vault' &&
     activeTab !== 'valuation' &&
     activeTab !== 'settings';
@@ -963,6 +971,18 @@ export default function App() {
                     setAnnualReportSymbol(sym);
                   }}
                   onOpenValuation={inspectInValuation}
+                  onInspectInScreener={inspectInScreener}
+                  onSelectFundamentalMenu={handleSelectFundamentalMenu}
+                />
+              )}
+              {activeTab === 'strategic-outlook' && (
+                <StrategicOutlookView
+                  equityOnly={equityOnly}
+                  initialSymbol={activeTicker || annualReportSymbol || valuationSymbol || explorerSymbol}
+                  onSymbolChange={(sym) => setActiveTicker(sym)}
+                  onOpenAnnualReports={inspectInAnnualReports}
+                  onOpenValuation={inspectInValuation}
+                  onInspectSymbol={inspectSymbol}
                   onInspectInScreener={inspectInScreener}
                   onSelectFundamentalMenu={handleSelectFundamentalMenu}
                 />

@@ -1,6 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { MarketStore } from '../server/marketStore.ts';
+import { distillAnnualReportWithAi } from '../server/fundamental/annualReportIntelEngine.ts';
 import { FundamentalVault } from '../server/fundamental/fundamentalVault.ts';
 import { evaluateScreenerUniverse } from '../server/fundamental/investorScoringEngine.ts';
 import {
@@ -16,6 +17,7 @@ const DATA_DIR = path.resolve(__dirname, '..', 'data');
 interface CliArgs {
   agencies: RegulatoryAgency[];
   enrichLimit: number;
+  distillAnnualLimit: number;
   symbols: string[];
   force: boolean;
   skipEnrich: boolean;
@@ -27,6 +29,7 @@ function printHelp(): void {
 Options:
   --agencies=ALL|ICRA,CARE,...   Comma-separated regulatory agencies (default: ALL)
   --enrich-limit=N               Max symbols to enrich with Gemini grounding if GEMINI_API_KEY is set (default: 15)
+  --distill-annual=N             Max companies to distill latest Annual Report via Gemini if missing (default: 4)
   --symbol=NABIL,NTC             Comma-separated ticker symbols to prioritize for enrichment
   --skip-enrich                  Only run direct agency notice crawl (no per-company enrichment)
   --force                        Re-enrich even if enriched within the last 7 days
@@ -37,6 +40,7 @@ Options:
 function parseArgs(argv: string[]): CliArgs {
   let agencies: RegulatoryAgency[] = [...ALL_AGENCIES];
   let enrichLimit = 15;
+  let distillAnnualLimit = 4;
   let symbols: string[] = [];
   let force = false;
   let skipEnrich = false;
@@ -58,6 +62,9 @@ function parseArgs(argv: string[]): CliArgs {
     } else if (arg.startsWith('--enrich-limit=')) {
       const parsed = Number(arg.slice('--enrich-limit='.length));
       if (Number.isFinite(parsed) && parsed >= 0) enrichLimit = Math.min(100, Math.round(parsed));
+    } else if (arg.startsWith('--distill-annual=')) {
+      const parsed = Number(arg.slice('--distill-annual='.length));
+      if (Number.isFinite(parsed) && parsed >= 0) distillAnnualLimit = Math.min(25, Math.round(parsed));
     } else if (arg.startsWith('--symbol=')) {
       symbols = arg
         .slice('--symbol='.length)
@@ -71,7 +78,7 @@ function parseArgs(argv: string[]): CliArgs {
     }
   }
 
-  return { agencies, enrichLimit, symbols, force, skipEnrich };
+  return { agencies, enrichLimit, distillAnnualLimit, symbols, force, skipEnrich };
 }
 
 async function main() {
@@ -99,49 +106,81 @@ async function main() {
   }
 
   const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
-  if (!args.skipEnrich && args.enrichLimit > 0 && hasGemini) {
+  if (!args.skipEnrich && hasGemini) {
     const evaluated = evaluateScreenerUniverse(store, vault, {
       equityOnly: true,
       kbMap: kb.getAllCompanyEntries(),
     });
     const staleCutoffMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-    let candidateTargets = evaluated.rows
+    const orderedCandidates = evaluated.rows
       .filter((r) => r.hasFundamentalData)
       .sort((a, b) => (b.market.turnover ?? 0) - (a.market.turnover ?? 0))
       .map((r) => r.symbol);
 
-    if (args.symbols.length > 0) {
-      candidateTargets = args.symbols;
-    } else if (!args.force) {
-      candidateTargets = candidateTargets.filter((sym) => {
-        const existing = kb.getCompanyEntry(sym);
-        if (!existing?.updatedAt) return true;
-        const ts = Date.parse(existing.updatedAt);
-        return !Number.isFinite(ts) || ts < staleCutoffMs;
-      });
+    if (args.enrichLimit > 0) {
+      let candidateTargets = orderedCandidates;
+      if (args.symbols.length > 0) {
+        candidateTargets = args.symbols;
+      } else if (!args.force) {
+        candidateTargets = candidateTargets.filter((sym) => {
+          const existing = kb.getCompanyEntry(sym);
+          if (!existing?.updatedAt) return true;
+          const ts = Date.parse(existing.updatedAt);
+          return !Number.isFinite(ts) || ts < staleCutoffMs;
+        });
+      }
+
+      const batchTargets = candidateTargets.slice(0, args.enrichLimit);
+      if (batchTargets.length > 0) {
+        console.log(
+          `[kb-crawl] Enriching ${batchTargets.length} company dossier(s) via Gemini search grounding...`
+        );
+        for (let i = 0; i < batchTargets.length; i += 6) {
+          const chunk = batchTargets.slice(i, i + 6);
+          const enrichRes = await kb.enrichCompanies(chunk, store, vault);
+          console.log(
+            `[kb-crawl] Batch ${Math.floor(i / 6) + 1}: updated=${enrichRes.updated.length}${
+              enrichRes.warnings.length ? ` warnings=${enrichRes.warnings.length}` : ''
+            }`
+          );
+        }
+      } else {
+        console.log('[kb-crawl] All candidate equity symbols already have fresh (<7d) KB dossiers.');
+      }
     }
 
-    const batchTargets = candidateTargets.slice(0, args.enrichLimit);
-    if (batchTargets.length > 0) {
-      console.log(
-        `[kb-crawl] Enriching ${batchTargets.length} company dossier(s) via Gemini search grounding...`
+    if (args.distillAnnualLimit > 0) {
+      const annualTargets = (args.symbols.length > 0 ? args.symbols : orderedCandidates).slice(
+        0,
+        args.distillAnnualLimit
       );
-      for (let i = 0; i < batchTargets.length; i += 6) {
-        const chunk = batchTargets.slice(i, i + 6);
-        const enrichRes = await kb.enrichCompanies(chunk, store, vault);
-        console.log(
-          `[kb-crawl] Batch ${Math.floor(i / 6) + 1}: updated=${enrichRes.updated.length}${
-            enrichRes.warnings.length ? ` warnings=${enrichRes.warnings.length}` : ''
-          }`
-        );
+      let distilledCount = 0;
+      for (const sym of annualTargets) {
+        try {
+          const res = await distillAnnualReportWithAi(
+            store,
+            vault,
+            kb,
+            sym,
+            undefined,
+            args.force
+          );
+          if (!res.cached) distilledCount++;
+          console.log(
+            `[kb-crawl] Annual Report FY ${res.fiscalYear} for ${sym}: ${res.cached ? 'cached' : 'distilled'}`
+          );
+        } catch (err) {
+          console.warn(
+            `[kb-crawl] Annual distill skipped for ${sym}: ${err instanceof Error ? err.message : 'failed'}`
+          );
+        }
       }
-    } else {
-      console.log('[kb-crawl] All candidate equity symbols already have fresh (<7d) KB dossiers.');
+      console.log(`[kb-crawl] Annual report distillation pass complete (${distilledCount} new).`);
     }
   } else if (!args.skipEnrich && !hasGemini) {
     console.log(
-      '[kb-crawl] GEMINI_API_KEY not configured — direct regulatory agency HTML crawl completed cleanly (skipping Gemini per-company enrichment).'
+      '[kb-crawl] GEMINI_API_KEY not configured — direct regulatory agency HTML crawl completed cleanly (skipping Gemini per-company enrichment & annual distillation).'
     );
   }
 

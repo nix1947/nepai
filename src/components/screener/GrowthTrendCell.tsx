@@ -297,6 +297,14 @@ export const CompositeGrowthTrendCell: React.FC<CompositeGrowthTrendCellProps> =
     yoy: number | null;
   }> = [
     {
+      tag: 'OP',
+      series: km.trends.operatingProfitCr ?? [],
+      unit: ' Cr',
+      digits: 1,
+      qoq: km.operatingProfitQoqPct,
+      yoy: km.operatingProfitYoyPct,
+    },
+    {
       tag: 'EPS',
       series: km.trends.eps,
       unit: '',

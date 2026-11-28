@@ -210,8 +210,17 @@ export function computeSectorValuation(params: {
       ? round2(currentPrice / bvps)
       : m.reportedPb.value;
 
-  const growthRateForPeg =
+  const opGrowthBest =
+    growth.operatingProfitCagr3yPct ??
+    growth.operatingProfitYoyPct ??
+    growth.q4Benchmark.operatingProfitVsAvgPct;
+  const epsGrowthBest =
     growth.epsCagr3yPct ?? growth.epsYoyPct ?? growth.netProfitYoyPct;
+  const useOperatingGrowthFocus =
+    Boolean(growth.earningsQuality?.hasNonOperatingCaution) ||
+    (opGrowthBest !== null && epsGrowthBest !== null && epsGrowthBest - opGrowthBest >= 20);
+  const growthRateForPeg =
+    useOperatingGrowthFocus && opGrowthBest !== null ? opGrowthBest : epsGrowthBest;
   const livePeg =
     livePe !== null && livePe > 0 && growthRateForPeg !== null && growthRateForPeg > 1
       ? round2(livePe / growthRateForPeg)
@@ -304,6 +313,12 @@ export function computeSectorValuation(params: {
 
   const estimates: number[] = [];
 
+  if (useOperatingGrowthFocus && opGrowthBest !== null) {
+    assumptions.push(
+      `Growth rate anchored to core Operating Profit (${opGrowthBest.toFixed(1)}%) rather than headline Net Profit/EPS because non-operating / one-off gains were flagged.`
+    );
+  }
+
   // 1. Justified P/B + Residual Income for BFIs & Insurance (and asset-backed fallback)
   if (
     (cfg.sectorGroup === 'Banking' ||
@@ -314,9 +329,13 @@ export function computeSectorValuation(params: {
     roe !== null
   ) {
     method = 'Justified P/B & Residual Income Model (Financial Sector)';
+    const growthDriverForModel =
+      useOperatingGrowthFocus && opGrowthBest !== null
+        ? opGrowthBest
+        : growth.epsCagr3yPct ?? roe * 0.45;
     const g = Math.min(
       cfg.sustainableGrowthCapPct,
-      Math.max(2.5, (growth.epsCagr3yPct ?? roe * 0.45) * 0.6)
+      Math.max(2.5, growthDriverForModel * 0.6)
     );
     const keDec = costOfEquityPct / 100;
     const roeDec = roe / 100;
@@ -337,7 +356,11 @@ export function computeSectorValuation(params: {
     // 2. Non-Financials: FCF/Owner-Earnings DCF + Graham Growth Formula
     const fcfPerShare =
       fcf !== null && shares !== null && shares > 0 ? fcf / shares : null;
-    const gRaw = growth.epsCagr3yPct ?? growth.epsYoyPct ?? (roe !== null ? Math.min(12, roe * 0.45) : 6);
+    const gRaw =
+      (useOperatingGrowthFocus && opGrowthBest !== null ? opGrowthBest : null) ??
+      growth.epsCagr3yPct ??
+      growth.epsYoyPct ??
+      (roe !== null ? Math.min(12, roe * 0.45) : 6);
     const gCapped = Math.max(2, Math.min(cfg.sustainableGrowthCapPct, gRaw));
 
     if (fcfPerShare !== null && fcfPerShare > 0) {
@@ -381,7 +404,14 @@ export function computeSectorValuation(params: {
     }
   } else if (eps !== null && eps > 0) {
     method = 'Earnings Power & Book Value Blend';
-    const gCapped = Math.max(2, Math.min(9, growth.epsYoyPct ?? 6));
+    const gCapped = Math.max(
+      2,
+      Math.min(
+        9,
+        (useOperatingGrowthFocus ? growth.operatingProfitYoyPct ?? opGrowthBest : growth.epsYoyPct) ??
+          6
+      )
+    );
     estimates.push(eps / Math.max(0.05, costOfEquityPct / 100 - gCapped / 200));
     if (bvps !== null && bvps > 0) estimates.push(bvps * 1.25);
   }
@@ -399,6 +429,9 @@ export function computeSectorValuation(params: {
     limitations.push('Missing positive EPS, BVPS, or ROE required to anchor intrinsic value without fabrication.');
   }
 
+  if (growth.earningsQuality?.hasNonOperatingCaution && growth.earningsQuality.cautionMessage) {
+    limitations.push(growth.earningsQuality.cautionMessage);
+  }
   if (m.operatingCashFlow.value === null) {
     limitations.push('Operating Cash Flow / Free Cash Flow not reported in available quarterly summary.');
   }

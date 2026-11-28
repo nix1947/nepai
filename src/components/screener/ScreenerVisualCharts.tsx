@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react';
 import type {
+  Q4ThreeYearBenchmark,
   QuarterlyStatementRecord,
   ScreenedCompanyRow,
 } from '../../types/fundamental';
@@ -36,7 +37,11 @@ type AxisMetricKey =
   | 'mos'
   | 'eps'
   | 'epsQoq'
-  | 'epsYoy';
+  | 'epsYoy'
+  | 'operatingProfitYoy'
+  | 'operatingMargin'
+  | 'opProfitVsQ4Avg'
+  | 'epsVsQ4Avg';
 
 type BubbleSizeKey = 'consensus' | 'turnover' | 'uniform';
 type LabelMode = 'smart' | 'focused' | 'all';
@@ -192,6 +197,46 @@ const AXIS_METRICS: Record<AxisMetricKey, AxisMetricDef> = {
     sweetThreshold: 10,
     extract: (r) => r.keyMetrics.epsYoyPct,
   },
+  operatingProfitYoy: {
+    key: 'operatingProfitYoy',
+    label: 'Operating Profit YoY Growth (%)',
+    shortLabel: 'Op. Profit YoY %',
+    unit: '%',
+    digits: 1,
+    goodDirection: 'high',
+    sweetThreshold: 10,
+    extract: (r) => r.keyMetrics.operatingProfitYoyPct,
+  },
+  operatingMargin: {
+    key: 'operatingMargin',
+    label: 'Operating Margin (%)',
+    shortLabel: 'Op. Margin %',
+    unit: '%',
+    digits: 1,
+    goodDirection: 'high',
+    sweetThreshold: 15,
+    extract: (r) => r.keyMetrics.operatingMarginPct,
+  },
+  opProfitVsQ4Avg: {
+    key: 'opProfitVsQ4Avg',
+    label: 'Op. Profit vs 3-Year 4Q Avg (%)',
+    shortLabel: 'Op. vs 3Y 4Q Avg %',
+    unit: '%',
+    digits: 1,
+    goodDirection: 'high',
+    sweetThreshold: 0,
+    extract: (r) => r.keyMetrics.operatingProfitVsQ4Avg3yPct,
+  },
+  epsVsQ4Avg: {
+    key: 'epsVsQ4Avg',
+    label: 'EPS vs 3-Year 4Q Avg (%)',
+    shortLabel: 'EPS vs 3Y 4Q Avg %',
+    unit: '%',
+    digits: 1,
+    goodDirection: 'high',
+    sweetThreshold: 0,
+    extract: (r) => r.keyMetrics.epsVsQ4Avg3yPct,
+  },
 };
 
 const AXIS_PRESETS: Array<{
@@ -203,6 +248,8 @@ const AXIS_PRESETS: Array<{
   { id: 'q_v', label: 'Quality vs Value', x: 'quality', y: 'valuation' },
   { id: 'roe_pe', label: 'ROE % vs P/E', x: 'roe', y: 'pe' },
   { id: 'g_mos', label: 'Growth vs MoS %', x: 'growth', y: 'mos' },
+  { id: 'op_mos', label: 'Op. Profit YoY vs MoS', x: 'operatingProfitYoy', y: 'mos' },
+  { id: 'q4_mos', label: 'vs 3Y 4Q Avg vs MoS', x: 'opProfitVsQ4Avg', y: 'mos' },
   { id: 'roe_pb', label: 'ROE % vs P/B', x: 'roe', y: 'pb' },
 ];
 
@@ -1480,12 +1527,16 @@ export const TopStocksCompositeBarsChart: React.FC<ScatterChartProps> = ({
 
 interface HistoryChartProps {
   statements: QuarterlyStatementRecord[];
+  q4Benchmark?: Q4ThreeYearBenchmark | null;
 }
 
 export const CompanyHistoricalTrendChart: React.FC<HistoryChartProps> = ({
   statements,
+  q4Benchmark,
 }) => {
-  const [metricKey, setMetricKey] = useState<'eps' | 'netProfit' | 'roe' | 'bvps'>('eps');
+  const [metricKey, setMetricKey] = useState<
+    'eps' | 'operatingProfit' | 'netProfit' | 'roe' | 'bvps'
+  >('eps');
 
   const chronological = useMemo(
     () => [...statements].sort((a, b) => a.sortKey - b.sortKey),
@@ -1496,6 +1547,11 @@ export const CompanyHistoricalTrendChart: React.FC<HistoryChartProps> = ({
     return chronological.map((st) => {
       let val: number | null = null;
       if (metricKey === 'eps') val = st.metrics.eps.value;
+      else if (metricKey === 'operatingProfit')
+        val =
+          st.metrics.operatingProfit.value !== null
+            ? Number((st.metrics.operatingProfit.value / 1e7).toFixed(2))
+            : null;
       else if (metricKey === 'netProfit')
         val =
           st.metrics.netProfit.value !== null
@@ -1511,19 +1567,81 @@ export const CompanyHistoricalTrendChart: React.FC<HistoryChartProps> = ({
     });
   }, [chronological, metricKey]);
 
+  const baselineInfo = useMemo(() => {
+    if (!q4Benchmark || q4Benchmark.yearsCount === 0) return null;
+    let avgVal: number | null = null;
+    let vsAvgLabel: string | null = null;
+    let currentAnnualized: number | null = null;
+    let unitSuffix = '';
+
+    if (metricKey === 'eps') {
+      avgVal = q4Benchmark.avgEps;
+      currentAnnualized = q4Benchmark.currentAnnualizedEps;
+      if (q4Benchmark.epsVsAvgPct !== null) {
+        vsAvgLabel = `${q4Benchmark.epsVsAvgPct >= 0 ? '+' : ''}${q4Benchmark.epsVsAvgPct.toFixed(1)}%`;
+      }
+    } else if (metricKey === 'operatingProfit') {
+      avgVal = q4Benchmark.avgOperatingProfitCr;
+      currentAnnualized = q4Benchmark.currentAnnualizedOperatingProfitCr;
+      unitSuffix = ' Cr';
+      if (q4Benchmark.operatingProfitVsAvgPct !== null) {
+        vsAvgLabel = `${q4Benchmark.operatingProfitVsAvgPct >= 0 ? '+' : ''}${q4Benchmark.operatingProfitVsAvgPct.toFixed(1)}%`;
+      }
+    } else if (metricKey === 'netProfit') {
+      avgVal = q4Benchmark.avgNetProfitCr;
+      currentAnnualized = q4Benchmark.currentAnnualizedNetProfitCr;
+      unitSuffix = ' Cr';
+      if (q4Benchmark.netProfitVsAvgPct !== null) {
+        vsAvgLabel = `${q4Benchmark.netProfitVsAvgPct >= 0 ? '+' : ''}${q4Benchmark.netProfitVsAvgPct.toFixed(1)}%`;
+      }
+    } else if (metricKey === 'roe') {
+      avgVal = q4Benchmark.avgRoePct;
+      currentAnnualized = q4Benchmark.currentRoePct;
+      unitSuffix = '%';
+      if (q4Benchmark.roeVsAvgDeltaPp !== null) {
+        vsAvgLabel = `${q4Benchmark.roeVsAvgDeltaPp >= 0 ? '+' : ''}${q4Benchmark.roeVsAvgDeltaPp.toFixed(2)} pp`;
+      }
+    } else if (metricKey === 'bvps') {
+      avgVal = q4Benchmark.avgBvps;
+      currentAnnualized = q4Benchmark.currentBvps;
+      if (q4Benchmark.bvpsVsAvgPct !== null) {
+        vsAvgLabel = `${q4Benchmark.bvpsVsAvgPct >= 0 ? '+' : ''}${q4Benchmark.bvpsVsAvgPct.toFixed(1)}%`;
+      }
+    }
+
+    if (avgVal === null || !Number.isFinite(avgVal)) return null;
+    return {
+      avgVal,
+      currentAnnualized,
+      vsAvgLabel,
+      unitSuffix,
+      basisLabel: q4Benchmark.basisLabel,
+      yearsCount: q4Benchmark.yearsCount,
+    };
+  }, [q4Benchmark, metricKey]);
+
   const validVals = points.map((p) => p.val).filter((v): v is number => v !== null);
-  const maxVal = validVals.length > 0 ? Math.max(...validVals, 1) : 10;
-  const minVal = validVals.length > 0 ? Math.min(0, ...validVals) : 0;
+  const scaleVals =
+    baselineInfo !== null ? [...validVals, baselineInfo.avgVal] : validVals;
+  const maxVal = scaleVals.length > 0 ? Math.max(...scaleVals, 1) : 10;
+  const minVal = scaleVals.length > 0 ? Math.min(0, ...scaleVals) : 0;
   const span = Math.max(1, maxVal - minVal);
+
+  const avgRefBottomPct =
+    baselineInfo !== null
+      ? Math.max(4, Math.min(96, ((baselineInfo.avgVal - minVal) / span) * 100))
+      : null;
 
   const unitLabel =
     metricKey === 'eps'
       ? 'EPS (NPR)'
-      : metricKey === 'netProfit'
-        ? 'Net Profit (Rs Crore)'
-        : metricKey === 'roe'
-          ? 'ROE (%)'
-          : 'BVPS (NPR)';
+      : metricKey === 'operatingProfit'
+        ? 'Operating Profit (Rs Crore)'
+        : metricKey === 'netProfit'
+          ? 'Net Profit (Rs Crore)'
+          : metricKey === 'roe'
+            ? 'ROE (%)'
+            : 'BVPS (NPR)';
 
   return (
     <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-3">
@@ -1534,12 +1652,38 @@ export const CompanyHistoricalTrendChart: React.FC<HistoryChartProps> = ({
           </h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             {chronological.length} archived fiscal period(s) in vault
+            {baselineInfo && (
+              <>
+                {' · '}
+                <span className="font-mono text-amber-700 dark:text-amber-300">
+                  3Y 4Q Avg: {baselineInfo.avgVal.toFixed(1)}
+                  {baselineInfo.unitSuffix}
+                </span>
+                {baselineInfo.vsAvgLabel && (
+                  <>
+                    {' '}
+                    (Now vs Avg:{' '}
+                    <span
+                      className={`font-mono font-semibold ${
+                        baselineInfo.vsAvgLabel.startsWith('+')
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
+                      {baselineInfo.vsAvgLabel}
+                    </span>
+                    )
+                  </>
+                )}
+              </>
+            )}
           </p>
         </div>
         <div className="inline-flex rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-0.5 text-[11px]">
           {(
             [
               { id: 'eps', label: 'EPS' },
+              { id: 'operatingProfit', label: 'Op. Profit' },
               { id: 'netProfit', label: 'Net Profit' },
               { id: 'roe', label: 'ROE %' },
               { id: 'bvps', label: 'BVPS' },
@@ -1566,36 +1710,55 @@ export const CompanyHistoricalTrendChart: React.FC<HistoryChartProps> = ({
           Selected metric not reported across stored periods.
         </div>
       ) : (
-        <div className="flex items-end gap-3 h-40 pt-4 pb-1 px-2 border-t border-slate-100 dark:border-slate-800/80 overflow-x-auto">
-          {points.map((pt) => {
-            const pctHeight =
-              pt.val !== null ? Math.max(8, Math.round(((pt.val - minVal) / span) * 100)) : 4;
-            return (
+        <div className="relative border-t border-slate-100 dark:border-slate-800/80 pt-4 pb-1 px-2 overflow-x-auto">
+          <div className="relative flex items-end gap-3 h-40 min-w-full">
+            {/* Horizontal 3-Year 4Q Average Reference Line across the bar plot */}
+            {baselineInfo && avgRefBottomPct !== null && (
               <div
-                key={pt.label}
-                className="flex-1 min-w-[68px] flex flex-col items-center justify-end h-full gap-1.5"
+                className="pointer-events-none absolute left-0 right-0 z-10 border-t-2 border-dashed border-amber-500/85 dark:border-amber-400/85"
+                style={{ bottom: `calc(22px + ${(avgRefBottomPct * 0.72).toFixed(1)}%)` }}
               >
-                <span className="text-[11px] font-mono tabular-nums text-slate-700 dark:text-slate-300">
-                  {pt.val !== null ? pt.val.toFixed(1) : 'N/A'}
-                </span>
-                <div className="w-full max-w-[44px] flex-1 flex items-end">
-                  <div
-                    className={`w-full rounded-t transition-all ${
-                      pt.val === null
-                        ? 'bg-slate-200 dark:bg-slate-800'
-                        : pt.val >= 0
-                          ? 'bg-blue-600 dark:bg-blue-500'
-                          : 'bg-red-500 dark:bg-red-400'
-                    }`}
-                    style={{ height: `${pctHeight}%` }}
-                  />
-                </div>
-                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                  {pt.label}
+                <span className="absolute right-0 -top-4 px-1.5 py-0.2 rounded bg-amber-50/95 dark:bg-amber-950/90 text-[10px] font-mono font-semibold text-amber-800 dark:text-amber-300 tabular-nums">
+                  3-Year 4Q Avg: {baselineInfo.avgVal.toFixed(1)}
+                  {baselineInfo.unitSuffix}
                 </span>
               </div>
-            );
-          })}
+            )}
+
+            {points.map((pt) => {
+              const pctHeight =
+                pt.val !== null ? Math.max(8, Math.round(((pt.val - minVal) / span) * 100)) : 4;
+              const beatsAvg =
+                baselineInfo !== null && pt.val !== null && pt.val >= baselineInfo.avgVal;
+              return (
+                <div
+                  key={pt.label}
+                  className="flex-1 min-w-[68px] flex flex-col items-center justify-end h-full gap-1.5"
+                >
+                  <span className="text-[11px] font-mono tabular-nums text-slate-700 dark:text-slate-300">
+                    {pt.val !== null ? pt.val.toFixed(1) : 'N/A'}
+                  </span>
+                  <div className="w-full max-w-[44px] flex-1 flex items-end">
+                    <div
+                      className={`w-full rounded-t transition-all ${
+                        pt.val === null
+                          ? 'bg-slate-200 dark:bg-slate-800'
+                          : pt.val < 0
+                            ? 'bg-red-500 dark:bg-red-400'
+                            : beatsAvg
+                              ? 'bg-emerald-600 dark:bg-emerald-500'
+                              : 'bg-blue-600 dark:bg-blue-500'
+                      }`}
+                      style={{ height: `${pctHeight}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    {pt.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

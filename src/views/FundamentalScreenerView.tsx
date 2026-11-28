@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  AlertTriangle,
   Award,
   BarChart2,
   CheckSquare,
@@ -668,6 +669,15 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
           <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
             {r.sector}
           </span>
+          {r.keyMetrics.earningsQuality?.hasNonOperatingCaution && (
+            <span
+              title={r.keyMetrics.earningsQuality.cautionMessage ?? undefined}
+              className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 dark:text-amber-400"
+            >
+              <AlertTriangle className="w-3 h-3 shrink-0" />
+              <span>One-Off Caution · Focus Op. Profit</span>
+            </span>
+          )}
         </div>
       ),
     };
@@ -776,6 +786,29 @@ export const FundamentalScreenerView: React.FC<FundamentalScreenerViewProps> = (
                 Last Yr: {fmtNullable(r.keyMetrics.yoyRevenueCr, ' Cr', 1)}
               </div>
             </div>
+          ),
+        },
+        {
+          key: 'opProfitTrend',
+          label: 'Op. Profit (Core Growth)',
+          align: 'right',
+          sortValue: (r) => r.keyMetrics.operatingProfitYoyPct ?? r.keyMetrics.operatingProfitCr,
+          csvValue: (r) => r.keyMetrics.operatingProfitCr,
+          render: (r) => (
+            <MetricTrendCell
+              metricName="Operating Profit"
+              currentValue={r.keyMetrics.operatingProfitCr}
+              unit=" Cr"
+              digits={1}
+              qoqPct={r.keyMetrics.operatingProfitQoqPct}
+              yoyPct={r.keyMetrics.operatingProfitYoyPct}
+              prevPeriodLabel={r.keyMetrics.prevPeriodLabel}
+              prevValue={r.keyMetrics.prevOperatingProfitCr}
+              yoyPeriodLabel={r.keyMetrics.yoyPeriodLabel}
+              yoyValue={r.keyMetrics.yoyOperatingProfitCr}
+              series={r.keyMetrics.trends.operatingProfitCr ?? []}
+              periods={r.keyMetrics.trends.periods}
+            />
           ),
         },
         {

@@ -373,6 +373,71 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
         </div>
       )}
 
+      {/* Earnings Quality & Operating Profit Focus Banner */}
+      {growth.earningsQuality &&
+        (growth.earningsQuality.hasNonOperatingCaution ||
+          growth.earningsQuality.status === 'Watch') && (
+          <div
+            className={`border rounded-lg p-3.5 space-y-2 text-xs ${
+              growth.earningsQuality.hasNonOperatingCaution
+                ? 'border-amber-300 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-950/30'
+                : 'border-slate-200 dark:border-slate-800 bg-amber-50/40 dark:bg-amber-950/15'
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 font-semibold text-amber-900 dark:text-amber-200">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>
+                  {growth.earningsQuality.cautionTitle ??
+                    'Operating Profit Focus · Non-Operating Distortion Check'}
+                </span>
+              </div>
+              <span className="text-[11px] font-mono text-amber-800 dark:text-amber-300 tabular-nums">
+                Valuation Focus: {growth.earningsQuality.focusMetric}
+              </span>
+            </div>
+            {growth.earningsQuality.cautionMessage && (
+              <p className="text-xs text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+                {growth.earningsQuality.cautionMessage}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 pt-1 text-[11px] font-mono tabular-nums text-amber-900 dark:text-amber-200">
+              <span>
+                Op. Profit:{' '}
+                <strong>
+                  {growth.earningsQuality.operatingProfitCr !== null
+                    ? `Rs ${growth.earningsQuality.operatingProfitCr.toFixed(1)} Cr`
+                    : '—'}
+                </strong>
+              </span>
+              <span>
+                Op. Margin:{' '}
+                <strong>
+                  {growth.earningsQuality.operatingMarginPct !== null
+                    ? `${growth.earningsQuality.operatingMarginPct.toFixed(1)}%`
+                    : '—'}
+                </strong>
+              </span>
+              <span>
+                Net / Op Ratio:{' '}
+                <strong>
+                  {growth.earningsQuality.netToOperatingProfitRatioPct !== null
+                    ? `${growth.earningsQuality.netToOperatingProfitRatioPct.toFixed(0)}%`
+                    : '—'}
+                </strong>
+              </span>
+              {growth.earningsQuality.nonOperatingIncomeCr !== null && (
+                <span>
+                  Non-Op / Disposal Gain:{' '}
+                  <strong>
+                    Rs {growth.earningsQuality.nonOperatingIncomeCr.toFixed(1)} Cr
+                  </strong>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
       {/* Fundamental Scores vs Separate Market Overlay */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-3">
@@ -919,12 +984,15 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
 
       {/* Historical Multi-Period Trajectory & YoY/QoQ/CAGR */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CompanyHistoricalTrendChart statements={statements} />
+        <CompanyHistoricalTrendChart
+          statements={statements}
+          q4Benchmark={growth.q4Benchmark}
+        />
 
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-              Multi-Horizon Growth Matrix (QoQ · YoY · 3Y CAGR · 5Y CAGR)
+              Multi-Horizon Growth Matrix (QoQ · YoY · 3Y/5Y CAGR · vs 3Y 4Q Avg)
             </h3>
             <span className="text-[11px] font-mono text-slate-500">
               {growth.periodsAvailable} period(s) / {growth.fiscalYearsAvailable} FY(s)
@@ -940,16 +1008,26 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
                   <th className="py-1.5 font-medium text-right">YoY</th>
                   <th className="py-1.5 font-medium text-right">3Y CAGR</th>
                   <th className="py-1.5 font-medium text-right">5Y CAGR</th>
+                  <th className="py-1.5 font-medium text-right">vs 3Y 4Q Avg</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-mono tabular-nums">
                 {[
+                  {
+                    label: 'Operating Profit (Core Focus)',
+                    qoq: growth.operatingProfitQoqPct,
+                    yoy: growth.operatingProfitYoyPct,
+                    c3: growth.operatingProfitCagr3yPct,
+                    c5: growth.operatingProfitCagr5yPct,
+                    vsQ4: growth.q4Benchmark?.operatingProfitVsAvgPct ?? null,
+                  },
                   {
                     label: 'EPS',
                     qoq: growth.epsQoqPct,
                     yoy: growth.epsYoyPct,
                     c3: growth.epsCagr3yPct,
                     c5: growth.epsCagr5yPct,
+                    vsQ4: growth.q4Benchmark?.epsVsAvgPct ?? null,
                   },
                   {
                     label: 'Net Profit',
@@ -957,6 +1035,7 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
                     yoy: growth.netProfitYoyPct,
                     c3: growth.netProfitCagr3yPct,
                     c5: growth.netProfitCagr5yPct,
+                    vsQ4: growth.q4Benchmark?.netProfitVsAvgPct ?? null,
                   },
                   {
                     label: 'Revenue',
@@ -964,6 +1043,7 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
                     yoy: growth.revenueYoyPct,
                     c3: growth.revenueCagr3yPct,
                     c5: growth.revenueCagr5yPct,
+                    vsQ4: growth.q4Benchmark?.revenueVsAvgPct ?? null,
                   },
                   {
                     label: 'BVPS',
@@ -971,13 +1051,14 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
                     yoy: growth.bvpsYoyPct,
                     c3: growth.bvpsCagr3yPct,
                     c5: growth.bvpsCagr5yPct,
+                    vsQ4: growth.q4Benchmark?.bvpsVsAvgPct ?? null,
                   },
                 ].map((row) => (
                   <tr key={row.label}>
                     <td className="py-2 font-sans font-medium text-slate-800 dark:text-slate-200">
                       {row.label}
                     </td>
-                    {[row.qoq, row.yoy, row.c3, row.c5].map((val, idx) => (
+                    {[row.qoq, row.yoy, row.c3, row.c5, row.vsQ4].map((val, idx) => (
                       <td
                         key={idx}
                         className={`py-2 text-right ${
@@ -997,30 +1078,68 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
             </table>
           </div>
 
+          {growth.q4Benchmark && growth.q4Benchmark.yearsCount > 0 && (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] flex flex-wrap items-center justify-between gap-2 text-slate-600 dark:text-slate-300 font-mono tabular-nums">
+              <span className="font-sans font-medium text-amber-700 dark:text-amber-300">
+                {growth.q4Benchmark.basisLabel}:
+              </span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <span>
+                  Op. Profit Avg:{' '}
+                  <strong>
+                    {growth.q4Benchmark.avgOperatingProfitCr !== null
+                      ? `Rs ${growth.q4Benchmark.avgOperatingProfitCr.toFixed(1)} Cr`
+                      : '—'}
+                  </strong>
+                </span>
+                <span>
+                  EPS Avg:{' '}
+                  <strong>
+                    {growth.q4Benchmark.avgEps !== null
+                      ? growth.q4Benchmark.avgEps.toFixed(1)
+                      : '—'}
+                  </strong>
+                </span>
+                <span>
+                  ROE Avg:{' '}
+                  <strong>
+                    {growth.q4Benchmark.avgRoePct !== null
+                      ? `${growth.q4Benchmark.avgRoePct.toFixed(1)}%`
+                      : '—'}
+                  </strong>
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
             <div>
               <span className="text-slate-500">Assets:</span>{' '}
-              <span className="font-mono font-medium">{fmtMetricValue(m.totalAssets, true)}</span>
+              <span className="font-mono font-medium tabular-nums">{fmtMetricValue(m.totalAssets, true)}</span>
             </div>
             <div>
               <span className="text-slate-500">Liabilities:</span>{' '}
-              <span className="font-mono font-medium">{fmtMetricValue(m.totalLiabilities, true)}</span>
+              <span className="font-mono font-medium tabular-nums">{fmtMetricValue(m.totalLiabilities, true)}</span>
             </div>
             <div>
               <span className="text-slate-500">Net Worth:</span>{' '}
-              <span className="font-mono font-medium">{fmtMetricValue(m.netWorth, true)}</span>
+              <span className="font-mono font-medium tabular-nums">{fmtMetricValue(m.netWorth, true)}</span>
+            </div>
+            <div>
+              <span className="text-slate-500">Op. Margin:</span>{' '}
+              <span className="font-mono font-medium tabular-nums">
+                {growth.operatingMarginPct !== null
+                  ? `${growth.operatingMarginPct.toFixed(1)}%`
+                  : '—'}
+              </span>
             </div>
             <div>
               <span className="text-slate-500">Reserves:</span>{' '}
-              <span className="font-mono font-medium">{fmtMetricValue(m.reserves, true)}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Retained Earnings:</span>{' '}
-              <span className="font-mono font-medium">{fmtMetricValue(m.retainedEarnings, true)}</span>
+              <span className="font-mono font-medium tabular-nums">{fmtMetricValue(m.reserves, true)}</span>
             </div>
             <div>
               <span className="text-slate-500">Operating Cash Flow:</span>{' '}
-              <span className="font-mono font-medium">{fmtMetricValue(m.operatingCashFlow, true)}</span>
+              <span className="font-mono font-medium tabular-nums">{fmtMetricValue(m.operatingCashFlow, true)}</span>
             </div>
           </div>
         </div>
@@ -1052,6 +1171,7 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
                 <th className="px-3 py-2 font-medium">Period</th>
                 <th className="px-3 py-2 font-medium">Source</th>
                 <th className="px-3 py-2 font-medium text-right">EPS</th>
+                <th className="px-3 py-2 font-medium text-right">Op. Profit</th>
                 <th className="px-3 py-2 font-medium text-right">Net Profit</th>
                 <th className="px-3 py-2 font-medium text-right">Revenue</th>
                 <th className="px-3 py-2 font-medium text-right">Net Margin</th>
@@ -1076,6 +1196,7 @@ export const CompanyFundamentalDetail: React.FC<CompanyFundamentalDetailProps> =
                     {st.dataSource.replace(/ShareSansar/gi, 'Quarterly Filing')}
                   </td>
                   <td className="px-3 py-2 text-right">{fmtMetricValue(st.metrics.eps)}</td>
+                  <td className="px-3 py-2 text-right">{fmtMetricValue(st.metrics.operatingProfit, true)}</td>
                   <td className="px-3 py-2 text-right">{fmtMetricValue(st.metrics.netProfit, true)}</td>
                   <td className="px-3 py-2 text-right">{fmtMetricValue(st.metrics.revenue, true)}</td>
                   <td className="px-3 py-2 text-right">{fmtMetricValue(st.metrics.netProfitMarginPct)}</td>

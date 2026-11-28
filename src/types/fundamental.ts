@@ -129,6 +129,7 @@ export interface Q4FiscalYearPoint {
   periodLabel: string;
   eps: number | null;
   netProfitCr: number | null;
+  operatingProfitCr: number | null;
   revenueCr: number | null;
   roePct: number | null;
   netMarginPct: number | null;
@@ -144,6 +145,7 @@ export interface Q4ThreeYearBenchmark {
   annualizedFactorApplied: number;
   currentAnnualizedEps: number | null;
   currentAnnualizedNetProfitCr: number | null;
+  currentAnnualizedOperatingProfitCr: number | null;
   currentAnnualizedRevenueCr: number | null;
   currentRoePct: number | null;
   currentNetMarginPct: number | null;
@@ -152,6 +154,7 @@ export interface Q4ThreeYearBenchmark {
   currentNplPct: number | null;
   avgEps: number | null;
   avgNetProfitCr: number | null;
+  avgOperatingProfitCr: number | null;
   avgRevenueCr: number | null;
   avgRoePct: number | null;
   avgNetMarginPct: number | null;
@@ -160,12 +163,28 @@ export interface Q4ThreeYearBenchmark {
   avgNplPct: number | null;
   epsVsAvgPct: number | null;
   netProfitVsAvgPct: number | null;
+  operatingProfitVsAvgPct: number | null;
   revenueVsAvgPct: number | null;
   roeVsAvgDeltaPp: number | null;
   marginVsAvgDeltaPp: number | null;
   bvpsVsAvgPct: number | null;
   nplVsAvgDeltaPp: number | null;
   historyPoints: Q4FiscalYearPoint[];
+}
+
+export interface EarningsQualityAssessment {
+  status: 'Core-Driven' | 'Watch' | 'One-Off Caution' | 'Unavailable';
+  hasNonOperatingCaution: boolean;
+  cautionTitle: string | null;
+  cautionMessage: string | null;
+  focusMetric: 'Operating Profit' | 'EPS / Net Profit';
+  operatingProfitCr: number | null;
+  operatingMarginPct: number | null;
+  netToOperatingProfitRatioPct: number | null;
+  nonOperatingGapPp: number | null;
+  nonOperatingIncomeCr: number | null;
+  operatingGrowthBestPct: number | null;
+  reasons: string[];
 }
 
 export interface GrowthComparisons {
@@ -177,6 +196,11 @@ export interface GrowthComparisons {
   netProfitYoyPct: number | null;
   netProfitCagr3yPct: number | null;
   netProfitCagr5yPct: number | null;
+  operatingProfitQoqPct: number | null;
+  operatingProfitYoyPct: number | null;
+  operatingProfitCagr3yPct: number | null;
+  operatingProfitCagr5yPct: number | null;
+  operatingMarginPct: number | null;
   revenueQoqPct: number | null;
   revenueYoyPct: number | null;
   revenueCagr3yPct: number | null;
@@ -187,6 +211,7 @@ export interface GrowthComparisons {
   periodsAvailable: number;
   fiscalYearsAvailable: number;
   q4Benchmark: Q4ThreeYearBenchmark;
+  earningsQuality: EarningsQualityAssessment;
 }
 
 export interface ValuationBreakdown {
@@ -391,8 +416,10 @@ export interface ScreenedCompanyRow {
   keyMetrics: {
     eps: number | null;
     netProfitCr: number | null;
+    operatingProfitCr: number | null;
     revenueCr: number | null;
     netMarginPct: number | null;
+    operatingMarginPct: number | null;
     roePct: number | null;
     roaPct: number | null;
     roicPct: number | null;
@@ -417,6 +444,9 @@ export interface ScreenedCompanyRow {
     netProfitQoqPct: number | null;
     netProfitYoyPct: number | null;
     netProfitCagr3yPct: number | null;
+    operatingProfitQoqPct: number | null;
+    operatingProfitYoyPct: number | null;
+    operatingProfitCagr3yPct: number | null;
     revenueQoqPct: number | null;
     revenueYoyPct: number | null;
     revenueCagr3yPct: number | null;
@@ -424,6 +454,7 @@ export interface ScreenedCompanyRow {
     prevPeriodLabel: string | null;
     prevEps: number | null;
     prevNetProfitCr: number | null;
+    prevOperatingProfitCr: number | null;
     prevRevenueCr: number | null;
     prevRoePct: number | null;
     roeQoqDeltaPct: number | null;
@@ -432,21 +463,30 @@ export interface ScreenedCompanyRow {
     yoyPeriodLabel: string | null;
     yoyEps: number | null;
     yoyNetProfitCr: number | null;
+    yoyOperatingProfitCr: number | null;
     yoyRevenueCr: number | null;
     epsVsQ4Avg3yPct: number | null;
     netProfitVsQ4Avg3yPct: number | null;
+    operatingProfitVsQ4Avg3yPct: number | null;
     revenueVsQ4Avg3yPct: number | null;
     roeVsQ4Avg3yDelta: number | null;
     q4AvgEps3y: number | null;
     q4AvgNetProfitCr3y: number | null;
+    q4AvgOperatingProfitCr3y: number | null;
     q4AvgRevenueCr3y: number | null;
+    q4AvgRoePct3y: number | null;
+    q4AnnualizedOpProfitCr: number | null;
+    q4AnnualizedNetProfitCr: number | null;
+    q4AnnualizedRevenueCr: number | null;
     q4AvgYearsCount: number;
     periodsAvailable: number;
+    earningsQuality: EarningsQualityAssessment;
     trends: {
       periods: string[];
       eps: Array<number | null>;
       revenueCr: Array<number | null>;
       netProfitCr: Array<number | null>;
+      operatingProfitCr: Array<number | null>;
     };
   };
   market: MarketOverlay;
@@ -1286,6 +1326,14 @@ export interface MasterScreenerRow {
     revenueGrowthPct: number | null;
     netProfitYoyPct: number | null;
     epsVsQ4Avg3yPct: number | null;
+    operatingProfitVsQ4Avg3yPct: number | null;
+    netProfitVsQ4Avg3yPct: number | null;
+    revenueVsQ4Avg3yPct: number | null;
+    q4AvgEps3y: number | null;
+    q4AvgOperatingProfitCr3y: number | null;
+    q4AvgNetProfitCr3y: number | null;
+    q4AvgRevenueCr3y: number | null;
+    q4AvgYearsCount: number;
     earningsMomentumScore: number;
   };
   gems: {

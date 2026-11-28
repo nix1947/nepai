@@ -14,6 +14,7 @@ import type {
   RegulatoryStanding,
   SectorGroup,
 } from '../../src/types/fundamental.ts';
+import type { StockResearchResponse } from '../../src/types/market.ts';
 import type { MarketStore } from '../marketStore.ts';
 import { getNepseSector } from '../sectors.ts';
 import { FundamentalVault } from './fundamentalVault.ts';
@@ -677,15 +678,13 @@ export class RegulatoryKnowledgeBase {
       }
     }
 
-    const latestStmt = ledger?.statements?.[ledger.statements.length - 1];
+    const latestStmt = ledger?.records?.[0];
+    const epsVal = latestStmt?.metrics?.eps?.value;
+    const roeVal = latestStmt?.metrics?.roePct?.value;
     const extraDisclosures = latestStmt
       ? `${latestStmt.fiscalYear} ${latestStmt.quarter}${
-          latestStmt.eps !== null && latestStmt.eps !== undefined ? ` · EPS Rs ${latestStmt.eps}` : ''
-        }${
-          latestStmt.roePct !== null && latestStmt.roePct !== undefined
-            ? ` · ROE ${latestStmt.roePct}%`
-            : ''
-        }`
+          epsVal !== null && epsVal !== undefined ? ` · EPS Rs ${epsVal}` : ''
+        }${roeVal !== null && roeVal !== undefined ? ` · ROE ${roeVal}%` : ''}`
       : null;
 
     const entry: CompanyKnowledgeBaseEntry = existing
@@ -704,7 +703,7 @@ export class RegulatoryKnowledgeBase {
           sector,
           sectorGroup,
           updatedAt: nowIso,
-          dataStatus: 'Seeded',
+          dataStatus: 'Cached',
           creditRating: {
             agency: null,
             ratingGrade: null,
@@ -729,6 +728,136 @@ export class RegulatoryKnowledgeBase {
     this.state.dailySearchDates[sym] = dateStr;
     this.save();
     return entry;
+  }
+
+  public recordStockSearchToKb(params: {
+    store: MarketStore;
+    vault: FundamentalVault;
+    research: StockResearchResponse;
+    dateStr?: string;
+  }): CompanyKnowledgeBaseEntry {
+    this.initIfNeeded();
+    const dateStr = params.dateStr || getNepalDateStr();
+    const { research, store, vault } = params;
+    const base = this.ensureCompanySearchEntry(research.symbol, store, vault, dateStr);
+    const sym = base.symbol;
+    const nowIso = new Date().toISOString();
+
+    const tailwindAdditions: string[] = [];
+    for (const opp of research.opportunities || []) {
+      if (opp.title?.trim()) tailwindAdditions.push(opp.title.trim());
+    }
+    const riskAdditions: string[] = [
+      ...(research.fundamentalRedFlags || []),
+      ...(research.governanceRegulatoryFlags || []),
+    ]
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const newCitations: RegulatoryKbCitation[] = [];
+    for (const src of research.sources || []) {
+      const uri = safeHttpUrl(src.uri);
+      if (!uri) continue;
+      const lower = `${uri} ${src.title || ''}`.toLowerCase();
+      const agency: RegulatoryAgency = lower.includes('icranepal')
+        ? 'ICRA'
+        : lower.includes('careratingsnepal')
+          ? 'CARE'
+          : lower.includes('nrb.org')
+            ? 'NRB'
+            : lower.includes('nia.gov') || lower.includes('beema')
+              ? 'NIA'
+              : lower.includes('sebon')
+                ? 'SEBON'
+                : lower.includes('cdsc')
+                  ? 'CDSC'
+                  : 'NEPSE';
+      newCitations.push({ title: String(src.title || uri), uri, agency });
+    }
+
+    const seenUris = new Set(base.citations.map((c) => c.uri));
+    const mergedCitations = [...base.citations];
+    for (const c of newCitations) {
+      if (!seenUris.has(c.uri)) {
+        seenUris.add(c.uri);
+        mergedCitations.unshift(c);
+      }
+    }
+
+    const mergedTailwinds = Array.from(
+      new Set([...tailwindAdditions, ...base.tailwinds])
+    ).slice(0, 8);
+    const mergedRisks = Array.from(
+      new Set([...riskAdditions, ...base.riskFlags])
+    ).slice(0, 8);
+
+    const hasAlerts =
+      (research.fundamentalRedFlags || []).length > 0 ||
+      (research.governanceRegulatoryFlags || []).length > 0;
+    const standing: RegulatoryStanding =
+      base.regulatoryStanding === 'Alert' || hasAlerts
+        ? hasAlerts
+          ? 'Watch'
+          : base.regulatoryStanding
+        : research.recommendation === 'BUY'
+          ? 'Positive'
+          : base.regulatoryStanding === 'Unknown'
+            ? 'Clean'
+            : base.regulatoryStanding;
+
+    const lockInTriggered =
+      base.lockInOverhangFlag ||
+      riskAdditions.some((r) => /lock[-\s]?in|promoter\s+unlock/i.test(r));
+
+    const searchDisclosure =
+      research.reportingPeriod && research.reportingPeriod !== 'Unavailable'
+        ? `${research.reportingPeriod} (${research.recommendation}): ${research.summary}`.slice(0, 340)
+        : research.summary
+          ? `${research.recommendation}: ${research.summary}`.slice(0, 340)
+          : base.nepseDisclosures;
+
+    const updated: CompanyKnowledgeBaseEntry = {
+      ...base,
+      updatedAt: nowIso,
+      dataStatus: research.searchGrounded ? 'Live' : base.dataStatus,
+      regulatoryStanding: standing,
+      nepseDisclosures: searchDisclosure || base.nepseDisclosures,
+      lockInOverhangFlag: lockInTriggered,
+      tailwinds: mergedTailwinds,
+      riskFlags: mergedRisks,
+      citations: mergedCitations.slice(0, 8),
+    };
+
+    this.state.companies[sym] = updated;
+    this.state.dailySearchDates[sym] = dateStr;
+    this.state.lastHarvestAt = nowIso;
+
+    if (research.summary?.trim()) {
+      const topSource = mergedCitations[0];
+      this.upsertNotice({
+        id: makeNoticeId('NEPSE', `${sym} ${dateStr} Stock Search`, topSource?.uri || null),
+        agency: topSource?.agency || 'NEPSE',
+        title: `${sym} (${updated.companyName}) Research Update · ${research.recommendation}`,
+        publishedDate: dateStr,
+        summary: research.summary.trim().slice(0, 320),
+        url: topSource?.uri || null,
+        symbols: [sym],
+        sectorGroups: [updated.sectorGroup],
+        impact:
+          research.recommendation === 'BUY'
+            ? 'Positive'
+            : research.recommendation === 'AVOID'
+              ? 'Negative'
+              : 'Neutral',
+        ratingGrade: updated.creditRating.ratingGrade,
+        ratingOutlook: updated.creditRating.outlook,
+        retrievedAt: nowIso,
+        method: research.searchGrounded ? 'Search Grounded' : 'Cached Macro',
+      });
+    }
+
+    this.save();
+    return updated;
   }
 
   private buildUniverseLookup(store: MarketStore): Array<{
@@ -914,7 +1043,7 @@ export class RegulatoryKnowledgeBase {
         notices: [],
         companiesUpdated: 0,
         warning:
-          'GEMINI_API_KEY is not configured; live search-grounded regulatory harvesting was skipped (only direct agency portal scrapes ran).',
+          'GEMINI_API_KEY is not configured; live search-grounded regulatory harvesting was skipped (only direct agency portal fetches ran).',
       };
     }
 

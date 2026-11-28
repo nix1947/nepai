@@ -211,6 +211,7 @@ export class FundamentalMonitorService {
   private logs: MonitorCollectionLog[] = [];
   private task: ScheduledTask | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private onDataUpdated: ((summary: string) => Promise<void> | void) | null = null;
   private batch: MonitorBatchStatus = {
     active: false,
     mode: '',
@@ -243,6 +244,10 @@ export class FundamentalMonitorService {
     if (options.enableCron !== false) {
       this.applyCronSchedule();
     }
+  }
+
+  public setOnDataUpdated(cb: (summary: string) => Promise<void> | void): void {
+    this.onDataUpdated = cb;
   }
 
   private loadState(): PersistedMonitorState {
@@ -804,10 +809,17 @@ export class FundamentalMonitorService {
 
     this.batch.active = false;
     this.batch.currentSymbol = null;
+    this.batch.message = `Completed ${mode}: ${this.batch.succeeded} updated, ${this.batch.skipped ?? 0} skipped (existing), ${this.batch.failed} unavailable/failed.`;
     if (this.batch.succeeded > 0) {
       this.vault.writeConsolidatedQuarterlyCsv();
+      if (this.onDataUpdated) {
+        try {
+          await this.onDataUpdated(this.batch.message);
+        } catch {
+          // non-fatal push notification error
+        }
+      }
     }
-    this.batch.message = `Completed ${mode}: ${this.batch.succeeded} updated, ${this.batch.skipped ?? 0} skipped (existing), ${this.batch.failed} unavailable/failed.`;
 
     if (retryQueue.length > 0 && this.config.maxRetries > 0) {
       if (this.retryTimer) clearTimeout(this.retryTimer);

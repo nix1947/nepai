@@ -127,6 +127,7 @@ export class DailyScheduler {
   private lastGitHubPushDate: string | null = null;
   private lastGitHubPushAt: string | null = null;
   private dailyKbHandler: DailyKbHandler | null = null;
+  private todaySearchedCounter: (() => number) | null = null;
   private task: ScheduledTask | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
@@ -163,6 +164,10 @@ export class DailyScheduler {
 
   public setDailyKbHandler(handler: DailyKbHandler): void {
     this.dailyKbHandler = handler;
+  }
+
+  public setTodaySearchedCounter(counter: () => number): void {
+    this.todaySearchedCounter = counter;
   }
 
   public markKbCrawledOnDate(dateStr: string): void {
@@ -521,6 +526,49 @@ export class DailyScheduler {
     }
   }
 
+  public async triggerAutoGitHubPush(
+    trigger: SchedulerLogEntry['trigger'] = 'search',
+    commitMessage?: string
+  ): Promise<{
+    attempted: boolean;
+    committed: boolean;
+    filesChanged: number;
+    message: string;
+  }> {
+    if (!this.config.pushToGitHub || !this.config.githubRepo) {
+      return {
+        attempted: false,
+        committed: false,
+        filesChanged: 0,
+        message: 'Auto-push to GitHub is disabled or no repository is configured.',
+      };
+    }
+    if (!process.env.GITHUB_TOKEN?.trim()) {
+      return {
+        attempted: false,
+        committed: false,
+        filesChanged: 0,
+        message: 'GitHub auto-push skipped (GITHUB_TOKEN secret not set on server).',
+      };
+    }
+    try {
+      const res = await this.pushDataToGitHubNow(trigger, commitMessage);
+      return {
+        attempted: true,
+        committed: res.committed,
+        filesChanged: res.filesChanged,
+        message: res.message,
+      };
+    } catch (err) {
+      return {
+        attempted: true,
+        committed: false,
+        filesChanged: 0,
+        message: err instanceof Error ? err.message : 'GitHub push failed',
+      };
+    }
+  }
+
   public async pullLatest(
     trigger: 'scheduled' | 'manual' = 'manual',
     isRetry = false
@@ -593,43 +641,48 @@ export class DailyScheduler {
         }
       }
 
-      // 2. ShareSansar pull (when sourceMode is 'sharesansar' or 'both')
+      // 2. Direct NEPSE EOD pull (when sourceMode is 'sharesansar' or 'both')
       if (this.config.sourceMode === 'sharesansar' || this.config.sourceMode === 'both') {
-        try {
-          const feed = await this.scraper.fetchLatestOrHoliday();
-          const todayInTz = getDatePartsInTz(new Date(), this.config.timezone).dateStr;
+        const todayInTz = getDatePartsInTz(new Date(), this.config.timezone).dateStr;
+        if (trigger === 'scheduled' && this.store.hasDate(todayInTz)) {
+          latestDate = latestDate || todayInTz;
+          notes.push(`Direct feed: ${todayInTz}.csv already loaded today, skipped`);
+        } else {
+          try {
+            const feed = await this.scraper.fetchLatestOrHoliday();
 
-          if (feed.status === 'no_data') {
-            latestDate = latestDate || feed.date;
-            notes.push(`Holiday / no trading data: ${feed.reason}`);
-          } else {
-            const { date, rows } = feed;
-            const alreadyLoaded = this.store.hasDate(date);
-
-            if (date < todayInTz && alreadyLoaded) {
-              latestDate = latestDate || date;
-              if (trigger === 'scheduled' && this.config.retryIfNotUpdated && !isRetry) {
-                this.retryTimer = setTimeout(() => {
-                  void this.pullLatest('scheduled', true);
-                }, this.config.retryDelayMinutes * 60 * 1000);
-                notes.push(
-                  `Market feed still shows ${date}; retrying in ${this.config.retryDelayMinutes} min`
-                );
-              } else {
-                notes.push(`Market closed / latest remains ${date}`);
-              }
+            if (feed.status === 'no_data') {
+              latestDate = latestDate || feed.date;
+              notes.push(`Holiday / no trading data: ${feed.reason}`);
             } else {
-              const saved = this.store.saveDayRows(date, rows);
-              totalRows += saved;
-              latestDate = date;
-              didWork = true;
-              notes.push(`Direct feed: saved ${saved} rows for ${date}`);
+              const { date, rows } = feed;
+              const alreadyLoaded = this.store.hasDate(date);
+
+              if (date < todayInTz && alreadyLoaded) {
+                latestDate = latestDate || date;
+                if (trigger === 'scheduled' && this.config.retryIfNotUpdated && !isRetry) {
+                  this.retryTimer = setTimeout(() => {
+                    void this.pullLatest('scheduled', true);
+                  }, this.config.retryDelayMinutes * 60 * 1000);
+                  notes.push(
+                    `Market feed still shows ${date}; retrying in ${this.config.retryDelayMinutes} min`
+                  );
+                } else {
+                  notes.push(`Market closed / latest remains ${date}`);
+                }
+              } else {
+                const saved = this.store.saveDayRows(date, rows);
+                totalRows += saved;
+                latestDate = date;
+                didWork = true;
+                notes.push(`Direct feed: saved ${saved} rows for ${date}`);
+              }
             }
+          } catch (feedErr) {
+            notes.push(
+              `Direct feed skipped: ${feedErr instanceof Error ? feedErr.message : String(feedErr)}`
+            );
           }
-        } catch (feedErr) {
-          notes.push(
-            `Direct feed skipped: ${feedErr instanceof Error ? feedErr.message : String(feedErr)}`
-          );
         }
       }
 
@@ -830,6 +883,7 @@ export class DailyScheduler {
       lastKbCrawlDate: this.lastKbCrawlDate,
       lastGitHubPushDate: this.lastGitHubPushDate,
       lastGitHubPushAt: this.lastGitHubPushAt,
+      todaySearchedSymbolsCount: this.todaySearchedCounter ? this.todaySearchedCounter() : 0,
     };
   }
 

@@ -199,6 +199,14 @@ function evaluateNineInvestors(params: {
   const car = m.carPct.value;
   const epsGrowthBest =
     growth.epsCagr3yPct ?? growth.epsYoyPct ?? growth.q4Benchmark.epsVsAvgPct;
+  const operatingGrowthBest =
+    growth.operatingProfitCagr3yPct ??
+    growth.operatingProfitYoyPct ??
+    growth.operatingProfitQoqPct ??
+    growth.q4Benchmark.operatingProfitVsAvgPct;
+  const hasOneOffCaution = Boolean(growth.earningsQuality?.hasNonOperatingCaution);
+  const focusedProfitGrowth =
+    operatingGrowthBest !== null ? operatingGrowthBest : epsGrowthBest;
   const revGrowthBest =
     growth.revenueCagr3yPct ?? growth.revenueYoyPct ?? growth.q4Benchmark.revenueVsAvgPct;
   const ocfOrOe = m.ownerEarnings.value ?? m.freeCashFlow.value ?? m.operatingCashFlow.value;
@@ -638,13 +646,16 @@ function evaluateNineInvestors(params: {
     [
       {
         key: 'peg_ratio',
-        label: 'PEG Ratio (P/E ÷ EPS Growth)',
+        label:
+          hasOneOffCaution && operatingGrowthBest !== null
+            ? 'PEG Ratio (P/E ÷ Core Op. Profit Growth)'
+            : 'PEG Ratio (P/E ÷ EPS Growth)',
         weight: 30,
         actualValue: peg,
         actualDisplay: peg !== null ? `${peg.toFixed(2)}x` : 'Unavailable',
         thresholdDisplay: '≤ 1.25x (≤ 1.0 ideal)',
         provenance: 'Calculated',
-        unavailableReason: 'Requires positive P/E and historical YoY/3Y EPS growth rate.',
+        unavailableReason: 'Requires positive P/E and historical YoY/3Y Operating Profit or EPS growth rate.',
         evaluate: (v) => {
           const passed = v > 0 && v <= 1.25;
           const ratio = v <= 0 ? 0 : v <= 0.85 ? 1 : v <= 1.25 ? 0.82 : clip(1.25 / v, 0.1, 0.55);
@@ -652,29 +663,37 @@ function evaluateNineInvestors(params: {
             ratio,
             passed,
             explanation: passed
-              ? `PEG of ${v.toFixed(2)}x signals attractive GARP pricing.`
-              : `PEG of ${v.toFixed(2)}x suggests growth is already priced in.`,
+              ? `PEG of ${v.toFixed(2)}x signals attractive GARP pricing${hasOneOffCaution ? ' (anchored to core Operating Profit growth)' : ''}.`
+              : `PEG of ${v.toFixed(2)}x suggests growth is already priced in${hasOneOffCaution ? ' on core Operating Profit basis' : ''}.`,
           };
         },
       },
       {
         key: 'growth_consistency',
-        label: 'Earnings Growth Rate (YoY / 3Y CAGR)',
+        label:
+          operatingGrowthBest !== null
+            ? 'Core Operating Profit Growth (YoY / 3Y CAGR)'
+            : 'Earnings Growth Rate (YoY / 3Y CAGR)',
         weight: 25,
-        actualValue: epsGrowthBest,
-        actualDisplay: fmtPct(epsGrowthBest),
+        actualValue: focusedProfitGrowth,
+        actualDisplay: fmtPct(focusedProfitGrowth),
         thresholdDisplay: '10% – 35% sustainable growth',
         provenance: 'Calculated',
-        unavailableReason: 'Multi-period EPS history needed for growth rate.',
+        unavailableReason: 'Multi-period Operating Profit or EPS history needed for growth rate.',
         evaluate: (v) => {
           const passed = v >= 10;
           const ratio = v >= 15 && v <= 40 ? 1 : v >= 10 ? 0.8 : v > 0 ? 0.45 : 0;
+          const metricLabel = operatingGrowthBest !== null ? 'Core Operating Profit' : 'EPS';
+          const cautionNote =
+            hasOneOffCaution && epsGrowthBest !== null && operatingGrowthBest !== null
+              ? ` (headline EPS ${epsGrowthBest.toFixed(1)}% discounted for non-operating boost)`
+              : '';
           return {
             ratio,
             passed,
             explanation: passed
-              ? `EPS growing at ${v.toFixed(1)}%, matching Lynch stalwart/fast-grower pace.`
-              : `EPS growth (${v.toFixed(1)}%) below 10% GARP threshold.`,
+              ? `${metricLabel} growing at ${v.toFixed(1)}%, matching Lynch stalwart/fast-grower pace.${cautionNote}`
+              : `${metricLabel} growth (${v.toFixed(1)}%) below 10% GARP threshold.${cautionNote}`,
           };
         },
       },
@@ -880,22 +899,31 @@ function evaluateNineInvestors(params: {
       },
       {
         key: 'eps_growth',
-        label: 'Profit & EPS Compounding',
+        label:
+          operatingGrowthBest !== null
+            ? 'Core Operating Profit Compounding'
+            : 'Profit & EPS Compounding',
         weight: 25,
-        actualValue: epsGrowthBest,
-        actualDisplay: fmtPct(epsGrowthBest),
-        thresholdDisplay: '≥ 12% EPS growth',
+        actualValue: focusedProfitGrowth,
+        actualDisplay: fmtPct(focusedProfitGrowth),
+        thresholdDisplay: '≥ 12% core profit growth',
         provenance: 'Calculated',
-        unavailableReason: 'Multi-period EPS history unavailable.',
+        unavailableReason: 'Multi-period Operating Profit or EPS history unavailable.',
         evaluate: (v) => {
           const passed = v >= 12;
           const ratio = v >= 20 ? 1 : passed ? 0.8 : v > 0 ? 0.45 : 0;
+          const metricLabel =
+            operatingGrowthBest !== null ? 'Core Operating Profit' : 'EPS';
+          const cautionNote =
+            hasOneOffCaution && epsGrowthBest !== null && operatingGrowthBest !== null
+              ? ` (one-off caution: headline EPS ${epsGrowthBest.toFixed(1)}% vs Operating Profit ${operatingGrowthBest.toFixed(1)}%)`
+              : '';
           return {
             ratio,
             passed,
             explanation: passed
-              ? `EPS compounding at ${v.toFixed(1)}% translates top-line growth to shareholders.`
-              : `EPS growth (${v.toFixed(1)}%) trails Fisher compounding target.`,
+              ? `${metricLabel} compounding at ${v.toFixed(1)}% translates top-line growth into repeatable operating profitability.${cautionNote}`
+              : `${metricLabel} growth (${v.toFixed(1)}%) trails Fisher compounding target.${cautionNote}`,
           };
         },
       },
@@ -1333,8 +1361,9 @@ function buildRecommendation(params: {
   inv: Record<InvestorId, InvestorScoreResult>;
   consensus: ConsensusMatch[];
   market: MarketOverlay;
+  growth?: GrowthComparisons;
 }): StockRecommendationExplanation {
-  const { record, valuation, scores, inv, consensus, market } = params;
+  const { record, valuation, scores, inv, consensus, market, growth } = params;
   if (!record || !valuation) {
     return {
       verdict: 'INSUFFICIENT DATA',
@@ -1368,8 +1397,17 @@ function buildRecommendation(params: {
     }
   }
 
+  if (growth?.earningsQuality?.hasNonOperatingCaution && growth.earningsQuality.cautionMessage) {
+    weaknesses.unshift(growth.earningsQuality.cautionMessage);
+  }
+
   const m = record.metrics;
   const supportingMetrics: string[] = [];
+  if (m.operatingProfit.value !== null) {
+    supportingMetrics.push(
+      `Op. Profit Rs ${(m.operatingProfit.value / 1e7).toFixed(2)} Cr (${m.operatingProfit.provenance})`
+    );
+  }
   if (m.eps.value !== null) supportingMetrics.push(`EPS Rs ${m.eps.value.toFixed(2)} (${m.eps.provenance})`);
   if (m.roePct.value !== null) supportingMetrics.push(`ROE ${m.roePct.value.toFixed(2)}% (${m.roePct.provenance})`);
   if (m.roicPct.value !== null) supportingMetrics.push(`ROIC ${m.roicPct.value.toFixed(2)}% (${m.roicPct.provenance})`);
@@ -1385,6 +1423,13 @@ function buildRecommendation(params: {
   if (m.debtToEquity.value !== null) supportingMetrics.push(`D/E ${m.debtToEquity.value.toFixed(2)}x`);
 
   const downsideRisks: string[] = [...weaknesses.slice(0, 3)];
+  if (
+    growth?.earningsQuality?.hasNonOperatingCaution &&
+    growth.earningsQuality.cautionMessage &&
+    !downsideRisks.includes(growth.earningsQuality.cautionMessage)
+  ) {
+    downsideRisks.unshift(growth.earningsQuality.cautionMessage);
+  }
   if (record.dataQualityFlags.includes('inconsistent')) {
     downsideRisks.unshift('Accounting consistency discrepancy flagged between Balance Sheet totals.');
   }
@@ -1784,8 +1829,10 @@ export function evaluateScreenerUniverse(
         keyMetrics: {
           eps: null,
           netProfitCr: null,
+          operatingProfitCr: null,
           revenueCr: null,
           netMarginPct: null,
+          operatingMarginPct: null,
           roePct: null,
           roaPct: null,
           roicPct: null,
@@ -1810,6 +1857,9 @@ export function evaluateScreenerUniverse(
           netProfitQoqPct: null,
           netProfitYoyPct: null,
           netProfitCagr3yPct: null,
+          operatingProfitQoqPct: null,
+          operatingProfitYoyPct: null,
+          operatingProfitCagr3yPct: null,
           revenueQoqPct: null,
           revenueYoyPct: null,
           revenueCagr3yPct: null,
@@ -1817,6 +1867,7 @@ export function evaluateScreenerUniverse(
           prevPeriodLabel: null,
           prevEps: null,
           prevNetProfitCr: null,
+          prevOperatingProfitCr: null,
           prevRevenueCr: null,
           prevRoePct: null,
           roeQoqDeltaPct: null,
@@ -1825,21 +1876,30 @@ export function evaluateScreenerUniverse(
           yoyPeriodLabel: null,
           yoyEps: null,
           yoyNetProfitCr: null,
+          yoyOperatingProfitCr: null,
           yoyRevenueCr: null,
           epsVsQ4Avg3yPct: null,
           netProfitVsQ4Avg3yPct: null,
+          operatingProfitVsQ4Avg3yPct: null,
           revenueVsQ4Avg3yPct: null,
           roeVsQ4Avg3yDelta: null,
           q4AvgEps3y: null,
           q4AvgNetProfitCr3y: null,
+          q4AvgOperatingProfitCr3y: null,
           q4AvgRevenueCr3y: null,
+          q4AvgRoePct3y: null,
+          q4AnnualizedOpProfitCr: null,
+          q4AnnualizedNetProfitCr: null,
+          q4AnnualizedRevenueCr: null,
           q4AvgYearsCount: 0,
           periodsAvailable: 0,
+          earningsQuality: item.growth.earningsQuality,
           trends: {
             periods: [],
             eps: [],
             revenueCr: [],
             netProfitCr: [],
+            operatingProfitCr: [],
           },
         },
         market: item.market,
@@ -2143,6 +2203,7 @@ export function evaluateScreenerUniverse(
       inv: invDetails,
       consensus,
       market: item.market,
+      growth: item.growth,
     });
     if (reportWeighting.basis === 'blended') {
       recommendation.whyQualifies = `${recommendation.whyQualifies} Weighted ${annualWeightPct}% Annual (${reportWeighting.annualPeriodLabel}: ${reportWeighting.annualOverallScore}/100) + ${interimWeightPct}% Interim (${reportWeighting.interimPeriodLabel}: ${reportWeighting.interimOverallScore}/100).`;
@@ -2181,8 +2242,10 @@ export function evaluateScreenerUniverse(
       keyMetrics: {
         eps: metricVal((x) => x.eps.value),
         netProfitCr: m.netProfit.value !== null ? round2(m.netProfit.value / 1e7) : null,
+        operatingProfitCr: m.operatingProfit.value !== null ? round2(m.operatingProfit.value / 1e7) : null,
         revenueCr: m.revenue.value !== null ? round2(m.revenue.value / 1e7) : null,
         netMarginPct: metricVal((x) => x.netProfitMarginPct.value),
+        operatingMarginPct: item.growth.operatingMarginPct,
         roePct: metricVal((x) => x.roePct.value),
         roaPct: metricVal((x) => x.roaPct.value),
         roicPct: metricVal((x) => x.roicPct.value),
@@ -2207,6 +2270,9 @@ export function evaluateScreenerUniverse(
         netProfitQoqPct: item.growth.netProfitQoqPct,
         netProfitYoyPct: item.growth.netProfitYoyPct,
         netProfitCagr3yPct: item.growth.netProfitCagr3yPct,
+        operatingProfitQoqPct: item.growth.operatingProfitQoqPct,
+        operatingProfitYoyPct: item.growth.operatingProfitYoyPct,
+        operatingProfitCagr3yPct: item.growth.operatingProfitCagr3yPct,
         revenueQoqPct: item.growth.revenueQoqPct,
         revenueYoyPct: item.growth.revenueYoyPct,
         revenueCagr3yPct: item.growth.revenueCagr3yPct,
@@ -2217,6 +2283,11 @@ export function evaluateScreenerUniverse(
           item.prevRecord?.metrics.netProfit.value !== null &&
           item.prevRecord?.metrics.netProfit.value !== undefined
             ? round2(item.prevRecord.metrics.netProfit.value / 1e7)
+            : null,
+        prevOperatingProfitCr:
+          item.prevRecord?.metrics.operatingProfit.value !== null &&
+          item.prevRecord?.metrics.operatingProfit.value !== undefined
+            ? round2(item.prevRecord.metrics.operatingProfit.value / 1e7)
             : null,
         prevRevenueCr:
           item.prevRecord?.metrics.revenue.value !== null &&
@@ -2244,6 +2315,11 @@ export function evaluateScreenerUniverse(
           item.yoyRecord?.metrics.netProfit.value !== undefined
             ? round2(item.yoyRecord.metrics.netProfit.value / 1e7)
             : null,
+        yoyOperatingProfitCr:
+          item.yoyRecord?.metrics.operatingProfit.value !== null &&
+          item.yoyRecord?.metrics.operatingProfit.value !== undefined
+            ? round2(item.yoyRecord.metrics.operatingProfit.value / 1e7)
+            : null,
         yoyRevenueCr:
           item.yoyRecord?.metrics.revenue.value !== null &&
           item.yoyRecord?.metrics.revenue.value !== undefined
@@ -2251,13 +2327,20 @@ export function evaluateScreenerUniverse(
             : null,
         epsVsQ4Avg3yPct: item.growth.q4Benchmark.epsVsAvgPct,
         netProfitVsQ4Avg3yPct: item.growth.q4Benchmark.netProfitVsAvgPct,
+        operatingProfitVsQ4Avg3yPct: item.growth.q4Benchmark.operatingProfitVsAvgPct,
         revenueVsQ4Avg3yPct: item.growth.q4Benchmark.revenueVsAvgPct,
         roeVsQ4Avg3yDelta: item.growth.q4Benchmark.roeVsAvgDeltaPp,
         q4AvgEps3y: item.growth.q4Benchmark.avgEps,
         q4AvgNetProfitCr3y: item.growth.q4Benchmark.avgNetProfitCr,
+        q4AvgOperatingProfitCr3y: item.growth.q4Benchmark.avgOperatingProfitCr,
         q4AvgRevenueCr3y: item.growth.q4Benchmark.avgRevenueCr,
+        q4AvgRoePct3y: item.growth.q4Benchmark.avgRoePct,
+        q4AnnualizedOpProfitCr: item.growth.q4Benchmark.currentAnnualizedOperatingProfitCr,
+        q4AnnualizedNetProfitCr: item.growth.q4Benchmark.currentAnnualizedNetProfitCr,
+        q4AnnualizedRevenueCr: item.growth.q4Benchmark.currentAnnualizedRevenueCr,
         q4AvgYearsCount: item.growth.q4Benchmark.yearsCount,
         periodsAvailable: item.growth.periodsAvailable,
+        earningsQuality: item.growth.earningsQuality,
         trends: {
           periods: item.trendRecords.map((r) => r.periodLabel),
           eps: item.trendRecords.map((r) => r.metrics.eps.value),
@@ -2266,6 +2349,11 @@ export function evaluateScreenerUniverse(
           ),
           netProfitCr: item.trendRecords.map((r) =>
             r.metrics.netProfit.value !== null ? round2(r.metrics.netProfit.value / 1e7) : null
+          ),
+          operatingProfitCr: item.trendRecords.map((r) =>
+            r.metrics.operatingProfit.value !== null
+              ? round2(r.metrics.operatingProfit.value / 1e7)
+              : null
           ),
         },
       },

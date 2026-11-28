@@ -31,7 +31,7 @@ import {
   scrapeBatchFinancials,
   scrapeCompanyFinancials,
 } from './server/financialScraper.ts';
-import { DailyScheduler } from './server/scheduler.ts';
+import { DailyScheduler, type DailyKbRunResult } from './server/scheduler.ts';
 import {
   buildSpreadsheetExport,
   FundamentalVault,
@@ -53,7 +53,11 @@ import { evaluateHiddenGems } from './server/fundamental/hiddenGemsEngine.ts';
 import { evaluateScreenerUniverse } from './server/fundamental/investorScoringEngine.ts';
 import { computeMasterScreener } from './server/fundamental/masterScreenerEngine.ts';
 import { getActiveNepalFiscalQuarter } from './server/fundamental/nepalCalendar.ts';
-import { ALL_AGENCIES, RegulatoryKnowledgeBase } from './server/fundamental/regulatoryKnowledgeBase.ts';
+import {
+  ALL_AGENCIES,
+  getNepalDateStr,
+  RegulatoryKnowledgeBase,
+} from './server/fundamental/regulatoryKnowledgeBase.ts';
 import { buildStrategicOutlookHeatmap } from './server/fundamental/strategicOutlookEngine.ts';
 import type {
   ConsensusTag,
@@ -134,6 +138,211 @@ async function startServer() {
   const fundamentalVault = new FundamentalVault(DATA_DIR);
   const fundamentalMonitor = new FundamentalMonitorService(store, fundamentalVault);
   const regulatoryKb = new RegulatoryKnowledgeBase(DATA_DIR);
+
+  async function runDailyKbPipeline(opts: {
+    agencies?: RegulatoryAgency[];
+    enrichLimit?: number;
+    annualDistillLimit?: number;
+    includeQuarterly?: boolean;
+    equityOnly?: boolean;
+    symbols?: string[];
+    force?: boolean;
+    trigger: 'scheduled' | 'manual';
+  }): Promise<DailyKbRunResult & {
+    geminiConfigured: boolean;
+    agencies: RegulatoryAgency[];
+    directResults: Record<string, number>;
+    summary: ReturnType<RegulatoryKnowledgeBase['getSummary']>;
+    githubPushed?: boolean;
+    githubPushMessage?: string;
+  }> {
+    const todayNpt = getNepalDateStr();
+    const agencies =
+      opts.agencies && opts.agencies.length > 0 ? opts.agencies : ALL_AGENCIES;
+    const enrichLimit = opts.enrichLimit ?? 6;
+    const annualDistillLimit = opts.annualDistillLimit ?? 2;
+    const includeQuarterly = opts.includeQuarterly !== false;
+    const equityOnly = opts.equityOnly !== false;
+    const explicitSymbols = opts.symbols ?? [];
+    const force = Boolean(opts.force);
+    const geminiConfigured = regulatoryKb.isGeminiConfigured();
+
+    if (!force && regulatoryKb.getLastDailyCrawlDate() === todayNpt) {
+      return {
+        skipped: true,
+        date: todayNpt,
+        geminiConfigured,
+        agencies,
+        addedNotices: 0,
+        companiesUpdated: 0,
+        enrichedSymbols: [],
+        annualDistilledSymbols: [],
+        quarterlyRefreshed: [],
+        directResults: {},
+        warnings: [
+          `Knowledge Base already crawled today (${todayNpt} NPT) — skipped duplicate daily crawl.`,
+        ],
+        summary: regulatoryKb.getSummary(),
+      };
+    }
+
+    // 1. Direct agency portal fetch + Gemini Search Grounding across NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE
+    const harvest = await regulatoryKb.harvestAgencies(agencies, store);
+    const warnings = [...harvest.warnings];
+
+    // 2. Optionally check/pull due missing quarterly reports (up to 4 leaders)
+    const quarterlyRefreshed: string[] = [];
+    if (includeQuarterly) {
+      const activeQ = getActiveNepalFiscalQuarter(new Date(), 15);
+      if (activeQ.isDueNow) {
+        const dates = store.getDates();
+        const latest = dates[dates.length - 1];
+        const ranked = latest
+          ? store
+              .getDayPrices(latest, equityOnly)
+              .sort((a, b) => b.turnover - a.turnover)
+              .map((r) => r.symbol.toUpperCase())
+          : fundamentalVault.getAllLedgers().map((l) => l.symbol);
+        const missingQ = ranked
+          .filter((sym) => !fundamentalVault.hasQuarterData(sym, activeQ.fiscalYear, activeQ.quarter))
+          .slice(0, 4);
+        for (const sym of missingQ) {
+          try {
+            const qRes = await fundamentalMonitor.refreshSymbol(sym, 'manual-batch', false, {
+              force: false,
+              fiscalYear: activeQ.fiscalYear,
+              quarter: activeQ.quarter,
+            });
+            if (!qRes.skipped && qRes.periodsAdded > 0) {
+              quarterlyRefreshed.push(sym);
+            }
+          } catch (qErr) {
+            warnings.push(
+              `Quarterly refresh skipped for ${sym}: ${qErr instanceof Error ? qErr.message : 'failed'}`
+            );
+          }
+        }
+        if (quarterlyRefreshed.length > 0) {
+          fundamentalVault.writeConsolidatedQuarterlyCsv();
+        }
+      }
+    }
+
+    // 3. Gemini Search Grounded Company KB Enrichment & Annual Report Distillation
+    const enrichedSymbols: string[] = [];
+    const annualDistilledSymbols: string[] = [];
+
+    if (geminiConfigured && (enrichLimit > 0 || annualDistillLimit > 0)) {
+      const gemsResp = evaluateHiddenGems(store, fundamentalVault, regulatoryKb, {
+        equityOnly,
+        benchmarkFdRatePct: parseBenchmarkFdRate(),
+        monitorStatusMap: fundamentalMonitor.getStatusMap(),
+      });
+      const rankedPool =
+        explicitSymbols.length > 0
+          ? explicitSymbols
+          : [
+              ...gemsResp.gems.filter((g) => !g.kbEntry).map((g) => g.symbol),
+              ...gemsResp.gems.map((g) => g.symbol),
+            ];
+      const uniquePool = Array.from(new Set(rankedPool));
+
+      if (enrichLimit > 0 && uniquePool.length > 0) {
+        const toEnrich = uniquePool.slice(0, Math.min(6, enrichLimit));
+        try {
+          const enrichOut = await regulatoryKb.enrichCompanies(toEnrich, store, fundamentalVault);
+          for (const entry of enrichOut.updated) {
+            enrichedSymbols.push(entry.symbol);
+            regulatoryKb.markDailySymbolSearched(entry.symbol, todayNpt);
+          }
+          warnings.push(...enrichOut.warnings);
+        } catch (enrichErr) {
+          warnings.push(
+            `Company KB enrichment skipped: ${enrichErr instanceof Error ? enrichErr.message : 'failed'}`
+          );
+        }
+      }
+
+      if (annualDistillLimit > 0) {
+        const annualUniverse = getAnnualReportUniverse(store, fundamentalVault, regulatoryKb, {
+          equityOnly,
+        });
+        const annualPool =
+          explicitSymbols.length > 0
+            ? explicitSymbols
+            : [
+                ...annualUniverse.candidates
+                  .filter((c) => c.aiDistilledFyCount === 0)
+                  .map((c) => c.symbol),
+                ...annualUniverse.candidates.map((c) => c.symbol),
+              ];
+        for (const sym of Array.from(new Set(annualPool)).slice(0, annualDistillLimit)) {
+          try {
+            const distilled = await distillAnnualReportWithAi(
+              store,
+              fundamentalVault,
+              regulatoryKb,
+              sym,
+              undefined,
+              false
+            );
+            if (!distilled.cached) annualDistilledSymbols.push(sym);
+          } catch (distErr) {
+            warnings.push(
+              `Annual distillation skipped for ${sym}: ${distErr instanceof Error ? distErr.message : 'failed'}`
+            );
+          }
+        }
+      }
+    }
+
+    regulatoryKb.setLastDailyCrawlDate(todayNpt);
+    scheduler.markKbCrawledOnDate(todayNpt);
+
+    let githubPushed = false;
+    let githubPushMessage: string | undefined;
+    if (opts.trigger === 'manual') {
+      const pushRes = await scheduler.triggerAutoGitHubPush(
+        'kb',
+        `chore(kb): crawl regulatory, annual & quarterly knowledge base (${todayNpt})`
+      );
+      githubPushed = pushRes.committed;
+      githubPushMessage = pushRes.message;
+    }
+
+    return {
+      skipped: false,
+      date: todayNpt,
+      geminiConfigured,
+      agencies,
+      addedNotices: harvest.addedNotices,
+      companiesUpdated: harvest.companiesUpdated + enrichedSymbols.length,
+      enrichedSymbols,
+      annualDistilledSymbols,
+      quarterlyRefreshed,
+      directResults: harvest.directResults,
+      warnings: Array.from(new Set(warnings)),
+      summary: regulatoryKb.getSummary(),
+      githubPushed,
+      githubPushMessage,
+    };
+  }
+
+  scheduler.setDailyKbHandler(async ({ force, trigger }) =>
+    runDailyKbPipeline({
+      agencies: ALL_AGENCIES,
+      enrichLimit: 6,
+      annualDistillLimit: 2,
+      includeQuarterly: true,
+      equityOnly: true,
+      force,
+      trigger,
+    })
+  );
+  scheduler.setTodaySearchedCounter(() => regulatoryKb.getDailySearchCountForDate());
+  fundamentalMonitor.setOnDataUpdated(async (msg) => {
+    await scheduler.triggerAutoGitHubPush('kb', `chore(financials): ${msg}`);
+  });
 
   function parseBenchmarkFdRate(): number {
     const macro = loadMacroSnapshot(store);
@@ -652,6 +861,10 @@ async function startServer() {
       }
       if (result.succeeded.length > 0) {
         fundamentalVault.writeConsolidatedQuarterlyCsv();
+        void scheduler.triggerAutoGitHubPush(
+          'kb',
+          `chore(financials): update quarterly financials for ${result.succeeded.slice(0, 5).join(', ')}`
+        );
       }
       fundamentalMonitor.syncEntriesFromMarketAndVault(true);
 
@@ -730,6 +943,10 @@ async function startServer() {
       }
       fundamentalVault.writeConsolidatedQuarterlyCsv();
       fundamentalMonitor.syncEntriesFromMarketAndVault(true);
+      void scheduler.triggerAutoGitHubPush(
+        'kb',
+        `chore(financials): update quarterly statement ledger for ${symbol}`
+      );
       res.json(snapshot);
     } catch (err) {
       res.status(502).json({
@@ -1708,6 +1925,8 @@ async function startServer() {
 
   app.post('/api/screener/knowledge-base/enrich', async (req, res) => {
     try {
+      const force = Boolean(req.body?.force);
+      const todayNpt = getNepalDateStr();
       let symbols: string[] = Array.isArray(req.body?.symbols)
         ? req.body.symbols
             .map((s: unknown) => String(s || '').trim().toUpperCase())
@@ -1721,10 +1940,19 @@ async function startServer() {
           benchmarkFdRatePct: parseBenchmarkFdRate(),
           monitorStatusMap: fundamentalMonitor.getStatusMap(),
         });
-        const withoutKb = gemsResp.gems.filter((g) => !g.kbEntry).slice(0, 5);
-        symbols = (withoutKb.length > 0 ? withoutKb : gemsResp.gems.slice(0, 5)).map(
-          (g) => g.symbol
-        );
+        const withoutKb = gemsResp.gems
+          .filter((g) => !g.kbEntry && (force || !regulatoryKb.hasDailySearchForDate(g.symbol, todayNpt)))
+          .slice(0, 5);
+        const notSearchedToday = gemsResp.gems
+          .filter((g) => force || !regulatoryKb.hasDailySearchForDate(g.symbol, todayNpt))
+          .slice(0, 5);
+        symbols = (
+          withoutKb.length > 0
+            ? withoutKb
+            : notSearchedToday.length > 0
+              ? notSearchedToday
+              : gemsResp.gems.slice(0, 5)
+        ).map((g) => g.symbol);
       }
 
       if (symbols.length === 0) {
@@ -1732,8 +1960,51 @@ async function startServer() {
         return;
       }
 
-      const out = await regulatoryKb.enrichCompanies(symbols, store, fundamentalVault);
-      res.json(out);
+      const skippedSymbols = force
+        ? []
+        : symbols.filter((sym) => regulatoryKb.hasDailySearchForDate(sym, todayNpt));
+      const targetSymbols = force
+        ? symbols
+        : symbols.filter((sym) => !regulatoryKb.hasDailySearchForDate(sym, todayNpt));
+
+      if (targetSymbols.length === 0) {
+        const existingEntries = skippedSymbols
+          .map((sym) => regulatoryKb.getCompanyEntry(sym))
+          .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+        res.json({
+          updated: existingEntries,
+          skippedToday: true,
+          skippedSymbols,
+          warnings: [
+            `Already searched/enriched today (${todayNpt} NPT) for ${skippedSymbols.join(', ')}; skipped repeat crawl.`,
+          ],
+          summary: regulatoryKb.getSummary(),
+        });
+        return;
+      }
+
+      const out = await regulatoryKb.enrichCompanies(targetSymbols, store, fundamentalVault);
+      for (const entry of out.updated) {
+        regulatoryKb.markDailySymbolSearched(entry.symbol, todayNpt);
+      }
+      const cfg = scheduler.getStatus().config;
+      let githubPushed = false;
+      let githubPushMessage: string | undefined;
+      if (out.updated.length > 0 && cfg.autoPushOnSearchUpdate && cfg.pushToGitHub) {
+        const pushRes = await scheduler.triggerAutoGitHubPush(
+          'kb',
+          `chore(kb): enrich ${out.updated.map((e) => e.symbol).join(', ')} (${todayNpt})`
+        );
+        githubPushed = pushRes.committed;
+        githubPushMessage = pushRes.message;
+      }
+      res.json({
+        ...out,
+        skippedToday: false,
+        skippedSymbols,
+        githubPushed,
+        githubPushMessage,
+      });
     } catch (err) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'Failed to enrich companies from regulatory KB',
@@ -1765,6 +2036,7 @@ async function startServer() {
       );
       const includeQuarterly = req.body?.includeQuarterly !== false;
       const equityOnly = req.body?.equityOnly !== false;
+      const force = Boolean(req.body?.force);
 
       const explicitSymbols: string[] = Array.isArray(req.body?.symbols)
         ? req.body.symbols
@@ -1772,126 +2044,18 @@ async function startServer() {
             .filter(isValidSymbol)
         : [];
 
-      // 1. Direct agency scrapes + Gemini Search Grounding across NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE (incl. Annual & Quarterly notices)
-      const harvest = await regulatoryKb.harvestAgencies(agencies, store);
-      const warnings = [...harvest.warnings];
-      const geminiConfigured = regulatoryKb.isGeminiConfigured();
-
-      // 2. Optionally check/pull due missing quarterly reports (up to 4 leaders so request completes briskly)
-      const quarterlyRefreshed: string[] = [];
-      if (includeQuarterly) {
-        const activeQ = getActiveNepalFiscalQuarter(new Date(), 15);
-        if (activeQ.isDueNow) {
-          const dates = store.getDates();
-          const latest = dates[dates.length - 1];
-          const ranked = latest
-            ? store
-                .getDayPrices(latest, equityOnly)
-                .sort((a, b) => b.turnover - a.turnover)
-                .map((r) => r.symbol.toUpperCase())
-            : fundamentalVault.getAllLedgers().map((l) => l.symbol);
-          const missingQ = ranked
-            .filter((sym) => !fundamentalVault.hasQuarterData(sym, activeQ.fiscalYear, activeQ.quarter))
-            .slice(0, 4);
-          for (const sym of missingQ) {
-            try {
-              const qRes = await fundamentalMonitor.refreshSymbol(sym, 'manual-batch', false, {
-                force: false,
-                fiscalYear: activeQ.fiscalYear,
-                quarter: activeQ.quarter,
-              });
-              if (!qRes.skipped && qRes.periodsAdded > 0) {
-                quarterlyRefreshed.push(sym);
-              }
-            } catch (qErr) {
-              warnings.push(
-                `Quarterly refresh skipped for ${sym}: ${qErr instanceof Error ? qErr.message : 'failed'}`
-              );
-            }
-          }
-          if (quarterlyRefreshed.length > 0) {
-            fundamentalVault.writeConsolidatedQuarterlyCsv();
-          }
-        }
-      }
-
-      // 3. Gemini Search Grounded Company KB Enrichment & Annual Report Distillation
-      const enrichedSymbols: string[] = [];
-      const annualDistilledSymbols: string[] = [];
-
-      if (geminiConfigured && (enrichLimit > 0 || annualDistillLimit > 0)) {
-        const gemsResp = evaluateHiddenGems(store, fundamentalVault, regulatoryKb, {
-          equityOnly,
-          benchmarkFdRatePct: parseBenchmarkFdRate(),
-          monitorStatusMap: fundamentalMonitor.getStatusMap(),
-        });
-        const rankedPool =
-          explicitSymbols.length > 0
-            ? explicitSymbols
-            : [
-                ...gemsResp.gems.filter((g) => !g.kbEntry).map((g) => g.symbol),
-                ...gemsResp.gems.map((g) => g.symbol),
-              ];
-        const uniquePool = Array.from(new Set(rankedPool));
-
-        if (enrichLimit > 0 && uniquePool.length > 0) {
-          const toEnrich = uniquePool.slice(0, Math.min(6, enrichLimit));
-          try {
-            const enrichOut = await regulatoryKb.enrichCompanies(toEnrich, store, fundamentalVault);
-            for (const entry of enrichOut.updated) enrichedSymbols.push(entry.symbol);
-            warnings.push(...enrichOut.warnings);
-          } catch (enrichErr) {
-            warnings.push(
-              `Company KB enrichment skipped: ${enrichErr instanceof Error ? enrichErr.message : 'failed'}`
-            );
-          }
-        }
-
-        if (annualDistillLimit > 0) {
-          const annualUniverse = getAnnualReportUniverse(store, fundamentalVault, regulatoryKb, {
-            equityOnly,
-          });
-          const annualPool =
-            explicitSymbols.length > 0
-              ? explicitSymbols
-              : [
-                  ...annualUniverse.candidates
-                    .filter((c) => c.aiDistilledFyCount === 0)
-                    .map((c) => c.symbol),
-                  ...annualUniverse.candidates.map((c) => c.symbol),
-                ];
-          for (const sym of Array.from(new Set(annualPool)).slice(0, annualDistillLimit)) {
-            try {
-              const distilled = await distillAnnualReportWithAi(
-                store,
-                fundamentalVault,
-                regulatoryKb,
-                sym,
-                undefined,
-                false
-              );
-              if (!distilled.cached) annualDistilledSymbols.push(sym);
-            } catch (distErr) {
-              warnings.push(
-                `Annual distillation skipped for ${sym}: ${distErr instanceof Error ? distErr.message : 'failed'}`
-              );
-            }
-          }
-        }
-      }
-
-      res.json({
-        geminiConfigured,
+      const out = await runDailyKbPipeline({
         agencies,
-        addedNotices: harvest.addedNotices,
-        companiesUpdated: harvest.companiesUpdated + enrichedSymbols.length,
-        enrichedSymbols,
-        annualDistilledSymbols,
-        quarterlyRefreshed,
-        directResults: harvest.directResults,
-        warnings: Array.from(new Set(warnings)),
-        summary: regulatoryKb.getSummary(),
+        enrichLimit,
+        annualDistillLimit,
+        includeQuarterly,
+        equityOnly,
+        symbols: explicitSymbols,
+        force,
+        trigger: 'manual',
       });
+
+      res.json(out);
     } catch (err) {
       res.status(500).json({
         error:
@@ -1916,16 +2080,92 @@ async function startServer() {
   });
 
   app.post('/api/research/stock', async (req, res) => {
+    const started = Date.now();
+    const symbol = String(req.body?.symbol || '').trim().toUpperCase();
     try {
-      const symbol = String(req.body?.symbol || '').trim();
       const force = Boolean(req.body?.force);
       const nDays = req.body?.nDays ? Math.max(5, Math.min(250, Number(req.body.nDays))) : 20;
       if (!symbol) {
         res.status(400).json({ error: 'Symbol is required' });
         return;
       }
+
+      const todayNpt = getNepalDateStr();
+      const cfg = scheduler.getStatus().config;
+      const alreadySearchedInKbToday = regulatoryKb.hasDailySearchForDate(symbol, todayNpt);
+
       const data = await generateStockResearch(store, symbol, force, nDays);
-      res.json(data);
+
+      // Once-a-day skip: already researched & indexed in KB today -> skip repeat crawl & GitHub push
+      if (!force && data.skippedToday && alreadySearchedInKbToday) {
+        res.json({
+          ...data,
+          skippedToday: true,
+          searchedDate: todayNpt,
+          kbUpdated: false,
+          githubPushed: false,
+        });
+        return;
+      }
+
+      // First search today (or forced refresh): sync findings into Knowledge Base
+      regulatoryKb.recordStockSearchToKb({
+        store,
+        vault: fundamentalVault,
+        research: data,
+        dateStr: todayNpt,
+      });
+
+      if (cfg.autoCrawlOnSearch && regulatoryKb.isGeminiConfigured()) {
+        const existingKb = regulatoryKb.getCompanyEntry(symbol);
+        const needsRatingEnrich =
+          force ||
+          !existingKb ||
+          !existingKb.creditRating.ratingGrade ||
+          existingKb.updatedAt.slice(0, 10) !== todayNpt;
+        if (needsRatingEnrich) {
+          try {
+            await regulatoryKb.enrichCompanies([symbol], store, fundamentalVault);
+            regulatoryKb.recordStockSearchToKb({
+              store,
+              vault: fundamentalVault,
+              research: data,
+              dateStr: todayNpt,
+            });
+          } catch {
+            // Do not fail stock research response if secondary KB enrichment hits quota/network limits
+          }
+        }
+      }
+
+      regulatoryKb.markDailySymbolSearched(symbol, todayNpt);
+      scheduler.recordExternalLog({
+        trigger: 'search',
+        status: 'success',
+        tradingDate: todayNpt,
+        rowsSaved: 1,
+        durationMs: Date.now() - started,
+        message: `Searched ${symbol} & updated Knowledge Base (${todayNpt}).`,
+      });
+
+      let githubPushed = false;
+      let githubPushMessage: string | undefined;
+      if (cfg.autoPushOnSearchUpdate && cfg.pushToGitHub) {
+        const pushRes = await scheduler.triggerAutoGitHubPush(
+          'search',
+          `chore(kb): update ${symbol} stock research & knowledge base (${todayNpt})`
+        );
+        githubPushed = pushRes.committed;
+        githubPushMessage = pushRes.message;
+      }
+
+      res.json({
+        ...data,
+        searchedDate: todayNpt,
+        kbUpdated: true,
+        githubPushed,
+        githubPushMessage,
+      });
     } catch (err) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'Failed to fetch stock risks and opportunities',
@@ -2081,6 +2321,24 @@ async function startServer() {
       entry,
       status: scheduler.getStatus(),
     });
+  });
+
+  app.post('/api/github/push-data', async (req, res) => {
+    try {
+      const msg =
+        typeof req.body?.commitMessage === 'string' && req.body.commitMessage.trim()
+          ? req.body.commitMessage.trim()
+          : undefined;
+      const result = await scheduler.pushDataToGitHubNow('manual', msg);
+      res.json({
+        result,
+        status: scheduler.getStatus(),
+      });
+    } catch (err) {
+      res.status(400).json({
+        error: err instanceof Error ? err.message : 'Failed to push data directory to GitHub',
+      });
+    }
   });
 
   app.post('/api/github/workflow-dispatch', async (req, res) => {

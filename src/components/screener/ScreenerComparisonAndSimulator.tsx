@@ -42,12 +42,16 @@ export interface PeerComparisonArenaProps {
   onClear: () => void;
 }
 
+type Q4BaselineChartMetric = 'index' | 'eps' | 'opProfit' | 'netProfit' | 'revenue' | 'roe';
+
 export const PeerComparisonArena: React.FC<PeerComparisonArenaProps> = ({
   rows,
   onRemoveSymbol,
   onInspectSymbol,
   onClear,
 }) => {
+  const [q4ChartMetric, setQ4ChartMetric] = useState<Q4BaselineChartMetric>('index');
+
   const metricRows: CompareMetricRow[] = useMemo(
     () => [
       {
@@ -180,6 +184,32 @@ export const PeerComparisonArena: React.FC<PeerComparisonArenaProps> = ({
           `${fmtSigned(r.keyMetrics.revenueQoqPct, 1, '%')} · ${fmtSigned(r.keyMetrics.revenueYoyPct, 1, '%')}`,
       },
       {
+        label: 'Operating Profit (Core · Cr)',
+        direction: 'higher',
+        getNum: (r) => r.keyMetrics.operatingProfitCr,
+        format: (r) => (
+          <div className="inline-flex items-center justify-end gap-2">
+            <GrowthTrendSparkline
+              values={r.keyMetrics.trends.operatingProfitCr ?? []}
+              periods={r.keyMetrics.trends.periods}
+              metricName="Operating Profit"
+              unit=" Cr"
+              digits={1}
+              width={42}
+              height={14}
+            />
+            <span>{fmtNum(r.keyMetrics.operatingProfitCr, 1, 'Cr')}</span>
+          </div>
+        ),
+      },
+      {
+        label: 'Op. Profit QoQ · YoY %',
+        direction: 'higher',
+        getNum: (r) => r.keyMetrics.operatingProfitYoyPct ?? r.keyMetrics.operatingProfitQoqPct,
+        format: (r) =>
+          `${fmtSigned(r.keyMetrics.operatingProfitQoqPct, 1, '%')} · ${fmtSigned(r.keyMetrics.operatingProfitYoyPct, 1, '%')}`,
+      },
+      {
         label: 'Net Profit (Trend · Cr)',
         direction: 'higher',
         getNum: (r) => r.keyMetrics.netProfitCr,
@@ -210,6 +240,61 @@ export const PeerComparisonArena: React.FC<PeerComparisonArenaProps> = ({
         direction: 'higher',
         getNum: (r) => r.keyMetrics.roeQoqDeltaPct,
         format: (r) => fmtSigned(r.keyMetrics.roeQoqDeltaPct, 2, ' pp'),
+      },
+      {
+        section: '3-Year 4Q Average Baseline',
+        label: '3Y 4Q Baseline Sample',
+        direction: 'higher',
+        getNum: (r) => (r.keyMetrics.q4AvgYearsCount > 0 ? r.keyMetrics.q4AvgYearsCount : null),
+        format: (r) =>
+          r.keyMetrics.q4AvgYearsCount > 0
+            ? `${r.keyMetrics.q4AvgYearsCount} Q4 FY${r.keyMetrics.q4AvgYearsCount > 1 ? 's' : ''}`
+            : 'Pending',
+      },
+      {
+        label: 'EPS vs 3Y 4Q Avg',
+        direction: 'higher',
+        getNum: (r) => r.keyMetrics.epsVsQ4Avg3yPct,
+        format: (r) =>
+          r.keyMetrics.q4AvgEps3y !== null
+            ? `${fmtNum(r.keyMetrics.eps, 1)} vs ${fmtNum(r.keyMetrics.q4AvgEps3y, 1)} (${fmtSigned(r.keyMetrics.epsVsQ4Avg3yPct, 1, '%')})`
+            : '—',
+      },
+      {
+        label: 'Op. Profit vs 3Y 4Q Avg',
+        direction: 'higher',
+        getNum: (r) => r.keyMetrics.operatingProfitVsQ4Avg3yPct,
+        format: (r) =>
+          r.keyMetrics.q4AvgOperatingProfitCr3y !== null
+            ? `${fmtNum(r.keyMetrics.q4AnnualizedOpProfitCr ?? r.keyMetrics.operatingProfitCr, 1)} vs ${fmtNum(r.keyMetrics.q4AvgOperatingProfitCr3y, 1)} Cr (${fmtSigned(r.keyMetrics.operatingProfitVsQ4Avg3yPct, 1, '%')})`
+            : '—',
+      },
+      {
+        label: 'Net Profit vs 3Y 4Q Avg',
+        direction: 'higher',
+        getNum: (r) => r.keyMetrics.netProfitVsQ4Avg3yPct,
+        format: (r) =>
+          r.keyMetrics.q4AvgNetProfitCr3y !== null
+            ? `${fmtNum(r.keyMetrics.q4AnnualizedNetProfitCr ?? r.keyMetrics.netProfitCr, 1)} vs ${fmtNum(r.keyMetrics.q4AvgNetProfitCr3y, 1)} Cr (${fmtSigned(r.keyMetrics.netProfitVsQ4Avg3yPct, 1, '%')})`
+            : '—',
+      },
+      {
+        label: 'Revenue vs 3Y 4Q Avg',
+        direction: 'higher',
+        getNum: (r) => r.keyMetrics.revenueVsQ4Avg3yPct,
+        format: (r) =>
+          r.keyMetrics.q4AvgRevenueCr3y !== null
+            ? `${fmtNum(r.keyMetrics.q4AnnualizedRevenueCr ?? r.keyMetrics.revenueCr, 1)} vs ${fmtNum(r.keyMetrics.q4AvgRevenueCr3y, 1)} Cr (${fmtSigned(r.keyMetrics.revenueVsQ4Avg3yPct, 1, '%')})`
+            : '—',
+      },
+      {
+        label: 'ROE vs 3Y 4Q Avg',
+        direction: 'higher',
+        getNum: (r) => r.keyMetrics.roeVsQ4Avg3yDelta,
+        format: (r) =>
+          r.keyMetrics.q4AvgRoePct3y !== null
+            ? `${fmtNum(r.keyMetrics.roePct, 1, '%')} vs ${fmtNum(r.keyMetrics.q4AvgRoePct3y, 1, '%')} (${fmtSigned(r.keyMetrics.roeVsQ4Avg3yDelta, 2, ' pp')})`
+            : '—',
       },
       {
         section: 'Multi-Horizon Growth',
@@ -374,68 +459,386 @@ export const PeerComparisonArena: React.FC<PeerComparisonArenaProps> = ({
           </table>
         </div>
 
-        {/* 9-Investor Grouped Horizontal Comparison Bars */}
-        <div className="xl:col-span-5 p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                9-Investor DNA Comparison (0–100)
-              </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Vertical dashed line marks 65/100 qualification threshold
-              </p>
+        {/* Comparison Charts Column: 3-Year 4Q Average Baseline + 9-Investor DNA */}
+        <div className="xl:col-span-5 p-4 space-y-5">
+          {/* Current vs 3-Year 4Q Average Baseline Comparison Chart */}
+          <div className="space-y-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  Current Growth vs 3-Year 4Q Average Baseline
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {q4ChartMetric === 'index'
+                    ? 'Dashed reference line = 100% (each company’s own 3-Year 4Q Average baseline)'
+                    : 'Dashed markers mark each company’s 3-Year 4Q Average & peer average reference line'}
+                </p>
+              </div>
+              <div className="inline-flex flex-wrap rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-0.5 text-[10px]">
+                {(
+                  [
+                    { id: 'index', label: '3Y 4Q Index' },
+                    { id: 'opProfit', label: 'Op. Profit' },
+                    { id: 'eps', label: 'EPS' },
+                    { id: 'netProfit', label: 'Net Profit' },
+                    { id: 'revenue', label: 'Revenue' },
+                    { id: 'roe', label: 'ROE %' },
+                  ] as const
+                ).map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setQ4ChartMetric(tab.id)}
+                    className={`px-2 py-0.5 rounded font-medium whitespace-nowrap transition-colors ${
+                      q4ChartMetric === tab.id
+                        ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono">
-              {rows.map((r, idx) => (
-                <span key={r.symbol} className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                  <span
-                    className="w-2.5 h-2.5 rounded-sm inline-block"
-                    style={{ backgroundColor: COMPARE_SERIES_COLORS[idx % COMPARE_SERIES_COLORS.length] }}
-                  />
-                  {r.symbol}
-                </span>
-              ))}
-            </div>
+
+            {q4ChartMetric === 'index' ? (
+              (() => {
+                const indexItems = rows.map((r, idx) => {
+                  const opDelta = r.keyMetrics.operatingProfitVsQ4Avg3yPct;
+                  const epsDelta = r.keyMetrics.epsVsQ4Avg3yPct;
+                  const opIdx = opDelta !== null ? Math.max(0, 100 + opDelta) : null;
+                  const epsIdx = epsDelta !== null ? Math.max(0, 100 + epsDelta) : null;
+                  return {
+                    symbol: r.symbol,
+                    color: COMPARE_SERIES_COLORS[idx % COMPARE_SERIES_COLORS.length],
+                    opDelta,
+                    epsDelta,
+                    opIdx,
+                    epsIdx,
+                    yearsCount: r.keyMetrics.q4AvgYearsCount,
+                    caution: r.keyMetrics.earningsQuality?.hasNonOperatingCaution ?? false,
+                  };
+                });
+                const maxIdxVal = Math.max(
+                  150,
+                  ...indexItems.flatMap((i) => [i.opIdx ?? 0, i.epsIdx ?? 0])
+                );
+                const scaleMax = Math.ceil(maxIdxVal / 25) * 25;
+                const refLeftPct = (100 / scaleMax) * 100;
+                const hasAny = indexItems.some((i) => i.opIdx !== null || i.epsIdx !== null);
+
+                if (!hasAny) {
+                  return (
+                    <div className="py-4 text-center text-[11px] text-slate-500 dark:text-slate-400">
+                      3-Year 4Q Average history not yet archived for the selected peers.
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1">
+                          <span className="w-2.5 h-1.5 rounded-xs bg-emerald-600 dark:bg-emerald-500 inline-block" />
+                          Op. Profit (Core)
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="w-2.5 h-1.5 rounded-xs bg-blue-500 dark:bg-blue-400 inline-block" />
+                          EPS
+                        </span>
+                      </div>
+                      <span className="text-amber-700 dark:text-amber-400 font-medium">
+                        --- 3-Year 4Q Average (100%)
+                      </span>
+                    </div>
+
+                    <div className="relative pt-4 space-y-2.5">
+                      {/* Full-height 3-Year 4Q Average reference line at 100% */}
+                      <div
+                        className="absolute top-0 bottom-0 border-l-2 border-dashed border-amber-500/80 dark:border-amber-400/80 pointer-events-none z-10"
+                        style={{ left: `${refLeftPct}%` }}
+                      >
+                        <span className="absolute -top-0.5 -translate-x-1/2 px-1 bg-white dark:bg-slate-900 text-[9px] font-mono font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap">
+                          3Y 4Q Avg (100%)
+                        </span>
+                      </div>
+
+                      {indexItems.map((item) => (
+                        <div key={item.symbol} className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                              {item.symbol}
+                              {item.yearsCount > 0 && (
+                                <span className="ml-1.5 font-normal text-[10px] text-slate-400">
+                                  ({item.yearsCount}Y Q4)
+                                </span>
+                              )}
+                              {item.caution && (
+                                <span className="ml-1.5 text-[10px] font-sans font-medium text-amber-700 dark:text-amber-400">
+                                  · One-Off Caution
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-mono tabular-nums text-[10px] text-slate-600 dark:text-slate-300">
+                              Op {fmtSigned(item.opDelta, 1, '%')} · EPS {fmtSigned(item.epsDelta, 1, '%')}
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-sm overflow-hidden">
+                              {item.opIdx !== null && (
+                                <div
+                                  className={`h-full transition-all duration-200 ${
+                                    (item.opDelta ?? 0) >= 0
+                                      ? 'bg-emerald-600 dark:bg-emerald-500'
+                                      : 'bg-amber-500 dark:bg-amber-400'
+                                  }`}
+                                  style={{ width: `${Math.min(100, (item.opIdx / scaleMax) * 100)}%` }}
+                                />
+                              )}
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-sm overflow-hidden">
+                              {item.epsIdx !== null && (
+                                <div
+                                  className="h-full bg-blue-500/85 dark:bg-blue-400/85 transition-all duration-200"
+                                  style={{ width: `${Math.min(100, (item.epsIdx / scaleMax) * 100)}%` }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              (() => {
+                const metricMeta: Record<
+                  Exclude<Q4BaselineChartMetric, 'index'>,
+                  {
+                    unit: string;
+                    digits: number;
+                    isPp?: boolean;
+                    getCur: (r: ScreenedCompanyRow) => number | null;
+                    getAvg: (r: ScreenedCompanyRow) => number | null;
+                    getDelta: (r: ScreenedCompanyRow) => number | null;
+                  }
+                > = {
+                  opProfit: {
+                    unit: ' Cr',
+                    digits: 1,
+                    getCur: (r) => r.keyMetrics.q4AnnualizedOpProfitCr ?? r.keyMetrics.operatingProfitCr,
+                    getAvg: (r) => r.keyMetrics.q4AvgOperatingProfitCr3y,
+                    getDelta: (r) => r.keyMetrics.operatingProfitVsQ4Avg3yPct,
+                  },
+                  eps: {
+                    unit: '',
+                    digits: 1,
+                    getCur: (r) => r.keyMetrics.eps,
+                    getAvg: (r) => r.keyMetrics.q4AvgEps3y,
+                    getDelta: (r) => r.keyMetrics.epsVsQ4Avg3yPct,
+                  },
+                  netProfit: {
+                    unit: ' Cr',
+                    digits: 1,
+                    getCur: (r) => r.keyMetrics.q4AnnualizedNetProfitCr ?? r.keyMetrics.netProfitCr,
+                    getAvg: (r) => r.keyMetrics.q4AvgNetProfitCr3y,
+                    getDelta: (r) => r.keyMetrics.netProfitVsQ4Avg3yPct,
+                  },
+                  revenue: {
+                    unit: ' Cr',
+                    digits: 1,
+                    getCur: (r) => r.keyMetrics.q4AnnualizedRevenueCr ?? r.keyMetrics.revenueCr,
+                    getAvg: (r) => r.keyMetrics.q4AvgRevenueCr3y,
+                    getDelta: (r) => r.keyMetrics.revenueVsQ4Avg3yPct,
+                  },
+                  roe: {
+                    unit: '%',
+                    digits: 1,
+                    isPp: true,
+                    getCur: (r) => r.keyMetrics.roePct,
+                    getAvg: (r) => r.keyMetrics.q4AvgRoePct3y,
+                    getDelta: (r) => r.keyMetrics.roeVsQ4Avg3yDelta,
+                  },
+                };
+
+                const spec = metricMeta[q4ChartMetric];
+                const items = rows.map((r, idx) => ({
+                  symbol: r.symbol,
+                  color: COMPARE_SERIES_COLORS[idx % COMPARE_SERIES_COLORS.length],
+                  cur: spec.getCur(r),
+                  avg: spec.getAvg(r),
+                  delta: spec.getDelta(r),
+                }));
+                const allVals = items
+                  .flatMap((i) => [i.cur, i.avg])
+                  .filter((v): v is number => v !== null && Number.isFinite(v) && v > 0);
+                const avgBaselines = items
+                  .map((i) => i.avg)
+                  .filter((v): v is number => v !== null && Number.isFinite(v) && v > 0);
+                const peerAvgBaseline =
+                  avgBaselines.length > 0
+                    ? avgBaselines.reduce((s, v) => s + v, 0) / avgBaselines.length
+                    : null;
+
+                if (allVals.length === 0) {
+                  return (
+                    <div className="py-4 text-center text-[11px] text-slate-500 dark:text-slate-400">
+                      Selected metric and 3-Year 4Q Average data unavailable for these peers.
+                    </div>
+                  );
+                }
+
+                const maxVal = Math.max(...allVals) * 1.12;
+                const peerRefPct =
+                  peerAvgBaseline !== null ? Math.min(98, (peerAvgBaseline / maxVal) * 100) : null;
+
+                return (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                      <span>Solid bar = Current Run-Rate</span>
+                      <span className="text-amber-700 dark:text-amber-400 font-medium">
+                        --- Own 3Y 4Q Avg
+                        {peerAvgBaseline !== null && items.length > 1
+                          ? ` · Peer 3Y 4Q Avg: ${peerAvgBaseline.toFixed(spec.digits)}${spec.unit}`
+                          : ''}
+                      </span>
+                    </div>
+
+                    <div className="relative pt-4 space-y-2.5">
+                      {peerRefPct !== null && (
+                        <div
+                          className="absolute top-0 bottom-0 border-l border-dashed border-amber-500/70 dark:border-amber-400/70 pointer-events-none z-10"
+                          style={{ left: `${peerRefPct}%` }}
+                        >
+                          <span className="absolute -top-0.5 -translate-x-1/2 px-1 bg-white dark:bg-slate-900 text-[9px] font-mono font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap">
+                            {items.length > 1 ? 'Peer 3Y 4Q Avg' : '3Y 4Q Avg'}
+                          </span>
+                        </div>
+                      )}
+
+                      {items.map((item) => {
+                        const curPct =
+                          item.cur !== null && item.cur > 0
+                            ? Math.min(100, (item.cur / maxVal) * 100)
+                            : 0;
+                        const avgPct =
+                          item.avg !== null && item.avg > 0
+                            ? Math.min(100, (item.avg / maxVal) * 100)
+                            : null;
+                        return (
+                          <div key={item.symbol} className="space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                                {item.symbol}
+                              </span>
+                              <span className="font-mono tabular-nums text-[10px] text-slate-600 dark:text-slate-300">
+                                Now {fmtNum(item.cur, spec.digits, spec.unit)} · 3Y 4Q Avg{' '}
+                                {fmtNum(item.avg, spec.digits, spec.unit)} (
+                                <span
+                                  className={
+                                    item.delta === null
+                                      ? 'text-slate-400'
+                                      : item.delta >= 0
+                                        ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                                        : 'text-red-600 dark:text-red-400 font-semibold'
+                                  }
+                                >
+                                  {fmtSigned(item.delta, spec.isPp ? 2 : 1, spec.isPp ? ' pp' : '%')}
+                                </span>
+                                )
+                              </span>
+                            </div>
+                            <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-sm">
+                              <div
+                                className="h-full rounded-sm transition-all duration-200"
+                                style={{
+                                  width: `${curPct}%`,
+                                  backgroundColor: item.color,
+                                }}
+                              />
+                              {avgPct !== null && (
+                                <div
+                                  title={`${item.symbol} 3-Year 4Q Average: ${fmtNum(item.avg, spec.digits, spec.unit)}`}
+                                  className="absolute -top-0.5 -bottom-0.5 w-0.5 bg-amber-600 dark:bg-amber-400 z-20"
+                                  style={{ left: `${avgPct}%` }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
           </div>
 
-          <div className="space-y-2.5 pt-1">
-            {INVESTOR_META.map((inv) => (
-              <div key={inv.id} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-medium text-slate-700 dark:text-slate-300">{inv.label}</span>
-                  <span className="font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                    {rows
-                      .map((r) => `${r.symbol} ${(r.investorScores[inv.id] ?? 0).toFixed(0)}`)
-                      .join(' · ')}
-                  </span>
-                </div>
-                <div className="relative space-y-1">
-                  {/* 65-point threshold guide */}
-                  <div
-                    className="absolute top-0 bottom-0 border-l border-dashed border-slate-300 dark:border-slate-700 pointer-events-none"
-                    style={{ left: '65%' }}
-                  />
-                  {rows.map((r, idx) => {
-                    const score = Math.max(0, Math.min(100, r.investorScores[inv.id] ?? 0));
-                    return (
-                      <div
-                        key={`${inv.id}-${r.symbol}`}
-                        className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-sm overflow-hidden"
-                      >
-                        <div
-                          className="h-full transition-all duration-200"
-                          style={{
-                            width: `${score}%`,
-                            backgroundColor:
-                              COMPARE_SERIES_COLORS[idx % COMPARE_SERIES_COLORS.length],
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+          {/* 9-Investor Grouped Horizontal Comparison Bars */}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  9-Investor DNA Comparison (0–100)
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Vertical dashed line marks 65/100 qualification threshold
+                </p>
               </div>
-            ))}
+              <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono">
+                {rows.map((r, idx) => (
+                  <span key={r.symbol} className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                    <span
+                      className="w-2.5 h-2.5 rounded-sm inline-block"
+                      style={{ backgroundColor: COMPARE_SERIES_COLORS[idx % COMPARE_SERIES_COLORS.length] }}
+                    />
+                    {r.symbol}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              {INVESTOR_META.map((inv) => (
+                <div key={inv.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{inv.label}</span>
+                    <span className="font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                      {rows
+                        .map((r) => `${r.symbol} ${(r.investorScores[inv.id] ?? 0).toFixed(0)}`)
+                        .join(' · ')}
+                    </span>
+                  </div>
+                  <div className="relative space-y-1">
+                    {/* 65-point threshold guide */}
+                    <div
+                      className="absolute top-0 bottom-0 border-l border-dashed border-slate-300 dark:border-slate-700 pointer-events-none"
+                      style={{ left: '65%' }}
+                    />
+                    {rows.map((r, idx) => {
+                      const score = Math.max(0, Math.min(100, r.investorScores[inv.id] ?? 0));
+                      return (
+                        <div
+                          key={`${inv.id}-${r.symbol}`}
+                          className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-sm overflow-hidden"
+                        >
+                          <div
+                            className="h-full transition-all duration-200"
+                            style={{
+                              width: `${score}%`,
+                              backgroundColor:
+                                COMPARE_SERIES_COLORS[idx % COMPARE_SERIES_COLORS.length],
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

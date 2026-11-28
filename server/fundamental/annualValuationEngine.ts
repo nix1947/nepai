@@ -575,8 +575,16 @@ function buildFutureScenarios(params: {
   const eps = km.eps;
   const bvps = km.bvps;
   const roe = km.roePct ?? cfg.minRoePct;
+  const opGrowth =
+    km.operatingProfitCagr3yPct ??
+    km.operatingProfitYoyPct ??
+    km.operatingProfitVsQ4Avg3yPct;
+  const useOpFocus = Boolean(km.earningsQuality?.hasNonOperatingCaution) && opGrowth !== null;
   const baseGrowth = clip(
-    km.epsCagr3yPct ?? km.epsYoyPct ?? (roe > 0 ? roe * 0.48 : 7),
+    (useOpFocus ? opGrowth : null) ??
+      km.epsCagr3yPct ??
+      km.epsYoyPct ??
+      (roe > 0 ? roe * 0.48 : 7),
     3,
     cfg.sustainableGrowthCapPct
   );
@@ -623,6 +631,8 @@ function buildFutureScenarios(params: {
       return round1((Math.pow(target / ltp, 1 / yrs) - 1) * 100);
     };
 
+    const basisLabel = useOpFocus ? 'Core Operating Profit growth' : 'EPS/BV growth';
+
     return {
       horizon: h,
       bearPrice,
@@ -631,7 +641,7 @@ function buildFutureScenarios(params: {
       bearCagrPct: calcCagr(bearPrice),
       baseCagrPct: calcCagr(basePrice),
       bullCagrPct: calcCagr(bullPrice),
-      assumptions: `Bear: ${(gBear * 100).toFixed(1)}% EPS/BV growth & 0.82x fair-multiple · Base: ${(gBase * 100).toFixed(1)}% growth & 1.0x fair · Bull: ${(gBull * 100).toFixed(1)}% growth & 1.20x re-rating.`,
+      assumptions: `Bear: ${(gBear * 100).toFixed(1)}% ${basisLabel} & 0.82x fair-multiple · Base: ${(gBase * 100).toFixed(1)}% growth & 1.0x fair · Bull: ${(gBull * 100).toFixed(1)}% growth & 1.20x re-rating.`,
     };
   });
 }
@@ -708,6 +718,9 @@ function buildSwotAndFutureWorth(params: {
   }
 
   // Weaknesses
+  if (km.earningsQuality?.hasNonOperatingCaution && km.earningsQuality.cautionMessage) {
+    weaknesses.push(km.earningsQuality.cautionMessage);
+  }
   if ((km.roePct ?? 99) < cfg.minRoePct) {
     weaknesses.push(
       `Sub-hurdle ROE (${km.roePct !== null ? `${km.roePct.toFixed(1)}%` : 'Unavailable'}) below ${cfg.minRoePct}% ${cfg.label} threshold.`
@@ -724,7 +737,7 @@ function buildSwotAndFutureWorth(params: {
     );
   }
   if (cap.operatingCashFlowCr === null) {
-    weaknesses.push('Operating Cash Flow not itemized in ShareSansar summary; audit full AGM annual report cash statement before heavy sizing.');
+    weaknesses.push('Operating Cash Flow not itemized in financial summary; audit full AGM annual report cash statement before heavy sizing.');
   } else if (cap.netProfitToOcfPct !== null && cap.netProfitToOcfPct < 75) {
     weaknesses.push(`Cash conversion lag: OCF is only ${cap.netProfitToOcfPct.toFixed(0)}% of net profit.`);
   }
@@ -765,6 +778,11 @@ function buildSwotAndFutureWorth(params: {
   }
 
   // Risks
+  if (km.earningsQuality?.hasNonOperatingCaution) {
+    risks.push(
+      `Earnings Quality Caution: headline Net Profit growth relies heavily on non-operating / disposal gains — rely on core Operating Profit growth (${km.earningsQuality.operatingGrowthBestPct !== null ? `${km.earningsQuality.operatingGrowthBestPct >= 0 ? '+' : ''}${km.earningsQuality.operatingGrowthBestPct.toFixed(1)}%` : 'N/A'}) instead.`
+    );
+  }
   if (marginOfSafetyPct !== null && marginOfSafetyPct < -15) {
     risks.push(
       `Valuation stretch risk: LTP trades ${Math.abs(marginOfSafetyPct).toFixed(1)}% above composite fair value (Rs ${compositeFairValue?.toFixed(0)}), compressing forward IRR.`
@@ -800,6 +818,7 @@ function buildSwotAndFutureWorth(params: {
   if (cap.reserveToCapitalRatio !== null && cap.reserveToCapitalRatio >= 0.8) convScore += 4;
   if (eySpread !== null && eySpread > 1.5) convScore += 4;
   if (kbEntry?.regulatoryStanding === 'Alert' || kbEntry?.lockInOverhangFlag) convScore -= 10;
+  if (km.earningsQuality?.hasNonOperatingCaution) convScore -= 6;
   convScore = round1(clip(convScore, 0, 100));
 
   let convictionTier: SwotAndFutureWorth['futureWorthVerdict']['convictionTier'] =
@@ -834,7 +853,10 @@ function buildSwotAndFutureWorth(params: {
       ? `Rs ${entryZones.deepValuePrice.toFixed(0)} – Rs ${entryZones.buyZonePrice.toFixed(0)}`
       : 'Awaiting fundamental inputs';
 
-  const rationale = `${summary.symbol} scores ${convScore.toFixed(1)}/100 for long-term capital commitment (${forensics.hasAnnualReport ? `${forensics.annualWeightPct}% Annual + ${forensics.interimWeightPct}% Interim weighted` : 'interim-quarter basis'}). Fair value clusters around ${fairValueRangeLabel}${marginOfSafetyPct !== null ? ` (${marginOfSafetyPct >= 0 ? `+${marginOfSafetyPct.toFixed(1)}% discount` : `${Math.abs(marginOfSafetyPct).toFixed(1)}% premium`} vs LTP)` : ''}, with ${cap.dividendBonusCapacityRating.toLowerCase()} for multi-year total return.`;
+  const cautionSuffix = km.earningsQuality?.hasNonOperatingCaution
+    ? ' Caution: non-operating profit boost detected, so growth projections focus on core Operating Profit.'
+    : '';
+  const rationale = `${summary.symbol} scores ${convScore.toFixed(1)}/100 for long-term capital commitment (${forensics.hasAnnualReport ? `${forensics.annualWeightPct}% Annual + ${forensics.interimWeightPct}% Interim weighted` : 'interim-quarter basis'}). Fair value clusters around ${fairValueRangeLabel}${marginOfSafetyPct !== null ? ` (${marginOfSafetyPct >= 0 ? `+${marginOfSafetyPct.toFixed(1)}% discount` : `${Math.abs(marginOfSafetyPct).toFixed(1)}% premium`} vs LTP)` : ''}, with ${cap.dividendBonusCapacityRating.toLowerCase()} for multi-year total return.${cautionSuffix}`;
 
   return {
     strengths: strengths.slice(0, 5),
@@ -967,9 +989,15 @@ function computeValuationHealthScore(params: {
     summary.sectorGroup === 'Banking' || summary.sectorGroup === 'Microfinance';
   const isInsurance = summary.sectorGroup === 'Insurance';
 
-  const epsGrowthVal = km.epsCagr3yPct ?? km.epsYoyPct ?? km.epsVsQ4Avg3yPct;
+  const opGrowthVal =
+    km.operatingProfitCagr3yPct ?? km.operatingProfitYoyPct ?? km.operatingProfitVsQ4Avg3yPct;
+  const epsGrowthVal =
+    km.earningsQuality?.hasNonOperatingCaution && opGrowthVal !== null
+      ? opGrowthVal
+      : km.epsCagr3yPct ?? km.epsYoyPct ?? km.epsVsQ4Avg3yPct;
   const revGrowthVal = km.revenueCagr3yPct ?? km.revenueYoyPct;
-  const profitGrowthVal = km.netProfitCagr3yPct ?? km.netProfitYoyPct;
+  const profitGrowthVal =
+    opGrowthVal ?? km.netProfitCagr3yPct ?? km.netProfitYoyPct;
   const eySpread =
     km.earningsYieldPct !== null ? round2(km.earningsYieldPct - benchmarkFdRatePct) : null;
 

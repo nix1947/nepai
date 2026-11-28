@@ -273,6 +273,7 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
           annualDistillLimit: 2,
           includeQuarterly: true,
           equityOnly,
+          force: true,
         }),
       });
       const json = await res.json();
@@ -288,6 +289,9 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
       }
       if (json.quarterlyRefreshed?.length) {
         details.push(`quarterly filings (${json.quarterlyRefreshed.join(', ')})`);
+      }
+      if (json.githubPushed) {
+        details.push('auto-pushed to GitHub');
       }
       const warnText =
         Array.isArray(json.warnings) && json.warnings.length > 0
@@ -324,7 +328,11 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
       if (!res.ok) throw new Error(json.error || 'Company KB enrichment failed');
       setActionBanner({
         kind: 'info',
-        text: `Enriched ${json.updated?.length ?? 0} Hidden Gem(s) (${symbols.join(', ')}) with ICRA/CARE ratings and NRB/NIA/SEBON/NEPSE/CDSC filings.`,
+        text: json.skippedToday
+          ? `Already searched & indexed today (${json.skippedSymbols?.join(', ') || symbols.join(', ')}) — skipped repeat crawl.`
+          : `Enriched ${json.updated?.length ?? 0} Hidden Gem(s) (${symbols.join(', ')}) with ICRA/CARE ratings and NRB/NIA/SEBON/NEPSE/CDSC filings.${
+              json.githubPushed ? ' Auto-pushed updates to GitHub.' : ''
+            }`,
       });
       await loadAll();
     } catch (err) {
@@ -350,7 +358,11 @@ export const HiddenGemsKnowledgePanel: React.FC<HiddenGemsKnowledgePanelProps> =
       if (!res.ok) throw new Error(json.error || `KB enrichment failed for ${symbol}`);
       setActionBanner({
         kind: 'info',
-        text: `Updated regulatory & credit-rating knowledge base for ${symbol}.`,
+        text: json.skippedToday
+          ? `Already searched & indexed ${symbol} today — skipped repeat crawl for today.`
+          : `Updated regulatory & credit-rating knowledge base for ${symbol}.${
+              json.githubPushed ? ' Auto-pushed updates to GitHub.' : ''
+            }`,
       });
       await loadAll();
     } catch (err) {

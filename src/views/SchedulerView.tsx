@@ -49,7 +49,10 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
   const [githubRepo, setGithubRepo] = useState('nix1947/nepai');
   const [githubBranch, setGithubBranch] = useState('main');
   const [githubDataPath, setGithubDataPath] = useState('data');
-  const [pushToGitHub, setPushToGitHub] = useState(false);
+  const [pushToGitHub, setPushToGitHub] = useState(true);
+  const [crawlKbDaily, setCrawlKbDaily] = useState(true);
+  const [autoCrawlOnSearch, setAutoCrawlOnSearch] = useState(true);
+  const [autoPushOnSearchUpdate, setAutoPushOnSearchUpdate] = useState(true);
 
   // Backfill states
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -61,6 +64,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
   const [saving, setSaving] = useState(false);
   const [pulling, setPulling] = useState(false);
   const [syncingGh, setSyncingGh] = useState(false);
+  const [pushingData, setPushingData] = useState(false);
   const [pushingProj, setPushingProj] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [ghAccount, setGhAccount] = useState<{
@@ -100,7 +104,10 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
         setGithubRepo(data.config.githubRepo || '');
         setGithubBranch(data.config.githubBranch || 'main');
         setGithubDataPath(data.config.githubDataPath || 'data');
-        setPushToGitHub(Boolean(data.config.pushToGitHub));
+        setPushToGitHub(Boolean(data.config.pushToGitHub ?? true));
+        setCrawlKbDaily(Boolean(data.config.crawlKbDaily ?? true));
+        setAutoCrawlOnSearch(Boolean(data.config.autoCrawlOnSearch ?? true));
+        setAutoPushOnSearchUpdate(Boolean(data.config.autoPushOnSearchUpdate ?? true));
         if (data.config.githubRepo) {
           setPushRepoName(data.config.githubRepo);
         }
@@ -165,11 +172,14 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
           githubBranch,
           githubDataPath,
           pushToGitHub,
+          crawlKbDaily,
+          autoCrawlOnSearch,
+          autoPushOnSearchUpdate,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save schedule');
-      setNotice({ kind: 'success', text: 'Daily scheduler and GitHub sync settings saved.' });
+      setNotice({ kind: 'success', text: 'Daily scheduler, KB auto-crawl, and GitHub auto-push settings saved.' });
       await loadStatus();
     } catch (err) {
       setNotice({ kind: 'error', text: err instanceof Error ? err.message : 'Save failed' });
@@ -234,6 +244,32 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
     }
   };
 
+  const pushDataToGitHubNow = async () => {
+    setPushingData(true);
+    setNotice(null);
+    try {
+      const res = await fetch('/api/github/push-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to push data/ to GitHub');
+      setNotice({
+        kind: data.result?.committed ? 'success' : 'info',
+        text: data.result?.message || 'Data directory checked against GitHub.',
+      });
+      await loadStatus();
+    } catch (err) {
+      setNotice({
+        kind: 'error',
+        text: err instanceof Error ? err.message : 'Push data/ to GitHub failed',
+      });
+    } finally {
+      setPushingData(false);
+    }
+  };
+
   const pushProject = async () => {
     setPushingProj(true);
     setNotice(null);
@@ -274,6 +310,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
           enrichLimit: 6,
           annualDistillLimit: 2,
           includeQuarterly: true,
+          force: true,
         }),
       });
       const json = await res.json();
@@ -292,6 +329,9 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
       if (json.quarterlyRefreshed?.length) {
         parts.push(`pulled quarterly filings (${json.quarterlyRefreshed.join(', ')})`);
       }
+      if (json.githubPushed) {
+        parts.push('pushed updates to GitHub');
+      }
       const warnSuffix =
         Array.isArray(json.warnings) && json.warnings.length > 0
           ? ` Notes: ${json.warnings.slice(0, 2).join(' · ')}`
@@ -300,6 +340,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
         kind: json.geminiConfigured ? 'success' : 'info',
         text: `${parts.join(' · ')}.${warnSuffix}`,
       });
+      await loadStatus();
       onDataChanged();
     } catch (err) {
       setNotice({
@@ -451,17 +492,20 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
       {/* Status summary row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Auto-Pull Schedule</div>
-          <div className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">
+          <div className="text-xs text-slate-500 dark:text-slate-400">Once-a-Day Pull &amp; KB Crawl</div>
+          <div className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
             {status?.config.enabled ? `Active · ${status.config.time} (${status.config.timezone})` : 'Paused'}
           </div>
-          <div className="mt-1 text-xs font-mono text-slate-500 dark:text-slate-400">
-            Next run: {status?.nextRunIso ? `${formatDateTimeLocal(status.nextRunIso)} (${formatTimeUntil(status.nextRunIso)})` : '–'}
+          <div className="mt-1 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
+            Next: {status?.nextRunIso ? `${formatDateTimeLocal(status.nextRunIso)} (${formatTimeUntil(status.nextRunIso)})` : '–'}
+          </div>
+          <div className="mt-0.5 text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400">
+            Last KB Crawl: {status?.lastKbCrawlDate || 'Pending today'}
           </div>
         </div>
 
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Data Source Mode</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">GitHub Auto-Sync &amp; Push</div>
           <div className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">
             {status?.config.sourceMode === 'github'
               ? 'GitHub Repository'
@@ -474,17 +518,23 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
               ? `${status.config.githubRepo}@${status.config.githubBranch}/${status.config.githubDataPath}`
               : 'Configure a GitHub repo below to enable daily GitHub sync'}
           </div>
+          <div className="mt-0.5 text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400">
+            Last Push: {status?.lastGitHubPushAt ? formatDateTimeLocal(status.lastGitHubPushAt) : status?.lastGitHubPushDate || 'Not pushed yet'}
+          </div>
         </div>
 
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-4">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Stored Trading Days</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">Stored Days &amp; Search Dedup</div>
           <div className="mt-1 text-base font-semibold font-mono tabular-nums text-slate-900 dark:text-slate-100">
-            {status?.loadedDates.length ?? 0} session(s)
+            {status?.loadedDates.length ?? 0} session(s) · {status?.todaySearchedSymbolsCount ?? 0} searched today
           </div>
-          <div className="mt-1 text-xs font-mono text-slate-500 dark:text-slate-400">
+          <div className="mt-1 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
             {status && status.loadedDates.length > 0
               ? `${status.loadedDates[0]} → ${status.loadedDates[status.loadedDates.length - 1]}`
               : 'Empty data directory'}
+          </div>
+          <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+            Repeat searches on the same day skip re-crawling
           </div>
         </div>
       </div>
@@ -502,8 +552,8 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
               One-click Gemini Search Grounding + direct portal crawl for{' '}
               <span className="font-mono font-medium">NRB, NIA, SEBON, CDSC, ICRA, CARE, NEPSE</span>,
-              audited Annual Reports, and due Quarterly ShareSansar statements. GitHub Actions also
-              runs this full pipeline daily at <span className="font-mono">18:08 NPT</span>.
+              audited Annual Reports, and due Quarterly Financial Statements. Scheduled daily runs crawl once per day and push updates to GitHub automatically; GitHub Actions also runs at{' '}
+              <span className="font-mono">18:08 NPT</span>.
             </p>
           </div>
 
@@ -764,7 +814,37 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
                   onChange={(e) => setPushToGitHub(e.target.checked)}
                   className="rounded border-slate-300 text-blue-600"
                 />
-                <span>Commit fetched CSVs to GitHub (requires GITHUB_TOKEN)</span>
+                <span>Commit updated data &amp; CSVs to GitHub (requires GITHUB_TOKEN)</span>
+              </label>
+            </div>
+
+            <div className="pt-2 space-y-2 border-t border-slate-100 dark:border-slate-800">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={crawlKbDaily}
+                  onChange={(e) => setCrawlKbDaily(e.target.checked)}
+                  className="rounded border-slate-300 text-blue-600"
+                />
+                <span>Crawl Regulatory KB &amp; due quarterly data automatically once per day</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={autoCrawlOnSearch}
+                  onChange={(e) => setAutoCrawlOnSearch(e.target.checked)}
+                  className="rounded border-slate-300 text-blue-600"
+                />
+                <span>Auto-crawl &amp; update Knowledge Base when searching a stock (skip repeats same day)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={autoPushOnSearchUpdate}
+                  onChange={(e) => setAutoPushOnSearchUpdate(e.target.checked)}
+                  className="rounded border-slate-300 text-blue-600"
+                />
+                <span>Auto-push updated Knowledge Base &amp; data files to GitHub on stock searches</span>
               </label>
             </div>
           </div>
@@ -799,7 +879,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="px-4 py-2 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
             >
               {saving ? 'Saving…' : 'Save Schedule'}
             </button>
@@ -807,7 +887,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
               type="button"
               onClick={pullNow}
               disabled={pulling}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
             >
               {pulling ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               <span>{pulling ? 'Running…' : 'Run Scheduled Pull Now'}</span>
@@ -816,10 +896,24 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({ onDataChanged }) =
               type="button"
               onClick={syncGitHubNow}
               disabled={syncingGh || !githubRepo.trim()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
             >
               <GitBranch className="w-3.5 h-3.5" />
               <span>{syncingGh ? 'Syncing…' : 'Pull from GitHub Now'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={pushDataToGitHubNow}
+              disabled={pushingData || !githubRepo.trim() || !status?.hasGitHubToken}
+              title={
+                status?.hasGitHubToken
+                  ? 'Push changed CSVs, quarterly financials, and Knowledge Base to GitHub'
+                  : 'Requires GITHUB_TOKEN secret on server'
+              }
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>{pushingData ? 'Pushing Data…' : 'Push Data to GitHub Now'}</span>
             </button>
           </div>
         </form>

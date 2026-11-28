@@ -6,6 +6,7 @@ import type {
 import type { StockResearchResponse } from '../../src/types/market.ts';
 import type {
   DataQualityFlag,
+  EarningsQualityAssessment,
   GrowthComparisons,
   NormalizedFinancialMetrics,
   Q4FiscalYearPoint,
@@ -467,7 +468,7 @@ export function normalizeShareSansarSnapshot(
           section: row.section,
           particulars: row.particulars,
           rawValue: rawStr,
-          numericValue: val !== null && isThousandRow && !pLower.includes('per share') ? val * 1_000 : val,
+          numericValue: val !== null && !pLower.includes('per share') ? val * mult : val,
         });
 
         if (val === null) continue;
@@ -543,7 +544,13 @@ export function normalizeShareSansarSnapshot(
           pLower === 'profit/(loss) for the period'
         ) {
           metrics.netProfit = reported(val * mult, 'NPR', parsedPeriod.periodLabel, 'ShareSansar');
-        } else if (pLower === 'operating profit' || pLower.includes('operating profit/')) {
+        } else if (
+          pLower === 'operating profit' ||
+          pLower.includes('operating profit/') ||
+          pLower === 'profit from operations' ||
+          pLower.includes('profit/(loss) from operations') ||
+          pLower.includes('operating income/(loss)')
+        ) {
           metrics.operatingProfit = reported(val * mult, 'NPR', parsedPeriod.periodLabel, 'ShareSansar');
           if (metrics.ebit.provenance === 'Unavailable') {
             metrics.ebit = reported(val * mult, 'NPR', parsedPeriod.periodLabel, 'ShareSansar');
@@ -744,6 +751,7 @@ function emptyQ4Benchmark(): Q4ThreeYearBenchmark {
     annualizedFactorApplied: 1,
     currentAnnualizedEps: null,
     currentAnnualizedNetProfitCr: null,
+    currentAnnualizedOperatingProfitCr: null,
     currentAnnualizedRevenueCr: null,
     currentRoePct: null,
     currentNetMarginPct: null,
@@ -752,6 +760,7 @@ function emptyQ4Benchmark(): Q4ThreeYearBenchmark {
     currentNplPct: null,
     avgEps: null,
     avgNetProfitCr: null,
+    avgOperatingProfitCr: null,
     avgRevenueCr: null,
     avgRoePct: null,
     avgNetMarginPct: null,
@@ -760,6 +769,7 @@ function emptyQ4Benchmark(): Q4ThreeYearBenchmark {
     avgNplPct: null,
     epsVsAvgPct: null,
     netProfitVsAvgPct: null,
+    operatingProfitVsAvgPct: null,
     revenueVsAvgPct: null,
     roeVsAvgDeltaPp: null,
     marginVsAvgDeltaPp: null,
@@ -805,6 +815,7 @@ export function computeQ4ThreeYearBenchmark(
     periodLabel: r.periodLabel,
     eps: r.metrics.eps.value,
     netProfitCr: toCr(r.metrics.netProfit.value, 1),
+    operatingProfitCr: toCr(r.metrics.operatingProfit.value, 1),
     revenueCr: toCr(r.metrics.revenue.value, 1),
     roePct: r.metrics.roePct.value,
     netMarginPct: r.metrics.netProfitMarginPct.value,
@@ -831,6 +842,7 @@ export function computeQ4ThreeYearBenchmark(
 
   const currentAnnualizedEps = latest.metrics.eps.value;
   const currentAnnualizedNetProfitCr = toCr(latest.metrics.netProfit.value, mult);
+  const currentAnnualizedOperatingProfitCr = toCr(latest.metrics.operatingProfit.value, mult);
   const currentAnnualizedRevenueCr = toCr(latest.metrics.revenue.value, mult);
   const currentRoePct = latest.metrics.roePct.value;
   const currentNetMarginPct = latest.metrics.netProfitMarginPct.value;
@@ -840,6 +852,7 @@ export function computeQ4ThreeYearBenchmark(
 
   const avgEps = mean(historyPoints.map((p) => p.eps));
   const avgNetProfitCr = mean(historyPoints.map((p) => p.netProfitCr));
+  const avgOperatingProfitCr = mean(historyPoints.map((p) => p.operatingProfitCr));
   const avgRevenueCr = mean(historyPoints.map((p) => p.revenueCr));
   const avgRoePct = mean(historyPoints.map((p) => p.roePct));
   const avgNetMarginPct = mean(historyPoints.map((p) => p.netMarginPct));
@@ -865,6 +878,7 @@ export function computeQ4ThreeYearBenchmark(
     annualizedFactorApplied: round2(mult),
     currentAnnualizedEps,
     currentAnnualizedNetProfitCr,
+    currentAnnualizedOperatingProfitCr,
     currentAnnualizedRevenueCr,
     currentRoePct,
     currentNetMarginPct,
@@ -873,6 +887,7 @@ export function computeQ4ThreeYearBenchmark(
     currentNplPct,
     avgEps,
     avgNetProfitCr,
+    avgOperatingProfitCr,
     avgRevenueCr,
     avgRoePct,
     avgNetMarginPct,
@@ -881,12 +896,281 @@ export function computeQ4ThreeYearBenchmark(
     avgNplPct,
     epsVsAvgPct: pctDiff(currentAnnualizedEps, avgEps),
     netProfitVsAvgPct: pctDiff(currentAnnualizedNetProfitCr, avgNetProfitCr),
+    operatingProfitVsAvgPct: pctDiff(currentAnnualizedOperatingProfitCr, avgOperatingProfitCr),
     revenueVsAvgPct: pctDiff(currentAnnualizedRevenueCr, avgRevenueCr),
     roeVsAvgDeltaPp: ppDiff(currentRoePct, avgRoePct),
     marginVsAvgDeltaPp: ppDiff(currentNetMarginPct, avgNetMarginPct),
     bvpsVsAvgPct: pctDiff(currentBvps, avgBvps),
     nplVsAvgDeltaPp: ppDiff(currentNplPct, avgNplPct),
     historyPoints,
+  };
+}
+
+function emptyEarningsQuality(): EarningsQualityAssessment {
+  return {
+    status: 'Unavailable',
+    hasNonOperatingCaution: false,
+    cautionTitle: null,
+    cautionMessage: null,
+    focusMetric: 'EPS / Net Profit',
+    operatingProfitCr: null,
+    operatingMarginPct: null,
+    netToOperatingProfitRatioPct: null,
+    nonOperatingGapPp: null,
+    nonOperatingIncomeCr: null,
+    operatingGrowthBestPct: null,
+    reasons: [],
+  };
+}
+
+function extractNonOperatingGainNpr(record: QuarterlyStatementRecord): number | null {
+  const items = record.rawLineItems || [];
+  let subtotalCandidate: number | null = null;
+  let specificGainSum = 0;
+  let hasSpecific = false;
+
+  for (const li of items) {
+    const p = (li.particulars || '').toLowerCase().trim();
+    const val = li.numericValue;
+    if (val === null || !Number.isFinite(val) || val <= 0) continue;
+    if (p.includes('expense') && !p.includes('income')) continue;
+
+    if (
+      p === 'non-operating income' ||
+      p === 'non operating income' ||
+      p === 'net non-operating income' ||
+      p === 'non-operating income/(expense)' ||
+      p === 'other non-operating income' ||
+      p.includes('total non-operating')
+    ) {
+      subtotalCandidate = Math.max(subtotalCandidate ?? 0, val);
+    } else if (
+      p.includes('gain on sale') ||
+      p.includes('gain on disposal') ||
+      p.includes('profit on sale') ||
+      p.includes('sale of investment') ||
+      p.includes('sale of property') ||
+      p.includes('disposal of property') ||
+      p.includes('disposal of investment') ||
+      p.includes('fair value gain') ||
+      p.includes('revaluation gain') ||
+      p.includes('extraordinary income') ||
+      (p.includes('non-operating') && p.includes('income'))
+    ) {
+      specificGainSum += val;
+      hasSpecific = true;
+    }
+  }
+
+  if (subtotalCandidate !== null && subtotalCandidate > 0) return subtotalCandidate;
+  if (hasSpecific && specificGainSum > 0) return specificGainSum;
+  return null;
+}
+
+export function computeEarningsQualityAssessment(
+  recordsDesc: QuarterlyStatementRecord[],
+  growthRates: {
+    operatingProfitQoqPct: number | null;
+    operatingProfitYoyPct: number | null;
+    operatingProfitCagr3yPct: number | null;
+    epsQoqPct: number | null;
+    epsYoyPct: number | null;
+    epsCagr3yPct: number | null;
+    netProfitQoqPct: number | null;
+    netProfitYoyPct: number | null;
+    netProfitCagr3yPct: number | null;
+    operatingProfitVsAvgPct: number | null;
+  }
+): EarningsQualityAssessment {
+  if (recordsDesc.length === 0) return emptyEarningsQuality();
+
+  const latest = recordsDesc[0];
+  const op = latest.metrics.operatingProfit.value;
+  const np = latest.metrics.netProfit.value;
+  const rev = latest.metrics.revenue.value;
+
+  const operatingProfitCr = op !== null && Number.isFinite(op) ? round2(op / 1e7) : null;
+  const netProfitCr = np !== null && Number.isFinite(np) ? round2(np / 1e7) : null;
+  const operatingMarginPct =
+    op !== null && rev !== null && rev > 0 ? round2((op / rev) * 100) : null;
+  const netToOperatingProfitRatioPct =
+    np !== null && op !== null && op > 0 ? round2((np / op) * 100) : null;
+
+  const detectedNonOpGainNpr = extractNonOperatingGainNpr(latest);
+  const proxyExcessNpr =
+    np !== null && op !== null && np > op * 1.12 ? np - op : null;
+  const effectiveNonOpNpr =
+    detectedNonOpGainNpr !== null && proxyExcessNpr !== null
+      ? Math.max(detectedNonOpGainNpr, proxyExcessNpr)
+      : detectedNonOpGainNpr ?? proxyExcessNpr;
+  const nonOperatingIncomeCr =
+    effectiveNonOpNpr !== null ? round2(effectiveNonOpNpr / 1e7) : null;
+
+  const operatingGrowthBestPct =
+    growthRates.operatingProfitCagr3yPct ??
+    growthRates.operatingProfitYoyPct ??
+    growthRates.operatingProfitQoqPct ??
+    growthRates.operatingProfitVsAvgPct;
+
+  const horizonPairs: Array<{ label: string; headline: number | null; opG: number | null }> = [
+    {
+      label: 'YoY',
+      headline: growthRates.netProfitYoyPct ?? growthRates.epsYoyPct,
+      opG: growthRates.operatingProfitYoyPct,
+    },
+    {
+      label: 'QoQ',
+      headline: growthRates.netProfitQoqPct ?? growthRates.epsQoqPct,
+      opG: growthRates.operatingProfitQoqPct,
+    },
+    {
+      label: '3Y CAGR',
+      headline: growthRates.netProfitCagr3yPct ?? growthRates.epsCagr3yPct,
+      opG: growthRates.operatingProfitCagr3yPct,
+    },
+  ];
+
+  let nonOperatingGapPp: number | null = null;
+  let worstGapPair: { label: string; headline: number; opG: number; gap: number } | null = null;
+  for (const hp of horizonPairs) {
+    if (hp.headline === null || hp.opG === null) continue;
+    const gap = round2(hp.headline - hp.opG);
+    if (nonOperatingGapPp === null || gap > nonOperatingGapPp) {
+      nonOperatingGapPp = gap;
+      worstGapPair = { label: hp.label, headline: hp.headline, opG: hp.opG, gap };
+    }
+  }
+
+  const reasons: string[] = [];
+  let hasCaution = false;
+  let hasWatch = false;
+
+  if (np !== null && np > 0 && op !== null && op <= 0) {
+    hasCaution = true;
+    reasons.push(
+      `Reported positive Net Profit (Rs ${netProfitCr?.toFixed(2)} Cr) despite non-positive core Operating Profit (Rs ${operatingProfitCr?.toFixed(2)} Cr), indicating bottom-line profitability came from non-operating gains rather than core business.`
+    );
+  } else if (np !== null && op !== null && op > 0 && np > op * 1.12) {
+    hasCaution = true;
+    reasons.push(
+      `Net Profit (Rs ${netProfitCr?.toFixed(2)} Cr) is ${netToOperatingProfitRatioPct?.toFixed(0)}% of Operating Profit (Rs ${operatingProfitCr?.toFixed(2)} Cr) — exceeding core operating profit typically reflects non-operating gains such as investment/property disposals or write-backs.`
+    );
+  }
+
+  if (
+    detectedNonOpGainNpr !== null &&
+    np !== null &&
+    np > 0 &&
+    (detectedNonOpGainNpr / np >= 0.2 ||
+      (op !== null && op > 0 && detectedNonOpGainNpr / op >= 0.2))
+  ) {
+    const sharePct = round2((detectedNonOpGainNpr / np) * 100);
+    if (op === null || np >= op * 0.92 || (worstGapPair && worstGapPair.gap >= 12)) {
+      hasCaution = true;
+      reasons.push(
+        `Non-operating / asset-disposal income (Rs ${(detectedNonOpGainNpr / 1e7).toFixed(2)} Cr, ~${sharePct.toFixed(0)}% of Net Profit) materially boosts reported profit.`
+      );
+    } else {
+      hasWatch = true;
+      reasons.push(
+        `Non-operating income line item (Rs ${(detectedNonOpGainNpr / 1e7).toFixed(2)} Cr) is present in this period; monitor core Operating Profit run-rate.`
+      );
+    }
+  }
+
+  if (
+    worstGapPair &&
+    worstGapPair.gap >= 20 &&
+    (worstGapPair.opG < 8 || worstGapPair.gap >= 30)
+  ) {
+    hasCaution = true;
+    reasons.push(
+      `${worstGapPair.label} bottom-line growth (${worstGapPair.headline >= 0 ? '+' : ''}${worstGapPair.headline.toFixed(1)}%) outpaces core Operating Profit growth (${worstGapPair.opG >= 0 ? '+' : ''}${worstGapPair.opG.toFixed(1)}%) by +${worstGapPair.gap.toFixed(1)}pp — compare core Operating Profit instead of one-off profit spikes.`
+    );
+  } else if (!hasCaution && worstGapPair && worstGapPair.gap >= 12) {
+    hasWatch = true;
+    reasons.push(
+      `${worstGapPair.label} Net Profit/EPS growth (+${worstGapPair.headline.toFixed(1)}%) leads Operating Profit (${worstGapPair.opG >= 0 ? '+' : ''}${worstGapPair.opG.toFixed(1)}%) by +${worstGapPair.gap.toFixed(1)}pp.`
+    );
+  }
+
+  if (!hasCaution && op !== null && np !== null && op > 0 && np > op * 0.95) {
+    hasWatch = true;
+    reasons.push(
+      `Net Profit (Rs ${netProfitCr?.toFixed(2)} Cr) sits unusually close to Operating Profit (Rs ${operatingProfitCr?.toFixed(2)} Cr; ${netToOperatingProfitRatioPct?.toFixed(0)}%); verify tax/other-income items.`
+    );
+  }
+
+  if (op === null) {
+    return {
+      status: 'Unavailable',
+      hasNonOperatingCaution: false,
+      cautionTitle: null,
+      cautionMessage: null,
+      focusMetric: 'EPS / Net Profit',
+      operatingProfitCr: null,
+      operatingMarginPct: null,
+      netToOperatingProfitRatioPct: null,
+      nonOperatingGapPp,
+      nonOperatingIncomeCr,
+      operatingGrowthBestPct,
+      reasons: [
+        'Operating Profit was not itemized separately in this filing summary; verify core operating earnings before relying on Net Profit/EPS growth.',
+      ],
+    };
+  }
+
+  if (hasCaution) {
+    const cautionTitle = 'Caution: Non-Operating / One-Off Profit Boost Detected';
+    const cautionMessage = `${reasons[0]} Focus growth and valuation comparisons on core Operating Profit${operatingGrowthBestPct !== null ? ` (${operatingGrowthBestPct >= 0 ? '+' : ''}${operatingGrowthBestPct.toFixed(1)}%)` : ''} rather than headline Net Profit/EPS (which can be inflated by investment or property sales).`;
+    return {
+      status: 'One-Off Caution',
+      hasNonOperatingCaution: true,
+      cautionTitle,
+      cautionMessage,
+      focusMetric: 'Operating Profit',
+      operatingProfitCr,
+      operatingMarginPct,
+      netToOperatingProfitRatioPct,
+      nonOperatingGapPp,
+      nonOperatingIncomeCr,
+      operatingGrowthBestPct,
+      reasons,
+    };
+  }
+
+  if (hasWatch) {
+    return {
+      status: 'Watch',
+      hasNonOperatingCaution: false,
+      cautionTitle: 'Monitor Non-Operating Variance — Focus on Operating Profit',
+      cautionMessage: reasons.join(' '),
+      focusMetric: 'Operating Profit',
+      operatingProfitCr,
+      operatingMarginPct,
+      netToOperatingProfitRatioPct,
+      nonOperatingGapPp,
+      nonOperatingIncomeCr,
+      operatingGrowthBestPct,
+      reasons,
+    };
+  }
+
+  return {
+    status: 'Core-Driven',
+    hasNonOperatingCaution: false,
+    cautionTitle: null,
+    cautionMessage: null,
+    focusMetric: 'Operating Profit',
+    operatingProfitCr,
+    operatingMarginPct,
+    netToOperatingProfitRatioPct,
+    nonOperatingGapPp,
+    nonOperatingIncomeCr,
+    operatingGrowthBestPct,
+    reasons: [
+      'Core Operating Profit aligns cleanly with reported Net Profit (no material one-off investment/property sale distortion detected).',
+    ],
   };
 }
 
@@ -909,6 +1193,11 @@ export function computeGrowthComparisons(
       netProfitYoyPct: null,
       netProfitCagr3yPct: null,
       netProfitCagr5yPct: null,
+      operatingProfitQoqPct: null,
+      operatingProfitYoyPct: null,
+      operatingProfitCagr3yPct: null,
+      operatingProfitCagr5yPct: null,
+      operatingMarginPct: null,
       revenueQoqPct: null,
       revenueYoyPct: null,
       revenueCagr3yPct: null,
@@ -919,6 +1208,7 @@ export function computeGrowthComparisons(
       periodsAvailable: 0,
       fiscalYearsAvailable: 0,
       q4Benchmark,
+      earningsQuality: emptyEarningsQuality(),
     };
   }
 
@@ -957,30 +1247,84 @@ export function computeGrowthComparisons(
 
   const uniqueYears = new Set(recordsDesc.map((r) => r.fiscalYear));
 
-  return {
-    epsQoqPct: pctChange(latest.metrics.eps.value, prevQuarter?.metrics.eps.value ?? null),
-    epsYoyPct: pctChange(latest.metrics.eps.value, r1y?.metrics.eps.value ?? null),
-    epsCagr3yPct: cagr(latest.metrics.eps.value, r3y?.metrics.eps.value ?? null, 3),
-    epsCagr5yPct: cagr(latest.metrics.eps.value, r5y?.metrics.eps.value ?? null, 5),
+  const epsQoqPct = pctChange(latest.metrics.eps.value, prevQuarter?.metrics.eps.value ?? null);
+  const epsYoyPct = pctChange(latest.metrics.eps.value, r1y?.metrics.eps.value ?? null);
+  const epsCagr3yPct = cagr(latest.metrics.eps.value, r3y?.metrics.eps.value ?? null, 3);
+  const epsCagr5yPct = cagr(latest.metrics.eps.value, r5y?.metrics.eps.value ?? null, 5);
 
-    netProfitQoqPct: pctChange(
-      latest.metrics.netProfit.value,
-      prevQuarter?.metrics.netProfit.value ?? null
-    ),
-    netProfitYoyPct: pctChange(
-      latest.metrics.netProfit.value,
-      r1y?.metrics.netProfit.value ?? null
-    ),
-    netProfitCagr3yPct: cagr(
-      latest.metrics.netProfit.value,
-      r3y?.metrics.netProfit.value ?? null,
-      3
-    ),
-    netProfitCagr5yPct: cagr(
-      latest.metrics.netProfit.value,
-      r5y?.metrics.netProfit.value ?? null,
-      5
-    ),
+  const netProfitQoqPct = pctChange(
+    latest.metrics.netProfit.value,
+    prevQuarter?.metrics.netProfit.value ?? null
+  );
+  const netProfitYoyPct = pctChange(
+    latest.metrics.netProfit.value,
+    r1y?.metrics.netProfit.value ?? null
+  );
+  const netProfitCagr3yPct = cagr(
+    latest.metrics.netProfit.value,
+    r3y?.metrics.netProfit.value ?? null,
+    3
+  );
+  const netProfitCagr5yPct = cagr(
+    latest.metrics.netProfit.value,
+    r5y?.metrics.netProfit.value ?? null,
+    5
+  );
+
+  const operatingProfitQoqPct = pctChange(
+    latest.metrics.operatingProfit.value,
+    prevQuarter?.metrics.operatingProfit.value ?? null
+  );
+  const operatingProfitYoyPct = pctChange(
+    latest.metrics.operatingProfit.value,
+    r1y?.metrics.operatingProfit.value ?? null
+  );
+  const operatingProfitCagr3yPct = cagr(
+    latest.metrics.operatingProfit.value,
+    r3y?.metrics.operatingProfit.value ?? null,
+    3
+  );
+  const operatingProfitCagr5yPct = cagr(
+    latest.metrics.operatingProfit.value,
+    r5y?.metrics.operatingProfit.value ?? null,
+    5
+  );
+  const operatingMarginPct =
+    latest.metrics.operatingProfit.value !== null &&
+    latest.metrics.revenue.value !== null &&
+    latest.metrics.revenue.value > 0
+      ? round2((latest.metrics.operatingProfit.value / latest.metrics.revenue.value) * 100)
+      : null;
+
+  const earningsQuality = computeEarningsQualityAssessment(recordsDesc, {
+    operatingProfitQoqPct,
+    operatingProfitYoyPct,
+    operatingProfitCagr3yPct,
+    epsQoqPct,
+    epsYoyPct,
+    epsCagr3yPct,
+    netProfitQoqPct,
+    netProfitYoyPct,
+    netProfitCagr3yPct,
+    operatingProfitVsAvgPct: q4Benchmark.operatingProfitVsAvgPct,
+  });
+
+  return {
+    epsQoqPct,
+    epsYoyPct,
+    epsCagr3yPct,
+    epsCagr5yPct,
+
+    netProfitQoqPct,
+    netProfitYoyPct,
+    netProfitCagr3yPct,
+    netProfitCagr5yPct,
+
+    operatingProfitQoqPct,
+    operatingProfitYoyPct,
+    operatingProfitCagr3yPct,
+    operatingProfitCagr5yPct,
+    operatingMarginPct,
 
     revenueQoqPct: pctChange(
       latest.metrics.revenue.value,
@@ -1008,6 +1352,7 @@ export function computeGrowthComparisons(
     periodsAvailable: recordsDesc.length,
     fiscalYearsAvailable: uniqueYears.size,
     q4Benchmark,
+    earningsQuality,
   };
 }
 

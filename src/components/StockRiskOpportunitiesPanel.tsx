@@ -52,14 +52,28 @@ function recBadgeClass(rec: StockRecommendation): string {
   return 'bg-slate-700 dark:bg-slate-600 text-white';
 }
 
+function getClientNepalDateKey(): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kathmandu',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
 export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelProps> = ({
   symbol,
   companyName,
   autoLoad = true,
 }) => {
   const { settings } = useTradingSettings();
+  const cacheKeyFor = (sym: string) => `${sym}:${getClientNepalDateKey()}`;
   const [data, setData] = useState<StockResearchResponse | null>(
-    () => (symbol ? clientStockCache.get(symbol) ?? null : null)
+    () => (symbol ? clientStockCache.get(cacheKeyFor(symbol)) ?? null : null)
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,8 +82,9 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
   const fetchResearch = useCallback(
     async (force = false) => {
       if (!symbol) return;
-      if (!force && clientStockCache.has(symbol)) {
-        setData(clientStockCache.get(symbol)!);
+      const ck = cacheKeyFor(symbol);
+      if (!force && clientStockCache.has(ck)) {
+        setData(clientStockCache.get(ck)!);
         setError(null);
         return;
       }
@@ -85,7 +100,7 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
         if (!res.ok) {
           throw new Error(json.error || `Request failed (${res.status})`);
         }
-        clientStockCache.set(symbol, json);
+        clientStockCache.set(ck, json);
         setData(json);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load fundamental research');
@@ -98,7 +113,7 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
 
   useEffect(() => {
     if (!symbol) return;
-    const cached = clientStockCache.get(symbol);
+    const cached = clientStockCache.get(cacheKeyFor(symbol));
     if (cached) {
       setData(cached);
       setError(null);
@@ -178,6 +193,11 @@ export const StockRiskOpportunitiesPanel: React.FC<StockRiskOpportunitiesPanelPr
                 <span className="font-mono tabular-nums">
                   {new Date(data.retrievedAt || data.generatedAt).toLocaleString()}
                 </span>
+                {data.skippedToday
+                  ? ` · Skipped repeat search today (${data.searchedDate || 'NPT'})`
+                  : data.kbUpdated
+                    ? ` · KB updated${data.githubPushed ? ' · Auto-pushed to GitHub' : ''}`
+                    : ''}
               </>
             )}
           </p>

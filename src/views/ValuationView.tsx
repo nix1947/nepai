@@ -597,6 +597,35 @@ export const ValuationView: React.FC<ValuationViewProps> = ({
               </div>
             )}
 
+            {dossier.summary.keyMetrics.earningsQuality?.hasNonOperatingCaution && (
+              <div className="border border-amber-300 dark:border-amber-800 rounded-lg bg-amber-50/75 dark:bg-amber-950/30 p-3 text-xs space-y-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 font-semibold text-amber-900 dark:text-amber-200">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>
+                      {dossier.summary.keyMetrics.earningsQuality.cautionTitle ??
+                        'Non-Operating Earnings Caution · Anchored on Operating Profit'}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[11px] text-amber-800 dark:text-amber-300 tabular-nums">
+                    Op. Profit:{' '}
+                    {dossier.summary.keyMetrics.operatingProfitCr !== null
+                      ? `Rs ${dossier.summary.keyMetrics.operatingProfitCr.toFixed(1)} Cr`
+                      : '—'}{' '}
+                    · Op. YoY:{' '}
+                    {dossier.summary.keyMetrics.operatingProfitYoyPct !== null
+                      ? `${dossier.summary.keyMetrics.operatingProfitYoyPct >= 0 ? '+' : ''}${dossier.summary.keyMetrics.operatingProfitYoyPct.toFixed(1)}%`
+                      : '—'}
+                  </span>
+                </div>
+                {dossier.summary.keyMetrics.earningsQuality.cautionMessage && (
+                  <p className="text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+                    {dossier.summary.keyMetrics.earningsQuality.cautionMessage}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* 4 Key Pricing Metrics + Target Price Zone Ruler */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 pt-1">
               <div className="xl:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3">

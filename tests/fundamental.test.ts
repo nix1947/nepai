@@ -17,9 +17,11 @@ import { FundamentalMonitorService } from '../server/fundamental/fundamentalColl
 import {
   buildSpreadsheetExport,
   computeGrowthComparisons,
+  computeQ4ThreeYearBenchmark,
   FundamentalVault,
   normalizeShareSansarSnapshot,
 } from '../server/fundamental/fundamentalVault.ts';
+import { buildExplorerOverview } from '../server/fundamental/explorerEngine.ts';
 import { evaluateHiddenGems } from '../server/fundamental/hiddenGemsEngine.ts';
 import { evaluateScreenerUniverse } from '../server/fundamental/investorScoringEngine.ts';
 import { computeMasterScreener } from '../server/fundamental/masterScreenerEngine.ts';
@@ -38,6 +40,7 @@ import {
   mergeFinancialSnapshots,
   type CompanyFinancialSnapshot,
 } from '../server/financialScraper.ts';
+import { DailyScheduler } from '../server/scheduler.ts';
 import { evaluateLatestHtml } from '../server/scraper.ts';
 
 test('Nepal BS fiscal quarter parsing & quarter-end + 15-day trigger window', () => {
@@ -1672,7 +1675,444 @@ test('buildStrategicOutlookHeatmap categorizes management quality, growth potent
   }
 });
 
+test('RegulatoryKnowledgeBase records stock search updates to KB and tracks once-a-day search deduplication', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-kb-search-dedup-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-28.csv'),
+      'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low\nNABIL,Nabil Bank Limited,500,510,498,505,500,5,1.0,10000,5050000,505,560,440\n',
+      'utf8'
+    );
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
 
+    const today = '2026-11-28';
+    const tomorrow = '2026-11-29';
 
+    assert.equal(kb.hasDailySearchForDate('NABIL', today), false);
+    assert.equal(kb.getDailySearchCountForDate(today), 0);
 
+    kb.recordStockSearchToKb({
+      store,
+      vault,
+      dateStr: today,
+      research: {
+        symbol: 'NABIL',
+        companyName: 'Nabil Bank Limited',
+        sector: 'Commercial Banks',
+        generatedAt: '2026-11-28T06:00:00.000Z',
+        retrievedAt: '2026-11-28T06:00:00.000Z',
+        dataStatus: 'Live',
+        model: 'test-model',
+        cached: false,
+        reportingPeriod: 'Q1 FY 2083/84',
+        publicationDate: today,
+        reportType: 'Quarterly',
+        limitations: [],
+        recommendation: 'BUY',
+        riskScore: 35,
+        opportunityScore: 76,
+        riskBreakdown: [],
+        opportunityBreakdown: [],
+        fundamentalRedFlags: [],
+        governanceRegulatoryFlags: ['NRB credit directive compliance'],
+        summary: 'Asset quality improving with steady CASA franchise.',
+        stance: 'Bullish',
+        opportunities: [
+          {
+            title: 'ICRA NP-IR AA- rating support',
+            detail: 'Lower cost of funds supporting net interest margin expansion.',
+            impact: 'High',
+            evidence: 'CASA deposit growth and benign NPL ratio.',
+          },
+        ],
+        risks: [
+          {
+            title: 'SME portfolio pressure',
+            detail: 'Monitor SME lending quota compliance across Q2.',
+            impact: 'Medium',
+            evidence: 'NRB regulatory lending mix threshold.',
+          },
+        ],
+        macroLinkage: 'Supports private sector credit growth.',
+        catalysts: [{ headline: 'Q2 earnings release', timeframe: 'Next 60 days' }],
+        sources: [{ title: 'ICRA Nepal Rating', uri: 'https://www.icranepal.com/nabil' }],
+      },
+    });
+
+    assert.equal(kb.hasDailySearchForDate('nabil', today), true);
+    assert.equal(kb.hasDailySearchForDate('NABIL', tomorrow), false);
+    assert.equal(kb.getDailySearchCountForDate(today), 1);
+
+    const entry = kb.getCompanyEntry('NABIL');
+    assert.ok(entry);
+    assert.ok(entry.tailwinds.some((t) => t.includes('ICRA NP-IR AA-')));
+    assert.ok(entry.riskFlags.some((r) => r.includes('NRB credit directive')));
+    assert.ok(entry.citations.some((c) => c.agency === 'ICRA'));
+
+    // Re-loading from disk preserves dailySearchDates & company KB entry
+    const kbReloaded = new RegulatoryKnowledgeBase(tmpDir);
+    kbReloaded.initIfNeeded();
+    assert.equal(kbReloaded.hasDailySearchForDate('NABIL', today), true);
+    assert.equal(kbReloaded.getDailySearchCountForDate(today), 1);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('DailyScheduler executes scheduled KB crawl at most once per day and skips repeat scheduled runs', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-sched-daily-'));
+  let scheduler: DailyScheduler | null = null;
+  try {
+    // Seed pre-existing scheduler.json with enabled=false & sourceMode=github (no repo) so no background startup timer or cron runs
+    fs.writeFileSync(
+      path.join(tmpDir, 'scheduler.json'),
+      JSON.stringify({
+        config: {
+          enabled: false,
+          time: '15:40',
+          timezone: 'Asia/Kathmandu',
+          days: [1, 2, 3, 4, 5],
+          retryIfNotUpdated: false,
+          retryDelayMinutes: 20,
+          sourceMode: 'github',
+          githubRepo: '',
+          githubBranch: 'main',
+          githubDataPath: 'data',
+          pushToGitHub: false,
+          crawlKbDaily: true,
+          autoCrawlOnSearch: true,
+          autoPushOnSearchUpdate: false,
+        },
+        history: [],
+        lastKbCrawlDate: null,
+        lastGitHubPushDate: null,
+        lastGitHubPushAt: null,
+      }),
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    scheduler = new DailyScheduler(store);
+
+    let kbRunCount = 0;
+    let lastDateStr = '';
+    scheduler.setDailyKbHandler(async () => {
+      kbRunCount += 1;
+      lastDateStr = '2026-11-28';
+      return {
+        skipped: false,
+        addedNotices: 2,
+        companiesUpdated: 1,
+        enrichedSymbols: ['NABIL'],
+        annualDistilledSymbols: [],
+        quarterlyRefreshed: [],
+        warnings: [],
+        date: lastDateStr,
+      };
+    });
+
+    await scheduler.pullLatest('scheduled');
+    assert.equal(kbRunCount, 1);
+
+    // Second scheduled run on the same calendar day must skip KB crawl
+    const secondLog = await scheduler.pullLatest('scheduled');
+    assert.equal(kbRunCount, 1);
+    assert.match(secondLog.message, /KB crawl: already completed today/i);
+  } finally {
+    if (scheduler?.getStatus().config.enabled) {
+      scheduler.updateConfig({ enabled: false });
+    }
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('computeQ4ThreeYearBenchmark averages 3 years of Q4 data and integrates into buildExplorerOverview', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-q4-explorer-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low\nNTC,Nepal Doorsanchar Company Limited,890,905,885,900,895,5,0.56,15000,13500000,900,1020,820\n',
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+
+    const makeQ4 = (fy: string, eps: number, roe: number, revCr: number, opCr: number, npCr: number): CompanyFinancialSnapshot => ({
+      symbol: 'NTC',
+      companyName: 'Nepal Doorsanchar Company Limited',
+      sector: 'Others',
+      companyId: '150',
+      scrapedAt: '2026-11-27T06:00:00.000Z',
+      sourceUrl: 'https://example.com/ntc',
+      periods: [`4th Quarter ${fy}`],
+      tabs: [
+        {
+          key: 'profit_loss',
+          title: 'Profit and Loss',
+          headers: ["Particulars (Rs. in '000)", `4th Quarter ${fy}`],
+          rows: [
+            { section: 'Income', isSectionHeader: false, particulars: 'Revenue', values: [String(revCr * 10_000)], numericValues: [revCr * 10_000] },
+            { section: 'Profit', isSectionHeader: false, particulars: 'Operating Profit', values: [String(opCr * 10_000)], numericValues: [opCr * 10_000] },
+            { section: 'Profit', isSectionHeader: false, particulars: 'Profit for the period', values: [String(npCr * 10_000)], numericValues: [npCr * 10_000] },
+          ],
+        },
+        {
+          key: 'balance_sheet',
+          title: 'Balance Sheet',
+          headers: ["Particulars (Rs. in '000)", `4th Quarter ${fy}`],
+          rows: [
+            { section: 'Equity', isSectionHeader: false, particulars: "Total Shareholder's Equity", values: ['90000000'], numericValues: [90_000_000] },
+            { section: 'Assets', isSectionHeader: false, particulars: 'Total Assets', values: ['140000000'], numericValues: [140_000_000] },
+          ],
+        },
+        {
+          key: 'key_metrics',
+          title: 'Key Metrics',
+          headers: ['Particulars', `4th Quarter ${fy}`],
+          rows: [
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: [String(eps)], numericValues: [eps] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Net Worth Per Share', values: ['510'], numericValues: [510] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Return on Equity', values: [String(roe)], numericValues: [roe] },
+          ],
+        },
+      ],
+    });
+
+    for (const [fy, eps, roe, revCr, opCr, npCr] of [
+      ['2080/81', 38, 10.5, 4200, 900, 680],
+      ['2081/82', 41, 11.5, 4400, 960, 740],
+      ['2082/83', 47, 13.0, 4800, 1140, 860],
+    ] as const) {
+      for (const rec of normalizeShareSansarSnapshot(makeQ4(fy, eps, roe, revCr, opCr, npCr))) {
+        vault.upsertStatementRecord(rec);
+      }
+    }
+
+    const ledger = vault.getCompanyLedger('NTC')!;
+    const bench = computeQ4ThreeYearBenchmark(ledger.records);
+    assert.ok(bench);
+    assert.equal(bench.yearsCount, 3);
+    assert.equal(bench.avgEps, 42); // (38 + 41 + 47) / 3 = 42
+    assert.equal(bench.avgOperatingProfitCr, 1000); // (900 + 960 + 1140) / 3 = 1000
+    assert.equal(bench.avgRoePct, 11.67); // (10.5 + 11.5 + 13) / 3 = 11.67
+
+    const explorer = buildExplorerOverview({ store, vault, symbol: 'NTC' });
+    assert.equal(explorer.symbol, 'NTC');
+    assert.ok(explorer.fundamental);
+    assert.ok(explorer.decisionPlaybook.pillars.length >= 3);
+    assert.ok(explorer.fundamental.growth.q4Benchmark);
+
+    const screener = evaluateScreenerUniverse(store, vault, { equityOnly: true });
+    const ntcRow = screener.rows.find((r) => r.symbol === 'NTC')!;
+    assert.ok(ntcRow);
+    assert.equal(ntcRow.keyMetrics.q4AvgYearsCount, 3);
+    assert.equal(ntcRow.keyMetrics.q4AvgEps3y, 42);
+    assert.equal(ntcRow.keyMetrics.q4AvgOperatingProfitCr3y, 1000);
+    assert.equal(ntcRow.keyMetrics.q4AvgRoePct3y, 11.67);
+    assert.equal(ntcRow.keyMetrics.q4AnnualizedOpProfitCr, 1140);
+    assert.equal(ntcRow.keyMetrics.operatingProfitVsQ4Avg3yPct, 14);
+
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+    const master = computeMasterScreener(store, vault, kb, { equityOnly: true });
+    const ntcMaster = master.rows.find((r) => r.symbol === 'NTC')!;
+    assert.ok(ntcMaster);
+    assert.equal(ntcMaster.earnings.q4AvgYearsCount, 3);
+    assert.equal(ntcMaster.earnings.q4AvgEps3y, 42);
+    assert.equal(ntcMaster.earnings.q4AvgOperatingProfitCr3y, 1000);
+    assert.equal(ntcMaster.earnings.operatingProfitVsQ4Avg3yPct, 14);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test('Non-operating investment/property gains trigger One-Off Caution and anchor valuation/scoring on Operating Profit', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nepse-op-caution-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, '2026-11-27.csv'),
+      [
+        'symbol,name,open,high,low,close,prev_close,diff,diff_pct,volume,turnover,ltp,w52_high,w52_low',
+        'ONEFF,OneOff Cement Limited,540,550,535,545,540,5,0.93,12000,6540000,545,620,460',
+        'CORECO,Core Hydro Limited,490,505,488,500,495,5,1.01,14000,7000000,500,560,410',
+      ].join('\n') + '\n',
+      'utf8'
+    );
+
+    const store = new MarketStore(tmpDir);
+    const vault = new FundamentalVault(tmpDir);
+    vault.initIfNeeded();
+    const kb = new RegulatoryKnowledgeBase(tmpDir);
+    kb.initIfNeeded();
+
+    const makeSnapshot = (params: {
+      symbol: string;
+      name: string;
+      sector: string;
+      fy: string;
+      qLabel: string;
+      revCr: number;
+      opProfitCr: number;
+      netProfitCr: number;
+      eps: number;
+      gainOnInvCr?: number;
+    }): CompanyFinancialSnapshot => ({
+      symbol: params.symbol,
+      companyName: params.name,
+      sector: params.sector,
+      companyId: params.symbol === 'ONEFF' ? '201' : '202',
+      scrapedAt: '2026-11-27T06:00:00.000Z',
+      sourceUrl: `https://example.com/${params.symbol.toLowerCase()}`,
+      periods: [`${params.qLabel} ${params.fy}`],
+      tabs: [
+        {
+          key: 'profit_loss',
+          title: 'Profit and Loss',
+          headers: ["Particulars (Rs. in '000)", `${params.qLabel} ${params.fy}`],
+          rows: [
+            { section: 'Income', isSectionHeader: false, particulars: 'Revenue from operations', values: [String(params.revCr * 10_000)], numericValues: [params.revCr * 10_000] },
+            { section: 'Profit', isSectionHeader: false, particulars: 'Operating Profit', values: [String(params.opProfitCr * 10_000)], numericValues: [params.opProfitCr * 10_000] },
+            ...(params.gainOnInvCr
+              ? [
+                  {
+                    section: 'Other',
+                    isSectionHeader: false,
+                    particulars: 'Gain on sale of investments and property',
+                    values: [String(params.gainOnInvCr * 10_000)],
+                    numericValues: [params.gainOnInvCr * 10_000],
+                  },
+                ]
+              : []),
+            { section: 'Profit', isSectionHeader: false, particulars: 'Net Profit', values: [String(params.netProfitCr * 10_000)], numericValues: [params.netProfitCr * 10_000] },
+          ],
+        },
+        {
+          key: 'balance_sheet',
+          title: 'Balance Sheet',
+          headers: ["Particulars (Rs. in '000)", `${params.qLabel} ${params.fy}`],
+          rows: [
+            { section: 'Equity', isSectionHeader: false, particulars: 'Share Capital', values: ['20000000'], numericValues: [20_000_000] },
+            { section: 'Equity', isSectionHeader: false, particulars: "Total Shareholder's Equity", values: ['42000000'], numericValues: [42_000_000] },
+            { section: 'Assets', isSectionHeader: false, particulars: 'Total Assets', values: ['70000000'], numericValues: [70_000_000] },
+          ],
+        },
+        {
+          key: 'key_metrics',
+          title: 'Key Metrics',
+          headers: ['Particulars', `${params.qLabel} ${params.fy}`],
+          rows: [
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Basic Earnings Per Share', values: [String(params.eps)], numericValues: [params.eps] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Net Worth Per Share', values: ['210'], numericValues: [210] },
+            { section: 'Ratios', isSectionHeader: false, particulars: 'Return on Equity', values: ['16.5'], numericValues: [16.5] },
+          ],
+        },
+      ],
+    });
+
+    // ONEFF: Operating Profit stays flat (100 Cr -> 100 Cr, 0% YoY), while asset/investment sale (130 Cr) pushes Net Profit & EPS +95%
+    for (const [fy, qLabel, revCr, opCr, npCr, eps, gainCr] of [
+      ['2082/83', '1st Quarter', 600, 100, 75, 20, 0],
+      ['2082/83', '4th Quarter', 610, 100, 76, 20.5, 0],
+      ['2083/84', '1st Quarter', 605, 100, 146.25, 39, 130],
+    ] as const) {
+      for (const rec of normalizeShareSansarSnapshot(
+        makeSnapshot({
+          symbol: 'ONEFF',
+          name: 'OneOff Cement Limited',
+          sector: 'Manufacturing And Processing',
+          fy,
+          qLabel,
+          revCr,
+          opProfitCr: opCr,
+          netProfitCr: npCr,
+          eps,
+          gainOnInvCr: gainCr > 0 ? gainCr : undefined,
+        })
+      )) {
+        vault.upsertStatementRecord(rec);
+      }
+    }
+
+    // CORECO: Operating Profit exceeds Net Profit and both grow steadily (+20% YoY) without non-operating inflation
+    for (const [fy, qLabel, revCr, opCr, npCr, eps] of [
+      ['2082/83', '1st Quarter', 500, 150, 100, 22],
+      ['2082/83', '4th Quarter', 540, 165, 110, 24],
+      ['2083/84', '1st Quarter', 600, 180, 120, 26.4],
+    ] as const) {
+      for (const rec of normalizeShareSansarSnapshot(
+        makeSnapshot({
+          symbol: 'CORECO',
+          name: 'Core Hydro Limited',
+          sector: 'Hydro Power',
+          fy,
+          qLabel,
+          revCr,
+          opProfitCr: opCr,
+          netProfitCr: npCr,
+          eps,
+        })
+      )) {
+        vault.upsertStatementRecord(rec);
+      }
+    }
+
+    const oneOffLedger = vault.getCompanyLedger('ONEFF')!;
+    const oneOffGrowth = computeGrowthComparisons(oneOffLedger.records);
+    assert.equal(oneOffGrowth.operatingProfitYoyPct, 0);
+    assert.ok((oneOffGrowth.epsYoyPct ?? 0) >= 90);
+    assert.equal(oneOffGrowth.earningsQuality.status, 'One-Off Caution');
+    assert.equal(oneOffGrowth.earningsQuality.hasNonOperatingCaution, true);
+    assert.equal(oneOffGrowth.earningsQuality.focusMetric, 'Operating Profit');
+    assert.ok((oneOffGrowth.earningsQuality.nonOperatingIncomeCr ?? 0) >= 100);
+    assert.ok(oneOffGrowth.earningsQuality.cautionMessage);
+
+    const oneOffVal = computeSectorValuation({
+      record: oneOffLedger.records[0],
+      growth: oneOffGrowth,
+      currentPrice: 545,
+      benchmarkFdRatePct: 6.5,
+    });
+    assert.ok(
+      oneOffVal.limitations.some((l) => /Operating Profit|non-operating|one-off/i.test(l)),
+      'Valuation limitations should flag non-operating earnings distortion'
+    );
+
+    const evaluated = evaluateScreenerUniverse(store, vault, { equityOnly: true });
+    const oneOffRow = evaluated.rows.find((r) => r.symbol === 'ONEFF')!;
+    const coreRow = evaluated.rows.find((r) => r.symbol === 'CORECO')!;
+
+    assert.equal(oneOffRow.keyMetrics.earningsQuality.status, 'One-Off Caution');
+    assert.equal(oneOffRow.keyMetrics.earningsQuality.hasNonOperatingCaution, true);
+    assert.ok(
+      oneOffRow.recommendation.downsideRisks.some((r) => /Operating Profit|non-operating/i.test(r))
+    );
+
+    assert.equal(coreRow.keyMetrics.earningsQuality.status, 'Core-Driven');
+    assert.equal(coreRow.keyMetrics.earningsQuality.hasNonOperatingCaution, false);
+    assert.ok((coreRow.keyMetrics.operatingProfitYoyPct ?? 0) >= 19);
+
+    const oneOffDossier = buildCompanyValuationDossier(store, vault, kb, 'ONEFF', {
+      equityOnly: true,
+    });
+    assert.ok(oneOffDossier);
+    assert.ok(
+      oneOffDossier.swot.weaknesses.some((w) => /Operating Profit|non-operating|one-off/i.test(w))
+    );
+
+    const oneOffExplorer = buildExplorerOverview({ store, vault, symbol: 'ONEFF' });
+    assert.ok(
+      oneOffExplorer.decisionPlaybook.riskPoints.some((r) =>
+        /Operating Profit|non-operating|one-off/i.test(r)
+      )
+    );
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
 

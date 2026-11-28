@@ -542,6 +542,11 @@ export interface StockResearchResponse {
   dataStatus: DataFreshnessStatus;
   model: string;
   cached: boolean;
+  skippedToday?: boolean;
+  searchedDate?: string;
+  kbUpdated?: boolean;
+  githubPushed?: boolean;
+  githubPushMessage?: string;
   searchGrounded?: boolean;
   notice?: string;
   reportingPeriod: string;

@@ -277,10 +277,16 @@ function synthesizeDecisionPlaybook(params: {
   const qualityScore = summaryRow.scores.fundamentalQualityScore;
   const valuationScore = summaryRow.scores.valuationAttractivenessScore;
 
+  const eq = fundamental.growth.earningsQuality;
+  const preferredQ4Pct =
+    eq.hasNonOperatingCaution && q4.operatingProfitVsAvgPct !== null
+      ? q4.operatingProfitVsAvgPct
+      : q4.epsVsAvgPct ?? q4.operatingProfitVsAvgPct;
+
   // Blend model growth score with direct 3Y Q4 Average run-rate delta when Q4 history is available
   let growthScore = summaryRow.scores.growthScore;
-  if (q4.yearsCount >= 1 && q4.epsVsAvgPct !== null) {
-    const q4DeltaScore = clip(55 + q4.epsVsAvgPct * 1.1, 15, 95);
+  if (q4.yearsCount >= 1 && preferredQ4Pct !== null) {
+    const q4DeltaScore = clip(55 + preferredQ4Pct * 1.1, 15, 95);
     growthScore = round1(summaryRow.scores.growthScore * 0.55 + q4DeltaScore * 0.45);
   }
 
@@ -348,11 +354,15 @@ function synthesizeDecisionPlaybook(params: {
         : 'Insufficient valuation inputs';
 
   const growthHeadline =
-    q4.yearsCount >= 1 && q4.epsVsAvgPct !== null
-      ? `Annualized EPS ${q4.epsVsAvgPct >= 0 ? '+' : ''}${q4.epsVsAvgPct.toFixed(1)}% vs ${q4.yearsCount}Y Q4 Avg`
-      : km.epsQoqPct !== null
-        ? `EPS QoQ ${km.epsQoqPct >= 0 ? '+' : ''}${km.epsQoqPct.toFixed(1)}% · Awaiting 3Y Q4`
-        : `Growth Score ${growthScore.toFixed(0)}/100 · ${q4.basisLabel}`;
+    eq.hasNonOperatingCaution && q4.operatingProfitVsAvgPct !== null && q4.yearsCount >= 1
+      ? `Core Op. Profit ${q4.operatingProfitVsAvgPct >= 0 ? '+' : ''}${q4.operatingProfitVsAvgPct.toFixed(1)}% vs ${q4.yearsCount}Y Q4 Avg (One-Off Caution)`
+      : q4.yearsCount >= 1 && q4.epsVsAvgPct !== null
+        ? `Annualized EPS ${q4.epsVsAvgPct >= 0 ? '+' : ''}${q4.epsVsAvgPct.toFixed(1)}% vs ${q4.yearsCount}Y Q4 Avg${q4.operatingProfitVsAvgPct !== null ? ` · Op. Profit ${q4.operatingProfitVsAvgPct >= 0 ? '+' : ''}${q4.operatingProfitVsAvgPct.toFixed(1)}%` : ''}`
+        : km.operatingProfitQoqPct !== null
+          ? `Op. Profit QoQ ${km.operatingProfitQoqPct >= 0 ? '+' : ''}${km.operatingProfitQoqPct.toFixed(1)}% · Awaiting 3Y Q4`
+          : km.epsQoqPct !== null
+            ? `EPS QoQ ${km.epsQoqPct >= 0 ? '+' : ''}${km.epsQoqPct.toFixed(1)}% · Awaiting 3Y Q4`
+            : `Growth Score ${growthScore.toFixed(0)}/100 · ${q4.basisLabel}`;
 
   const pillars: ExplorerDecisionPillar[] = [
     {
@@ -419,6 +429,9 @@ function synthesizeDecisionPlaybook(params: {
   }
 
   const riskPoints: string[] = [];
+  if (eq.hasNonOperatingCaution && eq.cautionMessage) {
+    riskPoints.push(eq.cautionMessage);
+  }
   if (q4.yearsCount >= 1 && q4.epsVsAvgPct !== null && q4.epsVsAvgPct < -5) {
     riskPoints.push(
       `Annualized EPS is trailing its ${q4.yearsCount}-Year Q4 baseline by ${q4.epsVsAvgPct.toFixed(1)}% (Rs ${q4.currentAnnualizedEps?.toFixed(2)} vs Rs ${q4.avgEps?.toFixed(2)}).`

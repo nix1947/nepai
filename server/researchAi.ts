@@ -24,17 +24,19 @@ import {
   saveFundamentalAudit,
   saveMacroSnapshot,
 } from './riskEngine.ts';
+import { getNepalDateStr } from './fundamental/regulatoryKnowledgeBase.ts';
 import { getNepseSector } from './sectors.ts';
 
 const PRIMARY_MODEL = 'gemini-4-hydrogen';
 const FALLBACK_MODEL = 'gemini-3.1-flash-lite';
-const CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes fresh TTL
+const CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes fresh TTL for macro updates
 const SEARCH_COOLDOWN_MS = 3 * 60 * 1000; // 3 minute cooldown if Search Grounding hits 429
 const DISK_CACHE_PATH = path.resolve(process.cwd(), 'data', '.research-cache.json');
 
 interface CacheEntry<T> {
   expiresAt: number;
   savedAt: string;
+  searchedDate?: string;
   data: T;
 }
 
@@ -106,6 +108,26 @@ function findStaleCachedStock(symbol: string): CacheEntry<StockResearchResponse>
     }
   }
   return latest;
+}
+
+function findTodayCachedStock(
+  symbol: string,
+  todayNpt: string
+): CacheEntry<StockResearchResponse> | null {
+  let match: CacheEntry<StockResearchResponse> | null = null;
+  const prefix = `stock:${symbol.toUpperCase()}:`;
+  for (const [k, entry] of stockCache.entries()) {
+    if (!k.startsWith(prefix) || !entry?.data) continue;
+    const entryDate =
+      entry.searchedDate ||
+      (entry.savedAt ? getNepalDateStr(new Date(entry.savedAt)) : null);
+    if (entryDate === todayNpt) {
+      if (!match || (entry.savedAt || '') > (match.savedAt || '')) {
+        match = entry;
+      }
+    }
+  }
+  return match;
 }
 
 function getAiClient(): GoogleGenAI {
@@ -223,14 +245,14 @@ async function callModelWithFallback(prompt: string): Promise<{
       useSearch: false,
       retries: 1,
       notice:
-        'Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.',
+        'Google Search Grounding quota was exceeded (429) or in cooldown; non-search model reasoning ran using only loaded NEPSE market records. Unretrieved external financial statements are marked Unavailable.',
     },
     {
       model: PRIMARY_MODEL,
       useSearch: false,
       retries: 1,
       notice:
-        'Google Search Grounding quota was exceeded (429) or in cooldown; model reasoning ran using only loaded ShareSansar market records. Unretrieved external financial statements are marked Unavailable.',
+        'Google Search Grounding quota was exceeded (429) or in cooldown; model reasoning ran using only loaded NEPSE market records. Unretrieved external financial statements are marked Unavailable.',
     },
   ];
 
@@ -689,11 +711,19 @@ export async function generateStockResearch(
   const companyName = last?.name || symbol;
   const sector = getNepseSector(symbol, companyName);
   const cacheKey = `stock:${symbol}:${last?.date || 'latest'}`;
+  const todayNpt = getNepalDateStr();
 
   if (!forceRefresh) {
-    const hit = stockCache.get(cacheKey);
-    if (hit && hit.expiresAt > Date.now()) {
-      return { ...hit.data, cached: true, dataStatus: 'Cached' };
+    const todayHit = findTodayCachedStock(symbol, todayNpt);
+    if (todayHit) {
+      return {
+        ...todayHit.data,
+        cached: true,
+        skippedToday: true,
+        searchedDate: todayNpt,
+        dataStatus: 'Cached',
+        notice: `Already searched today (${todayNpt} NPT) — skipped repeat crawl and serving today's cached report.`,
+      };
     }
   }
 
@@ -718,12 +748,12 @@ export async function generateStockResearch(
     last && firstBase > 0 ? (((last.close - firstBase) / firstBase) * 100).toFixed(2) : 'N/A';
 
   const priceContext = last
-    ? `ShareSansar EOD Snapshot (${last.date}) for ${symbol} (${companyName}, Sector: ${sector}):
+    ? `NEPSE EOD Snapshot (${last.date}) for ${symbol} (${companyName}, Sector: ${sector}):
 - LTP / Close: Rs ${last.ltp || last.close} (Day Chg: ${last.diff_pct ?? 0}%, ${cleanN}-day return: ${returnN}%)
 - Turnover: Rs ${(last.turnover / 1e7).toFixed(2)} crore (${avgTurnN > 0 ? (last.turnover / avgTurnN).toFixed(2) : 'N/A'}x ${cleanN}d avg) across ${last.trans} trades
 - Volume: ${last.volume.toLocaleString()} shares (${avgVolN > 0 ? (last.volume / avgVolN).toFixed(2) : 'N/A'}x ${cleanN}d avg)
 - Technicals: VWAP Rs ${last.vwap ?? 'N/A'} (${last.vwap_pct ?? 'N/A'}%), MA120 Rs ${last.d120 ?? 'N/A'}, MA180 Rs ${last.d180 ?? 'N/A'}, 52W High Rs ${last.w52_high ?? 'N/A'}, 52W Low Rs ${last.w52_low ?? 'N/A'}.`
-    : `NEPSE listed security: ${symbol} (${sector}). No local ShareSansar EOD rows loaded for this symbol.`;
+    : `NEPSE listed security: ${symbol} (${sector}). No local NEPSE EOD rows loaded for this symbol.`;
 
   const fi = macro?.fixedIncomeBenchmarks;
   const macroBenchmarkContext = fi
@@ -738,11 +768,12 @@ export async function generateStockResearch(
   const prompt = `You are an institutional NEPSE equity research analyst. Perform a deep, research-driven fundamental, macro, and risk-adjusted opportunity-cost analysis for "${symbol}" (${companyName}, Sector: ${sector}) on the Nepal Stock Exchange (NEPSE).
 
 Use Google Search to retrieve:
-1. The LATEST available quarterly report (Q1/Q2/Q3/Q4 unaudited financial disclosure) and latest audited annual report / AGM disclosure. Prioritize official company websites/IR pages, NEPSE, SEBON, and reputable NEPSE financial disclosures (ShareSansar/MeroLagani).
+1. The LATEST available quarterly report (Q1/Q2/Q3/Q4 unaudited financial disclosure) and latest audited annual report / AGM disclosure. Prioritize official company websites/IR pages, NEPSE, SEBON, and official financial disclosures.
 2. Exact reporting period (e.g., "Q1 FY 2082/83" or "FY 2081/82"), publication date, and source context.
 3. Extracted verified financial metrics: Revenue/Interest Income, Net Profit, EPS (annualized if quarterly—clearly labeled), Net Worth per Share, P/E, P/B, ROE, ROA, Reserves, Retained Earnings, Total Assets, Total Liabilities, Deposits, Loans, NPL %, Capital Adequacy (CAR), Liquidity/CCD, Operating Cash Flow, Dividend History, and sector-specific KPIs (e.g., Hydro MW / PPA / Cost per MW; Insurance solvency / net premium / claim ratio; Manufacturing capacity utilization).
 4. Quarter-over-Quarter (QoQ), Year-over-Year corresponding quarter (YoY), and Annual performance comparisons, noting ANY inconsistencies between quarterly and annual figures.
 5. Current NRB/NIA/SEBON regulatory exposure, governance issues, audit qualifications, and opportunity-cost comparison against Nepal Bank FD, T-Bills, and Gov Bond yields.
+6. Separate CORE OPERATING PROFIT growth from NON-OPERATING / ONE-OFF GAINS: check whether profit or EPS growth reflects sustainable Operating Profit or one-time gains from selling investments, property/fixed-asset disposals, fair-value revaluations, or provision write-backs. Whenever bottom-line Net Profit outpaces core Operating Profit or relies on non-operating income, explicitly add a caution in "fundamentalRedFlags" and anchor your growth assessment on Operating Profit.
 
 STRICT ANTI-FABRICATION RULES:
 - NEVER invent, estimate, or fill in missing financial figures. If a metric or report cannot be verified in search results, output "Unavailable" and list the gap in "limitations".
@@ -1017,6 +1048,8 @@ Return ONLY valid JSON in English (no prose outside the JSON object) matching th
       dataStatus: searchGrounded ? 'Live' : dataStatus,
       model,
       cached: false,
+      skippedToday: false,
+      searchedDate: todayNpt,
       searchGrounded,
       notice,
       reportingPeriod,
@@ -1054,6 +1087,7 @@ Return ONLY valid JSON in English (no prose outside the JSON object) matching th
     stockCache.set(cacheKey, {
       expiresAt: Date.now() + CACHE_TTL_MS,
       savedAt: nowIso,
+      searchedDate: todayNpt,
       data: result,
     });
     saveDiskCache();

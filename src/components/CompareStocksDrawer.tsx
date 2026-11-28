@@ -21,7 +21,12 @@ interface CompareStocksDrawerProps {
 
 interface MetricSpec {
   label: string;
-  group: 'Pricing & Value' | 'Annual Health & Fundamentals' | 'Technical & Player Flow' | '10x Runway';
+  group:
+    | 'Pricing & Value'
+    | 'Annual Health & Fundamentals'
+    | '3-Year 4Q Average Baseline'
+    | 'Technical & Player Flow'
+    | '10x Runway';
   higherBetter?: boolean;
   lowerBetter?: boolean;
   getVal: (r: MasterScreenerRow) => number | null;
@@ -128,6 +133,46 @@ const COMPARE_METRICS: MetricSpec[] = [
         : '—',
   },
   {
+    label: 'Op. Profit vs 3Y 4Q Avg',
+    group: '3-Year 4Q Average Baseline',
+    higherBetter: true,
+    getVal: (r) => r.earnings.operatingProfitVsQ4Avg3yPct,
+    format: (r) =>
+      r.earnings.operatingProfitVsQ4Avg3yPct !== null
+        ? `${r.earnings.operatingProfitVsQ4Avg3yPct >= 0 ? '+' : ''}${r.earnings.operatingProfitVsQ4Avg3yPct.toFixed(1)}% (Avg ${r.earnings.q4AvgOperatingProfitCr3y?.toFixed(1) ?? '—'} Cr)`
+        : '—',
+  },
+  {
+    label: 'EPS vs 3Y 4Q Avg',
+    group: '3-Year 4Q Average Baseline',
+    higherBetter: true,
+    getVal: (r) => r.earnings.epsVsQ4Avg3yPct,
+    format: (r) =>
+      r.earnings.epsVsQ4Avg3yPct !== null
+        ? `${r.earnings.epsVsQ4Avg3yPct >= 0 ? '+' : ''}${r.earnings.epsVsQ4Avg3yPct.toFixed(1)}% (Avg ${r.earnings.q4AvgEps3y?.toFixed(1) ?? '—'})`
+        : '—',
+  },
+  {
+    label: 'Net Profit vs 3Y 4Q Avg',
+    group: '3-Year 4Q Average Baseline',
+    higherBetter: true,
+    getVal: (r) => r.earnings.netProfitVsQ4Avg3yPct,
+    format: (r) =>
+      r.earnings.netProfitVsQ4Avg3yPct !== null
+        ? `${r.earnings.netProfitVsQ4Avg3yPct >= 0 ? '+' : ''}${r.earnings.netProfitVsQ4Avg3yPct.toFixed(1)}% (Avg ${r.earnings.q4AvgNetProfitCr3y?.toFixed(1) ?? '—'} Cr)`
+        : '—',
+  },
+  {
+    label: 'Revenue vs 3Y 4Q Avg',
+    group: '3-Year 4Q Average Baseline',
+    higherBetter: true,
+    getVal: (r) => r.earnings.revenueVsQ4Avg3yPct,
+    format: (r) =>
+      r.earnings.revenueVsQ4Avg3yPct !== null
+        ? `${r.earnings.revenueVsQ4Avg3yPct >= 0 ? '+' : ''}${r.earnings.revenueVsQ4Avg3yPct.toFixed(1)}% (Avg ${r.earnings.q4AvgRevenueCr3y?.toFixed(1) ?? '—'} Cr)`
+        : '—',
+  },
+  {
     label: 'Technical Score & RSI-14',
     group: 'Technical & Player Flow',
     higherBetter: true,
@@ -204,6 +249,7 @@ export const CompareStocksDrawer: React.FC<CompareStocksDrawerProps> = ({
   const groups: MetricSpec['group'][] = [
     'Pricing & Value',
     'Annual Health & Fundamentals',
+    '3-Year 4Q Average Baseline',
     'Technical & Player Flow',
     '10x Runway',
   ];
@@ -314,7 +360,112 @@ export const CompareStocksDrawer: React.FC<CompareStocksDrawerProps> = ({
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+            <div className="space-y-4">
+              {selectedRows.some((r) => r.earnings.q4AvgYearsCount > 0) &&
+                (() => {
+                  const chartItems = selectedRows.map((r) => ({
+                    symbol: r.symbol,
+                    yearsCount: r.earnings.q4AvgYearsCount,
+                    opDelta: r.earnings.operatingProfitVsQ4Avg3yPct,
+                    epsDelta: r.earnings.epsVsQ4Avg3yPct,
+                    opIdx:
+                      r.earnings.operatingProfitVsQ4Avg3yPct !== null
+                        ? Math.max(0, 100 + r.earnings.operatingProfitVsQ4Avg3yPct)
+                        : null,
+                    epsIdx:
+                      r.earnings.epsVsQ4Avg3yPct !== null
+                        ? Math.max(0, 100 + r.earnings.epsVsQ4Avg3yPct)
+                        : null,
+                  }));
+                  const maxIdx = Math.max(
+                    150,
+                    ...chartItems.flatMap((i) => [i.opIdx ?? 0, i.epsIdx ?? 0])
+                  );
+                  const scaleMax = Math.ceil(maxIdx / 25) * 25;
+                  const refLeftPct = (100 / scaleMax) * 100;
+                  return (
+                    <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 bg-slate-50/50 dark:bg-slate-950/40 space-y-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div>
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">
+                            Current Growth Performance vs 3-Year 4Q Average Baseline
+                          </span>
+                          <span className="ml-2 text-[11px] text-slate-500 dark:text-slate-400">
+                            (100% dashed line = 3-Year 4Q Average)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="w-2.5 h-1.5 rounded-xs bg-emerald-600 inline-block" />
+                            Op. Profit
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <span className="w-2.5 h-1.5 rounded-xs bg-blue-500 inline-block" />
+                            EPS
+                          </span>
+                        </div>
+                      </div>
+                      <div className="relative pt-4 space-y-2">
+                        <div
+                          className="absolute top-0 bottom-0 border-l-2 border-dashed border-amber-500/80 dark:border-amber-400/80 pointer-events-none z-10"
+                          style={{ left: `${refLeftPct}%` }}
+                        >
+                          <span className="absolute -top-0.5 -translate-x-1/2 px-1 bg-white dark:bg-slate-900 text-[9px] font-mono font-semibold text-amber-700 dark:text-amber-300 whitespace-nowrap">
+                            3-Year 4Q Avg (100%)
+                          </span>
+                        </div>
+                        {chartItems.map((item) => (
+                          <div key={item.symbol} className="space-y-1">
+                            <div className="flex items-center justify-between text-[11px] font-mono tabular-nums">
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                {item.symbol}{' '}
+                                {item.yearsCount > 0 && (
+                                  <span className="font-normal text-[10px] text-slate-400">
+                                    ({item.yearsCount}Y Q4)
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-[10px] text-slate-600 dark:text-slate-300">
+                                Op:{' '}
+                                {item.opDelta !== null
+                                  ? `${item.opDelta >= 0 ? '+' : ''}${item.opDelta.toFixed(1)}%`
+                                  : '—'}{' '}
+                                · EPS:{' '}
+                                {item.epsDelta !== null
+                                  ? `${item.epsDelta >= 0 ? '+' : ''}${item.epsDelta.toFixed(1)}%`
+                                  : '—'}
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="h-2 w-full bg-slate-200/70 dark:bg-slate-800 rounded-sm overflow-hidden">
+                                {item.opIdx !== null && (
+                                  <div
+                                    className={`h-full ${
+                                      (item.opDelta ?? 0) >= 0
+                                        ? 'bg-emerald-600 dark:bg-emerald-500'
+                                        : 'bg-amber-500 dark:bg-amber-400'
+                                    }`}
+                                    style={{ width: `${Math.min(100, (item.opIdx / scaleMax) * 100)}%` }}
+                                  />
+                                )}
+                              </div>
+                              <div className="h-1.5 w-full bg-slate-200/70 dark:bg-slate-800 rounded-sm overflow-hidden">
+                                {item.epsIdx !== null && (
+                                  <div
+                                    className="h-full bg-blue-500/85 dark:bg-blue-400/85"
+                                    style={{ width: `${Math.min(100, (item.epsIdx / scaleMax) * 100)}%` }}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+              <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
               <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
@@ -444,6 +595,7 @@ export const CompareStocksDrawer: React.FC<CompareStocksDrawerProps> = ({
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

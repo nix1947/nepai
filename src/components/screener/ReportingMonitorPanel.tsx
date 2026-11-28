@@ -101,6 +101,7 @@ export const ReportingMonitorPanel: React.FC<ReportingMonitorPanelProps> = ({
           annualDistillLimit: 2,
           includeQuarterly: true,
           equityOnly,
+          force: true,
         }),
       });
       const json = await res.json();
@@ -114,6 +115,9 @@ export const ReportingMonitorPanel: React.FC<ReportingMonitorPanelProps> = ({
       }
       if (json.quarterlyRefreshed?.length) {
         parts.push(`pulled Qtrs (${json.quarterlyRefreshed.join(', ')})`);
+      }
+      if (json.githubPushed) {
+        parts.push('auto-pushed to GitHub');
       }
       setMessage({ kind: 'ok', text: `${parts.join(' · ')}.` });
       await loadMonitor();

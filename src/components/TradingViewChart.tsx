@@ -766,7 +766,7 @@ export const TradingViewChart = forwardRef<TradingViewChartHandle, TradingViewCh
       { id: 'alma9', label: 'ALMA (9, 0.85, 6)', shortLabel: 'ALMA(9)', category: 'Trend & MAs', pane: 'Overlay', desc: 'Arnaud Legoux Gaussian-weighted moving average' },
       { id: 'mcginley', label: 'McGinley Dynamic (14)', shortLabel: 'McGinley', category: 'Trend & MAs', pane: 'Overlay', desc: 'Self-adjusting trend follower minimizing whipsaws' },
       { id: 'emaRibbon', label: 'EMA Ribbon (8/13/21/34/55)', shortLabel: 'Ribbon', category: 'Trend & MAs', pane: 'Overlay', desc: 'Multi-line Fibonacci EMA ribbon visualizing momentum expansion' },
-      { id: 'ma120', label: 'MA 120 / 180 (1D)', shortLabel: 'MA120/180', category: 'Trend & MAs', pane: 'Overlay', desc: 'ShareSansar 120-day & 180-day moving averages' },
+      { id: 'ma120', label: 'MA 120 / 180 (1D)', shortLabel: 'MA120/180', category: 'Trend & MAs', pane: 'Overlay', desc: 'Daily 120-day & 180-day moving averages' },
       { id: 'supertrend', label: 'Supertrend (10, 3)', shortLabel: 'Supertrend', category: 'Trend & MAs', pane: 'Overlay', desc: 'ATR trailing trend flip & dynamic stop line' },
       { id: 'psar', label: 'Parabolic SAR (0.02, 0.2)', shortLabel: 'PSAR', category: 'Trend & MAs', pane: 'Overlay', desc: 'Stop-and-reverse trailing dot system' },
       { id: 'ichimoku', label: 'Ichimoku Cloud (9, 26, 52)', shortLabel: 'Ichimoku', category: 'Trend & MAs', pane: 'Overlay', desc: 'Tenkan, Kijun, Senkou Span A/B & Chikou Span' },
